@@ -1,7 +1,0 @@
-{
-  "stockAdjustmentCreation.lotCode": "Batch Number",
-  "stockAdjustmentCreation.fileComplaint": "File Complaint",
-  "stockAdjustmentCreation.acceptedQuantityError": "accepted quantity cannot exceed delivery note quantity",
-  "stockAdjustmentCreation.cartonsInvalidError": "Cartons cannot be zero or greater than total received",
-  "stockAdjustmentCreation.positiveInteger": "Input must not be less than zero"
-}
