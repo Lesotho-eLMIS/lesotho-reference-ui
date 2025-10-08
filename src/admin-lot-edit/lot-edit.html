@@ -1,0 +1,37 @@
+<div class="modal" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>{{'adminLotEdit.editLot.title' | message:({lot: vm.lot.lotCode})}}</h1>
+            </div>
+            <div class="modal-body">
+                <form id="lot-edit-form" ng-submit="vm.editLot()">
+                    <label for="lotCode">{{'adminLotEdit.lotCode' | message}}</label>
+                    <input id="lotCode" type="text" ng-model="vm.lot.lotCode" required />
+                    <label for="lotExpiryDate">{{'adminLotEdit.lotExpiryDate' | message}}</label>
+                    <input
+                            openlmis-datepicker
+                            type="text"
+                            id="lotExpiryDate"
+                            ng-change="afterChange()"
+                            ng-model="vm.lot.expirationDate"/>
+                    <label for="lotManufactureDate">{{'adminLotEdit.lotManufactureDate' | message}}</label>
+                    <input
+                            openlmis-datepicker
+                            type="text"
+                            id="lotManufactureDate"
+                            ng-change="afterChange()"
+                            ng-model="vm.lot.manufactureDate"/>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel" ng-click="vm.goToPreviousState()">
+                    {{'adminLotEdit.cancel' | message}}
+                </button>
+                <button class="primary" form="lot-edit-form">
+                    {{'adminLotEdit.editLot' | message}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

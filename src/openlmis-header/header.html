@@ -1,0 +1,21 @@
+<div ng-controller="HeaderController as vm" class="openlmis-header" ng-class="{'is-offline':isOffline}" offline>
+    <h1 class="title">{{'openlmisHeader.appHeader' | message}}</h1>
+    <div class="openlmis-header-actions">
+        <!-- <div class="openlmis-header-info">
+            <a ui-sref="openlmis.home" ng-if="!isOffline">
+                <openlmis-system-notifications-indicator></openlmis-system-notifications-indicator>
+            </a>
+            <openlmis-app-cache></openlmis-app-cache>
+        </div> -->
+        <div class="status-offline" ng-if="isOffline">
+            <span class="offline-status-indicator">{{'openlmisHeader.youAreOffline' | message}}</span>
+            <a ng-click="vm.checkConnection()">{{'openlmisHeader.checkConnection' | message}}</a>
+        </div>
+        <div class="offline-events-indicator">
+            <openlmis-offline-events-indicator></openlmis-offline-events-indicator>
+        </div>
+        <div ng-show="!!user">
+            <ng-include src="'openlmis-header/user.html'"></ng-include>
+        </div>
+    </div>
+</div>

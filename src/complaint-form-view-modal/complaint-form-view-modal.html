@@ -1,0 +1,56 @@
+<div class="modal add-products-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="width: 1100px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+
+      <div class="modal-header">
+        <button type="button" class="close" aria-label="Close" ng-click="$hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">
+          {{'complaintFormViewModal.title' | message}}
+        </h4>
+      </div>
+
+      <div class="modal-body">
+<!-- ///////////////////////////////////////////// -->
+        <section class="openlmis-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>{{'complaintFormViewModal.productName' | message}}</th>
+                <th>{{'complaintFormViewModal.batchNumber' | message}}</th>
+                <th>{{'complaintFormViewModal.expiryDate' | message}}</th>
+                <th>{{'complaintFormViewModal.quantityAffected' | message}}</th>
+                <th>{{'complaintFormViewModal.quantityReturned' | message}}</th>
+                <th>{{'complaintFormViewModal.natureOfComplaint' | message}}</th>
+                <th>{{'complaintFormViewModal.complaintReason' | message}}</th>
+                <th>{{'complaintFormViewModal.complaintDetail' | message}}</th>
+                <th>{{'complaintFormViewModal.complainComment' | message}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="product in vm.lineItems">
+                <td>{{product.productName}}</td>
+                <td>{{product.lotCode}}</td>
+                <td>{{product.expirationDate}}</td>
+                <td>{{product.quantityAffected}}</td>
+                <td>{{product.quantityReturned}}</td>
+                <td>{{product.natureOfComplaint}}</td>
+                <td>{{product.complaintReason}}</td>
+                <td>{{product.reasonDetails}}</td>
+                <td>{{product.comments}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- <openlmis-pagination/> -->
+        </section>
+<!-- /////////////////////////////////////////////////////////// -->
+      </div>
+
+      <div class="modal-footer">
+        <button ng-click="$hide()">{{'complaintFormViewModal.cancel' | message}}</button>
+      </div>
+
+    </div>
+  </div>
+</div>

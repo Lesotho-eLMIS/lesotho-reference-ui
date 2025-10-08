@@ -1,0 +1,82 @@
+version: "2"
+services:
+  reference-ui:
+    image: elmislesotho/dev-ui:0.0.1
+    working_dir: /app
+    volumes:
+      - '.:/app'
+    ports:
+      - "9000:9000"
+      - "9876:9876"
+    env_file: .env
+    volumes_from:
+      - auth-ui
+      - fulfillment-ui
+      - referencedata-ui
+      - requisition-ui
+      - report-ui
+      - stockmanagement-ui
+      - cce-ui
+      - ui-components
+      - ui-layout
+      - offline-ui
+      - one-network-integration-ui
+    depends_on:
+      - auth-ui
+      - fulfillment-ui
+      - referencedata-ui
+      - requisition-ui
+      - report-ui
+      - stockmanagement-ui
+      - cce-ui
+      - ui-components
+      - ui-layout
+      - offline-ui
+      - one-network-integration-ui
+  auth-ui:
+    image: openlmis/auth-ui:6.2.16-SNAPSHOT
+    volumes:
+      - '/openlmis-auth-ui'
+  fulfillment-ui:
+    image: openlmis/fulfillment-ui:6.1.7-SNAPSHOT
+    volumes:
+      - '/openlmis-fulfillment-ui'
+  referencedata-ui:
+    image: openlmis/referencedata-ui:5.6.17-SNAPSHOT
+    volumes:
+      - '/openlmis-referencedata-ui'
+  report-ui:
+    image: openlmis/report-ui:5.2.15-SNAPSHOT
+    volumes:
+      - '/openlmis-report-ui'
+  requisition-ui:
+    image: openlmis/requisition-ui:7.0.15-SNAPSHOT
+    volumes:
+      - '/openlmis-requisition-ui'
+  stockmanagement-ui:
+    image: openlmis/stockmanagement-ui:2.1.9-SNAPSHOT
+    volumes:
+      - '/openlmis-stockmanagement-ui'
+  cce-ui:
+    image: openlmis/cce-ui:1.1.8-SNAPSHOT
+    volumes:
+      - '/openlmis-cce-ui'
+  ui-components:
+    image: openlmis/ui-components:7.2.14-SNAPSHOT
+    volumes:
+      - '/openlmis-ui-components'
+  ui-layout:
+    image: openlmis/ui-layout:5.2.9-SNAPSHOT
+    volumes:
+      - '/openlmis-ui-layout'
+  offline-ui:
+    image: openlmis/offline-ui:1.0.8-SNAPSHOT
+    volumes:
+      - '/openlmis-offline-ui'
+  one-network-integration-ui:
+    image: openlmis/one-network-integration-ui:0.0.7-SNAPSHOT
+    volumes:
+      - '/one-network-integration-ui'
+  image:
+    build: .
+    image: openlmis/reference-ui

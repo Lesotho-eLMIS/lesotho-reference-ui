@@ -1,0 +1,75 @@
+<div class="rejection-modal modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>{{'requisitionView.rejection.reason.title' | message}}</h4>
+            </div>
+            <div class="modal-body">
+                <p ng-if="vm.message">{{'requisitionView.rejection.reason.message' | message}}</p>
+                <form class="form-inline" ng-submit="vm.addRejectionReason()" reload-form>
+                    <div class="form-group">
+                        <label for="category">
+                            {{'requisitionView.rejection.reason.category' | message}}
+                        </label>
+                        <select id="category"
+                                ng-model="vm.category"
+                                ng-change="vm.filterByCategory(vm.category)"
+                                ng-options="category as category.name for category in vm.rejectionReasonCategories.content | orderBy:'displayOrder'"
+                                required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reason">
+                            {{'requisitionView.rejection.reason' | message}}
+                        </label>
+
+                        <select id="reason"
+                                ng-model="vm.reason.rejectionReason"
+                                ng-options="reason as reason.name for reason in vm.filteredRejectionReasons | orderBy:'displayOrder'"
+                                required>
+                        </select>
+                    </div>
+                    <button class="add" type="submit">
+                        {{'requisitionView.rejection.reason.add' | message}}
+                    </button>
+                </form>
+                <form id="rejectionsForm" ng-submit="vm.save()">
+                    <div class="openlmis-table-container">
+                        <table>
+                            <caption class="rejection-warning alert is-info"
+                                     ng-show="vm.selectedRejectionReasons === null || vm.selectedRejectionReasons.length === 0">
+                                {{'requisitionView.rejection.reason.warning.message' | message}}
+                            </caption>
+                            <thead>
+                            <tr>
+                                <th>{{'requisitionView.rejection.reason' | message}}</th>
+                                <th>{{'requisitionView.rejection.reason.category'| message}}</th>
+                                <th >{{'requisitionView.rejection.reason.action' | message}}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="rejection in vm.selectedRejectionReasons">
+                                <td>{{rejection.rejectionReason.name}}</td>
+                                <td>{{rejection.rejectionReason.rejectionReasonCategory.name}}</td>
+                                <td>
+                                    <input type="button" class="danger"
+                                           ng-click="vm.removeRejectionReason(rejection)"
+                                           value="{{'requisitionView.rejection.reason.action.remove' | message}}">
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" ng-if="!vm.isDisabled">
+                <button class="btn btn-default" ng-click="vm.cancel()">
+                    {{'requisitionView.rejection.reason.cancel' | message}}
+                </button>
+                <button class="btn btn-primary" form="rejectionsForm" type="submit">
+                    {{'requisitionView.rejection.reason.update' | message}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

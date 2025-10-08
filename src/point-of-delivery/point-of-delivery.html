@@ -1,0 +1,32 @@
+<h2>{{ 'pointOfDelivery.title' | message }}</h2>
+
+<form ng-submit="vm.search()" openlmis-table-filter>
+    <fieldset class="form-group">
+        <label for="searchFor">{{'pointOfDelivery.facility' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.referenceNo' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.packingDate' | message}}</label>
+        <input id="receivedDate" type="date" ng-model="vm.proofOfDelivery.receivedDate" required/>
+        
+        <label for="searchFor">{{'pointOfDelivery.packedBy' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.numberOfCartons' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.numberOfContainers' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.receivedBy' | message}}</label>
+        <input id="searchFor" type="text" ng-model="vm.keyword" maxlength="50"/>
+        
+        <label for="searchFor">{{'pointOfDelivery.receivedDate' | message}}</label>
+        <input id="receivedDate" type="date" ng-model="vm.proofOfDelivery.receivedDate" required/>
+        
+        <input type="submit" value="{{'pointOfDelivery.submit' | message}}"/>
+    </fieldset>
+</form>
+

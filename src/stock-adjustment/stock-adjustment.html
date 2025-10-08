@@ -1,0 +1,29 @@
+<h2 ng-show="vm.facility">{{ vm.key('title') | message: {'facility': vm.facility.name} }}</h2>
+<p class="alert is-offline" ng-if="vm.offline() && vm.offlineStockEvents()">
+    {{ vm.key('offline1') | message}}<br>
+    {{ vm.key('offline2') | message}}
+    <a ng-click="vm.goToPendingOfflineEventsPage()">{{ vm.key('pendingOfflineEvents') | message}}</a>
+    {{ vm.key('offline3') | message}}<br>
+</p>
+
+<section class="openlmis-table-container">
+    <table>
+        <caption ng-if="!vm.programs.length">{{vm.key('noProgramAvailable') | message}}
+        </caption>
+        <thead>
+            <tr>
+                <th>{{vm.key('program') | message}}</th>
+                <th>{{vm.key('action') | message}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="program in vm.programs">
+                <td>{{program.name}}</td>
+                <td>
+                    <input id="proceedButton" type="button" ng-click="vm.proceed(program)"
+                        value="{{vm.key('proceed') | message}}" class="primary"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>

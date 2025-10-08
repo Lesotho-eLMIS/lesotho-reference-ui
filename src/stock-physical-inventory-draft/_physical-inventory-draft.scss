@@ -1,0 +1,18 @@
+.physical-inventory-draft-progress {
+  margin-left: 0;
+}
+
+.reasons-cell {
+
+  padding-right: 0.5em !important;
+
+    &:before {
+        content: '' !important;
+    }
+}
+
+.draft-indicator {
+  display: block;
+  float: right;
+  margin-top: 1em;
+}

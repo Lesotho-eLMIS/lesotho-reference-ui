@@ -1,0 +1,11 @@
+{
+  "service": {
+    "Name": "reference-ui",
+    "Port": 80,
+    "Tags": ["openlmis-service"]
+  },
+  "path": [
+    "",
+    "<all>"
+  ]
+}

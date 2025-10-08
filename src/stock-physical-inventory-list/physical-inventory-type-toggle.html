@@ -1,0 +1,8 @@
+<div class="button-toggle">
+    <label ng-repeat="physicalInventoryType in vm.physicalInventoryTypes"
+        ng-class="{'selected': vm.physicalInventoryType === physicalInventoryType}">
+        <input type="radio" ng-model="vm.physicalInventoryType" ng-value="physicalInventoryType"
+            ng-change="vm.onChange()">
+        {{physicalInventoryType}}
+    </label>
+</div>

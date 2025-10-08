@@ -1,0 +1,10 @@
+{
+    "order.orders": "Supply Requests",
+    "orderStatus.ORDERED": "Requested",
+    "orderStatus.FULFILLING": "Fulfilling",
+    "orderStatus.SHIPPED": "Served",
+    "orderStatus.RECEIVED": "Received",
+    "orderStatus.TRANSFER_FAILED": "Transfer Failed",
+    "orderStatus.IN_ROUTE": "In Route",
+    "orderStatus.READY_TO_PACK": "Ready to pack"
+}

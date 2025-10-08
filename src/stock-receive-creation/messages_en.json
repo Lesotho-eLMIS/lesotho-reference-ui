@@ -1,0 +1,18 @@
+{
+  "stockReceiveCreation.lotCode": "Batch Number",
+  "stockReceiveCreation.noLotDefined": "No batch defined",
+  "stockReceiveCreation.productHasNoLots": "No batch defined",
+  "stockReceiveCreation.unitPrice": "Unit Price",
+  "stockReceiveCreation.referenceNumber": "Reference Number",
+  "stockReceiveCreation.invoiceNumber": "Invoice Number",
+  "stockReceiveCreation.deliveryNoteQuantity": "Delivery Note Quantity",
+  "stockReceiveCreation.acceptedQuantity": "Accepted Quantity",
+  "stockReceiveCreation.rejectedQuantity": "Rejected Quantity",
+  "stockReceiveCreation.rejectionReason": "Rejection Reason",
+  "stockReceiveCreation.comments": "Comments",
+  "stockReceiveCreation.amount": "Amount",
+  "stockReceiveCreation.discrepancy": "Discrepancy",
+  "stockReceiveCreation.complaint": "Complaint",
+  "stockReceiveCreation.fileComplaint": "File Complaint",
+  "stockReceiveCreation.cartonNumber": "Carton Number"
+}

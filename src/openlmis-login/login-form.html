@@ -1,0 +1,51 @@
+<link rel="stylesheet" href="_login.css">
+<div class="modal auth-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>{{'openlmisLogin.appHeader' | message}}</h1>
+                <openlmis-locale class="locale-container"/>
+            </div>
+            <div class="modal-body">
+                <form ng-submit="vm.doLogin()">
+                    <div id="loginError" class="alert is-error" ng-if="vm.loginError">
+                        {{vm.loginError | message}}
+                    </div>
+                    <div class="form-group">
+                        <label for="login-username">{{'openlmisLogin.username' | message}}</label>
+                        <input id="login-username"
+                            ng-model="vm.username"
+                            type="text"
+                            required
+                            autofocus/>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">{{'openlmisLogin.password' | message}}</label>    
+                        <span>
+                            <input ng-model="vm.password" type="{{vm.passwordFieldType}}" id="login-password" required/>
+                            <!-- <button type="button" ng-click="vm.togglePasswordVisibility()">
+                                <i class="fa" ng-class="{'fa-eye': passwordFieldType === 'password', 'fa-eye-slash': passwordFieldType === 'text'}"></i>
+                            </button> -->
+                            <input id='showPasswordCheckbox' type="checkbox" ng-model="vm.showPassword" ng-change="vm.togglePasswordVisibility()">
+                            <label for="showPasswordCheckbox">Show password</label>
+                        </span>
+                        
+                        
+                        
+                    </div>
+                    <div class="button-group">
+                        <input id="login-button" type="submit" value="{{'openlmisLogin.signIn' | message}}"/>
+                        <a id="forgotPasswordLink" ui-sref="auth.forgotPassword">
+                            {{'openlmisLogin.forgotPassword' | message}}
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="http://openlmis.org" target="_blank">
+                    {{'openlmisLogin.poweredBy' | message:({openlmis:'OpenLMIS'})}}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

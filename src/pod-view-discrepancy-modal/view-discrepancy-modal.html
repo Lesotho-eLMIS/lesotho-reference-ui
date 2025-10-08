@@ -1,0 +1,50 @@
+<div class="modal add-products-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" aria-label="Close" ng-click="$hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">
+          {{'podViewDiscrepancyModal.title' | message}}
+        </h4>
+      </div>
+      <div class="modal-body">
+        <section class="openlmis-table-container">
+            <section class="is-primary">
+              <form class="form-inline" name="discrepancyForm" ng-submit="vm.addDiscrepancy()">
+                  <div>
+                      <label>{{'podViewDiscrepancyModal.referenceNumberLabel' | message}} : </label>
+                      <label><b>{{vm.referenceNumber}}</b></label>
+                  </div>
+              </form>
+          </section>
+          <table suppress-tr-openlmis-invalid>
+              <caption ng-if="!vm.discrepancies.length">{{'podAddDiscrepancyModal.noDiscrepancies'| message}}</caption>
+              <thead>
+                  <tr>
+                      <th>{{'podViewDiscrepancyModal.containerType'| message}}</th>
+                      <th>{{'podViewDiscrepancyModal.discrepancy'| message}}</th>
+                      <th>{{'podViewDiscrepancyModal.quantity'| message}}</th>
+                      <th>{{'podViewDiscrepancyModal.comments'| message}}</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr  ng-repeat="discrepancy in vm.discrepancies">
+                      <td>{{discrepancy.shipmentType}}</td>
+                      <td>{{discrepancy.rejectionReason.name}}</td>
+                      <td>{{discrepancy.quantityAffected}}</td>
+                      <td>{{discrepancy.comments}}</td>
+                  </tr>
+              </tbody>
+          </table>
+      </section>
+      </div>
+
+      <div class="modal-footer">
+        <button ng-click="$hide()">{{'stockAddProductsModal.cancel' | message}}</button>
+      </div>
+
+    </div>
+  </div>
+</div>

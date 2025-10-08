@@ -1,0 +1,12 @@
+{
+  "podViewDiscrepancyModal.label": "Quality Checks",
+  "podViewDiscrepancyModal.title": "View Discrepancies",
+  "podViewDiscrepancyModal.discrepancy": "Discrepancy",
+  "podViewDiscrepancyModal.quantity": "Affected Quantity",
+  "podViewDiscrepancyModal.comments": "Comments",
+  "podViewDiscrepancyModal.noDiscrepancies": "No Discrepancies",
+  "podViewDiscrepancyModal.addDiscrepancy": "Discrepancy",
+  "podViewDiscrepancyModal.qualityChecks":"Quality Checks",
+  "podViewDiscrepancyModal.containerType":"Type",
+  "podViewDiscrepancyModal.referenceNumberLabel":"Reference Number"
+}

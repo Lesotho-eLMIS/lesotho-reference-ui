@@ -1,0 +1,96 @@
+<h2 ng-if="vm.facility && vm.program">
+    {{'stockCardSummaryList.title' | message: { 'facility': vm.facility.name, 'program': vm.program.name} }}
+</h2>
+<h2 ng-hide="vm.facility && vm.program">{{'stockCardSummaryList.stockOnHand' | message}}</h2>
+<p class="alert is-offline" ng-if="vm.offline()">
+    {{ 'stockCardSummaryList.offline1' | message}}
+    <b>{{ 'stockCardSummaryList.offline2' | message}}</b>
+    {{ 'stockCardSummaryList.offline3' | message}}<br>
+    <a ng-click="vm.goToPendingOfflineEventsPage()">{{ 'stockCardSummaryList.pendingOfflineEvents' | message}}</a>
+    {{ 'stockCardSummaryList.offline4' | message}}
+</p>
+
+<form ng-submit="vm.loadStockCardSummaries()" class="sidebar">
+    <openlmis-facility-program-select
+        is-supervised="vm.isSupervised"
+        facility="vm.facility"
+        program="vm.program"
+        module="'stock-card-summary-list'">
+    </openlmis-facility-program-select>
+    <input type="submit" value="{{'stockCardSummaryList.search'|message}}"/>
+</form>
+<section class="openlmis-table-container">
+    <form ng-submit="vm.search()" openlmis-table-filter>
+        <fieldset class="form-group">
+            <label for="includeInactive">
+                <input id="includeInactive"
+                       type="checkbox"
+                       name="includeInactive"
+                       ng-true-value="'true'"
+                       ng-false-value="'false'"
+                       ng-model="vm.includeInactive"/>
+                {{'stockPhysicalInventoryDraft.includeInactiveItems' | message}}
+            </label>
+
+            <label for="productCode">{{'stockCardSummaryList.productCode' | message}}</label>
+            <input id="productCode" type="text" ng-model="vm.productCode"/>
+
+            <label for="productName">{{'stockCardSummaryList.productName' | message}}</label>
+            <input id="productName" type="text" ng-model="vm.productName"/>
+
+            <label for="lotCode">{{'stockCardSummaryList.lotCode' | message}}</label>
+            <input id="lotCode" type="text" ng-model="vm.lotCode"/>
+
+            <input type="submit" value="{{'stockCardSummaryList.search' | message}}"/>
+        </fieldset>
+    </form>
+    <button class="primary" ng-disabled="!vm.displayStockCardSummaries.length" ng-click="vm.print()">{{'stockCardSummaryList.print' | message}}</button>
+    <table>
+        <caption ng-if="!vm.displayStockCardSummaries.length">
+            {{'stockCardSummaryList.noProducts' | message}}
+        </caption>
+        <thead>
+            <tr>
+                <th>{{'stockCardSummaryList.productCode' | message}}</th>
+                <th>{{'stockCardSummaryList.product' | message}}</th>
+                <th>{{'stockCardSummaryList.lotCode' | message}}</th>
+                <th>{{'stockCardSummaryList.expiryDate' | message}}</th>
+                <th>{{'stockCardSummaryList.dosageForm' | message}}</th>
+                <th>{{'stockCardSummaryList.unitofIssue' | message}}</th>
+                <th>{{'stockCardSummaryList.lastUpdate' | message}}</th>
+                <th>{{'stockCardSummaryList.stockOnHand' | message}}</th>
+                <th>{{'stockCardSummaryList.actions' | message}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="is-secondary" ng-if="vm.displayStockCardSummaries.length > 0" ng-repeat-start="summary in vm.displayStockCardSummaries">
+                <td>{{summary.orderable.productCode}}</td>
+                <td>{{summary.orderable.fullProductName}}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{summary.stockOnHand}}</td>
+                <td></td>
+            </tr>
+            <tr ng-repeat="fulfills in summary.canFulfillForMe | orderBy:'lot?lot.lotCode:\'\''" ng-repeat-end>
+                <td>{{fulfills.orderable.productCode}}</td>
+                <td>{{fulfills.orderable.fullProductName}}</td>
+                <td>{{fulfills.lot ? fulfills.lot.lotCode : ('stockCardSummaryList.noLotDefined' | message)}}</td>
+                <td>{{fulfills.lot ? (fulfills.lot.expirationDate | openlmisDate) : ''}}</td>
+                <td>{{fulfills.orderable.dispensable.routeOfAdministration}}</td>
+                <td>{{fulfills.orderable.dispensable.sizeCode}}</td>
+                <td>{{fulfills.occurredDate | openlmisDate}}</td>
+                <td>{{fulfills.stockOnHand}}</td>
+                <td>
+                    <button ng-if="fulfills.stockCard" type="button" ng-click="vm.viewSingleCard(fulfills.stockCard.id)" class="primary">
+                        {{'stockCardSummaryList.view'| message}}
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <openlmis-pagination ng-if="!vm.offline()" list="vm.displayStockCardSummaries" paged-list="vm.pagedList" pagination-id="'stockCardList'"/>
+    <openlmis-pagination ng-if="vm.offline()" list="vm.stockCardSummaries" paged-list="vm.pagedList"></openlmis-pagination>
+</section>

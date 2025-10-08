@@ -1,0 +1,20 @@
+{
+    "orderFulfillment.actions": "Actions",
+    "orderFulfillment.createdDate": "Date created",
+    "orderFulfillment.emergency": "Emergency",
+    "orderFulfillment.facility": "Facility",
+    "orderFulfillment.fulfillOrders": "Fulfill Requests",
+    "orderFulfillment.fulfillOrdersAt": "Fulfill Requests at ${facility}",
+    "orderFulfillment.noOrdersFound": "No requests found",
+    "orderFulfillment.createdDateDesc": "Recently requested",
+    "orderFulfillment.createdDateAsc": "Oldest requests",
+    "orderFulfillment.orderNumber": "Request number",
+    "orderFulfillment.orderStatus": "Request status",
+    "orderFulfillment.period": "Period",
+    "orderFulfillment.program": "Program",
+    "orderFulfillment.orderingFacility": "Requesting facility",
+    "orderFulfillment.search": "Search",
+    "orderFulfillment.status": "Status",
+    "orderFulfillment.startFulfillment": "Start Fulfillment",
+    "orderFulfillment.continueFulfillment": "Continue Fulfillment"
+}

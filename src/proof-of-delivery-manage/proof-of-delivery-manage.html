@@ -1,0 +1,69 @@
+<h2 ng-if="vm.facilityName && vm.programName">{{'proofOfDeliveryManage.managePodsForFacility' | message:{facility: vm.facilityName, program: vm.programName} }}</h2>
+<h2 ng-if="!vm.facilityName && vm.programName">{{'proofOfDeliveryManage.managePodsForProgram' | message:{program: vm.programName} }}</h2>
+<h2 ng-if="!vm.facilityName && !vm.programName">{{'proofOfDeliveryManage.managePods' | message}}</h2>
+<form class="sidebar" ng-submit="vm.loadOrders()">
+    <fieldset class="form-group" ng-if="vm.requestingFacilities.length > 0">
+        <label for="requestingFacility">{{'proofOfDeliveryManage.requestingFacility' | message}}</label>
+        <select id="requestingFacility"
+                ng-model="vm.requestingFacility"
+                ng-required="!vm.supplyingFacility"
+                ng-options="facility.name for facility in vm.requestingFacilities | orderBy:'name'"></select>
+    </fieldset>
+    <fieldset class="form-group" ng-if="vm.supplyingFacilities.length > 0">
+        <label for="supplyingFacility">{{'proofOfDeliveryManage.supplyingFacility' | message}}</label>
+        <select id="supplyingFacility"
+                ng-model="vm.supplyingFacility"
+                ng-required="!vm.requestingFacility"
+                ng-options="facility.name for facility in vm.supplyingFacilities | orderBy:'name'"></select>
+    </fieldset>
+    <fieldset class="form-group">
+        <label for="program">{{'proofOfDeliveryManage.program' | message}}</label>
+        <select id="program"
+                ng-model="vm.program"
+                ng-options="program.name for program in vm.programs" required></select>
+    </fieldset>
+    <input type="submit" value="{{'proofOfDeliveryManage.search' | message}}"/>
+</form>
+<section class="openlmis-table-container">
+    <table>
+        <caption ng-if="vm.pods && !vm.pods.length">
+            {{'proofOfDeliveryManage.noPodsFound' | message}}
+        </caption>
+        <thead>
+            <tr>
+                <th>{{'proofOfDeliveryManage.orderNumber' | message}}</th>
+                <th>{{'proofOfDeliveryManage.orderStatus' | message}}</th>
+                <th>{{'proofOfDeliveryManage.requestingFacility' | message}}</th>
+                <th>{{'proofOfDeliveryManage.supplyingDepot' | message}}</th>
+                <th>{{'proofOfDeliveryManage.program' | message}}</th>
+                <th>{{'proofOfDeliveryManage.period' | message}}</th>
+                <th>{{'proofOfDeliveryManage.orderDate' | message}}</th>
+                <th>{{'proofOfDeliveryManage.emergency' | message}}</th>
+                <th class="col-sticky sticky-right">{{'proofOfDeliveryManage.actions' | message}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="order in vm.pods">
+                <td>{{order.orderCode}}</td>
+                <td>{{order.status}}</td>
+                <td>{{order.requestingFacility.name}}</td>
+                <td>{{order.supplyingFacility.name}}</td>
+                <td>{{order.program.name}}</td>
+                <td>{{order.processingPeriod.name}}</td>
+                <td>{{order.createdDate | openlmisDate}}</td>
+                <td class="col-emergency">
+                    <i ng-class="{'icon-ok': order.emergency}"></i>
+                </td>
+                <td>
+                    <button class="primary" ng-click="vm.openPod(order.id)">
+                        {{'proofOfDeliveryManage.manage' | message}}
+                    </button>
+                    <button ng-click="vm.printProofOfDelivery(order.id)">
+                        {{'proofOfDeliveryManage.print' | message}}
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <openlmis-pagination list="vm.pods"></openlmis-pagination>
+</section>

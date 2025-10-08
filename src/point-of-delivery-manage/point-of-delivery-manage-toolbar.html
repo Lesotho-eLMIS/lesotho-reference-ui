@@ -1,0 +1,8 @@
+<div class="openlmis-toolbar">
+    <div class="button-group">
+       <button ng-disabled="vm.isOffline()" ng-if="!vm.tempPOD" class="danger" ng-click="vm.clearForm()">{{'pointOfDeliveryManage.clear'| message}}</button>
+    </div>
+    <button class="primary" form="podManageForm" ng-if="!vm.tempPOD" ng-click="vm.buildPayload()">{{'pointOfDeliveryManage.submit' | message}}</button>
+    <button class="primary" form="podManageForm" ng-if="vm.tempPOD" ng-click="vm.buildPayload()">{{'pointOfDeliveryManage.save' | message}}</button>
+  </div>
+  

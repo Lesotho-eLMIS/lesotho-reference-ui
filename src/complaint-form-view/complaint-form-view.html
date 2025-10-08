@@ -1,0 +1,31 @@
+<h2>{{'complaintFormView.complaintsAt' | message: {'facility':  vm.facilityName} }}</h2>
+
+<section class="openlmis-table-container">
+    <table>
+        <!-- <caption ng-if="!vm.PODEvents">
+            {{complaintFormView.title}}
+        </caption> -->
+        <thead>
+            <tr>
+                <th>{{'complaintFormView.complainingFacility' | message}}</th>
+                <th>{{'complaintFormView.complainant' | message}}</th>
+                <th>{{'complaintFormView.purchaseOrderNumber' | message}}</th>
+                <th>{{'complaintFormView.invoiceNumber' | message}}</th>
+                <!-- <th>{{'complaintFormView.complaintDate' | message}}</th> -->
+                <th>{{'complaintFormView.incidenceDate' | message}}</th>
+				<th>{{'complaintFormView.description' | message}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="item in vm.complaints | orderBy: '-occurredDate'">
+                <td>{{item.facilityName}}</td>
+                <td>{{item.userNames}}</td>
+                <td>{{item.purchaseOrderNumber}}</td>
+                <td>{{item.invoiceNumber}}</td>
+                <!-- <td>{{item.complaintDate | openlmisDate}}</td> -->
+                <td>{{item.occurredDate | openlmisDate }}</td>
+                <td><button type="button" class="primary"  ng-click="vm.getComplaints(item.id)">{{'complaintFormView.view' | message}}</button></td>
+            </tr>
+        </tbody>
+    </table>
+</section>

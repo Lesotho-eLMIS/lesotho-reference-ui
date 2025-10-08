@@ -1,0 +1,52 @@
+<h2>{{'pointOfDeliveryView.deliveriesAt' | message: {'facility':  vm.receivingFacility} }}</h2>
+
+<section class="openlmis-table-container">
+    <table>
+        <caption ng-if="!vm.PODEvents">
+            {{pointOfDeliveryView.title}}
+        </caption>
+        <thead>
+            <tr>
+                <th rowspan="2">{{'pointOfDeliveryView.facility' | message}}</th>
+                <th rowspan="2">{{'pointOfDeliveryView.referenceNo' | message}}</th>
+                <th rowspan="2">{{'pointOfDeliveryView.packingDate' | message}}</th>
+                <th rowspan="2">{{'pointOfDeliveryView.packedBy' | message}}</th>
+
+				<th colspan="2">{{'pointOfDeliveryView.cartons' | message}}</th>
+                <th colspan="2">{{'pointOfDeliveryView.containers' | message}}</th>
+
+                <th rowspan="2">{{'pointOfDeliveryView.receivedBy' | message}}</th>
+                <th rowspan="2" class="col-sticky sticky-right">{{'pointOfDeliveryView.receivedDate' | message}}</th>
+                <th rowspan="2">{{'pointOfDeliveryView.discrepancies' | message}}</th>
+                <th rowspan="2">{{'pointOfDeliveryView.action' | message}}</th>
+            </tr>
+            <tr>
+				
+				<th>{{'pointOfDeliveryView.quantityOnWayBill' | message}}</th>
+                <th>{{'pointOfDeliveryView.quantityAccepted' | message}}</th>
+
+				<th>{{'pointOfDeliveryView.quantityOnWayBill' | message}}</th>
+                <th>{{'pointOfDeliveryView.quantityAccepted' | message}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="item in vm.PODEvents | orderBy: '-receivingDate'">
+                <td>{{item.sourceName}}</td>
+                <td>{{item.referenceNumber}}</td>
+                <td>{{item.packingDate | openlmisDate}}</td>
+                <td>{{item.packedBy}}</td>
+                <td>{{item.cartonsQuantityOnWaybill}}</td>
+                <td>{{item.cartonsQuantityAccepted}}</td>
+                <td>{{item.containersQuantityOnWaybill}}</td>
+                <td>{{item.containersQuantityAccepted}}</td>
+                <td>{{formatPODrecievedBy(item.receivedByUserNames)}}</td>
+                <td>{{item.receivingDate | openlmisDate}}</td>
+                <td ng-if="item.discrepancies.length > 0" ><button class="primary"  ng-click="vm.viewDiscrepancies(item.discrepancies, item.referenceNumber)">{{'pointOfDeliveryView.discrepancies' | message}}</button></td>
+                <td ng-if="item.discrepancies.length === 0" >{{'pointOfDeliveryView.noDiscrepancies' | message}}</td>
+                <td><button class="primary"  ng-click="vm.viewPOD(item.id)">{{'pointOfDeliveryView.label' | message}}</button></td>
+            </tr>
+        </tbody>
+    </table>
+    <openlmis-pagination/>
+</section>
+

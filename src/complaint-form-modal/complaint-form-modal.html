@@ -1,0 +1,160 @@
+<div class="modal add-products-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content"
+      style="width: 80%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+
+      <div class="modal-header">
+        <button type="button" class="close" aria-label="Close" ng-click="$hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">
+          {{'complaintFormModal.title' | message}}
+        </h4>
+      </div>
+
+      <div class="modal-body">
+        <!-- ///////////////////////////////////////////// -->
+        <form>
+
+          <fieldset class="form-group">
+            <label for="orderingFacility">{{'complaintFormModal.healthFacility' | message}}</label>
+            <select id="receivingFacility" ng-model="vm.complaintFormFacility"
+              ng-options="facility.name for facility in vm.homeFacilities" ng-change="vm.onChangeComplainingFacility()"
+              required></select>
+
+          </fieldset>
+
+          <fieldset class="form-group">
+            <label for="purchaseOrderNumber">{{'complaintFormModal.purchaseOrderNumber' | message}}</label>
+            <input class="form-control" type="text" style="width: 150px;" ng-model="vm.complaint.purchaseOrderNumber"
+            required>
+          </fieldset>
+
+          <fieldset class="form-group">
+            <label for="ndsoInvoiceNumber">{{'complaintFormModal.NDSOInvoiceNumber' | message}}</label>
+            <input class="form-control" type="text" style="width: 150px;" ng-model="vm.complaint.invoiceNumber"
+            required>
+          </fieldset>
+
+        </form>
+
+
+
+        <section class="openlmis-table-container">
+          <!-- <openlmis-sort options="vm.options"/> -->
+          <section class="is-primary">
+            <form class="form-inline" name="productForm">
+              <div>
+                <label for="productSelect">{{'complaintFormModal.product'| message}}</label>
+                <select id="productSelect" ng-model="vm.selectedOrderableGroup"
+                  ng-options="orderableGroup[0].orderable.fullProductName for orderableGroup in vm.orderableGroups"
+                  ng-change="vm.orderableSelectionChanged()" required>
+                </select>
+              </div>
+              <div ng-if="vm.selectedOrderableHasLots">
+                <label for="lotSelect">{{'stockAddProductsModal.lotCode' | message}}</label>
+                <select id="lotSelect" ng-model="vm.selectedLot" ng-options="lot.lotCode for lot in vm.lots"
+                  ng-change="vm.lotChanged()" required>
+                </select>
+              </div>
+              <div ng-if="vm.hasPermissionToAddNewLot && vm.canAddNewLot">
+                <label for="lotCode">{{'stockAddProductsModal.newLotCode' | message}}</label>
+                <input id="lotCode" type="text" ng-model="vm.newLot.lotCode" ng-change="vm.newLotCodeChanged()"
+                  openlmis-invalid="{{vm.newLot.lotCodeInvalid | message}}" required>
+                <label for="expirationDate">{{'stockAddProductsModal.newLotExpirationDate' | message}}</label>
+                <input id="expirationDate" type="date" ng-model="vm.newLot.expirationDate"
+                  ng-change="vm.expirationDateChanged()"
+                  openlmis-invalid="{{vm.newLot.expirationDateInvalid | message}}" />
+              </div>
+              <button class="btn-primary" type="submit" ng-click="vm.addProductToComplaintForm()" class="add">{{'complaintFormModal.add' |
+                message}}</button>
+            </form>
+          </section>
+
+          <table>
+            
+            <thead>
+              <tr>
+                <th>{{'complaintFormModal.productName' | message}}</th>
+                <th>{{'complaintFormModal.batchNumber' | message}}</th>
+                <th>{{'complaintFormModal.expiryDate' | message}}</th>
+                <th>{{'complaintFormModal.quantityAffected' | message}}</th>
+                <th>{{'complaintFormModal.quantityReturned' | message}}</th>
+                <th>{{'complaintFormModal.natureOfComplaint' | message}}</th>
+                <th>{{'complaintFormModal.complaintReason' | message}}</th>
+                <th>{{'complaintFormModal.complaintDetail' | message}}</th>
+                <th>{{'complaintFormModal.complainComment' | message}}</th>
+                <th class="col-sticky sticky-right">{{'complaintFormModal.actions' | message}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="product in vm.productsForComplaint">
+                <td>{{product.orderable.fullProductName}}</td>
+                <td>{{product.lot.lotCode}}</td>
+                <td><input type="date" style="width: 90px;" ng-model="product.lot.expirationDate" ng-disabled="true">
+                </td>
+                <td>
+                  <input type="number" min="0" step="1" oninput="validity.valid||(value='');" style="width: 10px;"
+                    ng-model="product.quantityAffected" ng-change = 'vm.validateQuantities(product)' required></td>
+                <td openlmis-invalid="{{product.$errors.quantityInvalid}}" class="digit-cell">
+                  <input class="form-control" type="number" min="0" step="1" oninput="validity.valid||(value='');" style="width: 10px;"
+                    ng-model="product.quantityReturned" ng-class="{'error': product.$errors.prepackQuantityInvalid}" 
+                    ng-blur="vm.validateQuantities(product)" required></td>
+                <td>
+                  <!-- Nature of complaint -->
+                  <select id="natureOfComplaint" name="natureOfComplaint" ng-model="product.natureOfComplaintName"
+                    ng-options="natureOfComplaintName.name for natureOfComplaintName in vm.natureOfcomplaintOptions"
+                    ng-change="vm.setComplaintReason(product)" required>
+                  </select>
+                </td>
+                <td>
+                  <!-- complaint reason -->
+                  <select id="complaintReason" name="complaintReason" ng-model="product.complaintReason"
+                    ng-options="complaintReason for complaintReason in product.complaintReasons"
+                    ng-change="vm.setComplaintDetail(product)" ng-disabled="!product.complaintReasons.length">
+                  </select>
+                </td>
+                <td>
+                  <!-- reason detail -->
+                  <select id="reasonDetail" name="reasonDetail" ng-model="product.reasonDetails"
+                    ng-options="reasonDetails for reasonDetails in product.reasonDetailOptions"
+                    ng-disabled="!product.reasonDetailOptions.length">
+                  </select>
+                </td>
+                <td><input type="text" style="width: 70px;" ng-model="product.comments"></td>
+                <td>
+                  <button type="button" ng-click="vm.removeProductLineItem($index)"
+                    class="danger">{{'complaintFormModal.remove'| message}}</button>
+                  <!-- <button class="primary" ui-sref="openlmis.dispensing.patients.form">{{'complaintFormModal.edit' | message}}</button>
+                  <button type="button" class="btn btn-primary add" ui-sref="openlmis.dispensing.prescriptions.form">{{'complaintFormModal.addComplaint' | message}}</button> -->
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p> </p>
+          <p> </p>
+          <p> </p>
+          <p> </p>
+          <!-- <openlmis-pagination/> -->
+        </section>
+      </div>
+
+      <div>
+        <fieldset class="form-group">
+          <p>.</p>
+          <p> </p>
+          <p> </p>
+          <p> </p>
+        </fieldset>
+      </div>
+
+      <div class="modal-footer">
+        <button ng-click="$hide()">{{'complaintFormModal.cancel' | message}}</button>
+        <button ng-click="vm.confirm()" class="primary">
+          {{'complaintFormModal.sendComplaint' | message}}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

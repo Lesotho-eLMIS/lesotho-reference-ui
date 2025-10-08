@@ -1,0 +1,62 @@
+<h2 ng-if="vm.orderingFacility">{{'orderFulfillment.fulfillOrdersAt' | message: {'facility':  vm.orderingFacility.name} }}</h2>
+<h2 ng-if="!vm.orderingFacility">{{'orderFulfillment.fulfillOrders' | message}}</h2>
+<section class="openlmis-table-container">
+  <openlmis-sort options="vm.options"/>
+  <form ng-submit="vm.loadOrders()" >
+    <label for="orderingFacility">{{'orderFulfillment.orderingFacility' | message}}</label>
+    <select id="orderingFacility"
+            ng-model="vm.orderingFacility"
+            ng-options="facility.name for facility in vm.orderingFacilities"></select>
+    <label>{{'orderFulfillment.program' | message}}</label>
+    <select id="program"
+            ng-model="vm.program"
+            ng-options="program.name for program in vm.programs"></select>
+    <label>{{'orderFulfillment.orderStatus' | message}}</label>
+    <select id="orderStatus"
+            ng-model="vm.orderStatus"
+            ng-options="orderStatus for orderStatus in vm.orderStatuses"></select>
+    <input type="submit" class="btn btn-primary" value="{{'orderFulfillment.search' | message}}"/>
+  </form>
+  <table>
+    <caption ng-if="!vm.orders.length">{{'orderFulfillment.noOrdersFound' | message}}</caption>
+    <thead>
+    <tr>
+      <th>{{'orderFulfillment.emergency' | message}}</th>
+      <th>{{'orderFulfillment.orderNumber' | message}}</th>
+      <th>{{'orderFulfillment.status' | message}}</th>
+      <th>{{'orderFulfillment.orderingFacility' | message}}</th>
+      <th>{{'orderFulfillment.program' | message}}</th>
+      <th>{{'orderFulfillment.period' | message}}</th>
+      <th>{{'orderFulfillment.createdDate' | message}}</th>
+      <th class="col-sticky sticky-right">{{'orderFulfillment.actions' | message}}</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="order in vm.orders">
+      <td class="col-emergency">
+        <i ng-class="{'icon-ok': order.emergency}"></i>
+      </td>
+      <td>{{order.orderCode}}</td>
+      <!-- <td>{{order.status}}</td> -->
+
+      <td ng-show="order.status=='ORDERED'">REQUESTED</td>
+      <td ng-show="order.status=='SHIPPED'">SERVED</td>
+      <td ng-show="order.status!='ORDERED' && order.status!='SHIPPED'">{{order.status}}</td>
+
+      <td>{{order.facility | facility}}</td>
+      <td>{{order.program.name}}</td>
+      <td>{{order.processingPeriod.name}}</td>
+      <td>{{order.createdDate | openlmisDate}}</td>
+      <td>
+        <button ng-if="order.isFulfilling()" ui-sref="openlmis.orders.shipmentView({id: order.id})">
+          {{'orderFulfillment.continueFulfillment' | message}}
+        </button>
+        <button ng-if="!order.isFulfilling()" ui-sref="openlmis.orders.shipmentView({id: order.id})">
+          {{'orderFulfillment.startFulfillment' | message}}
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <openlmis-pagination/>
+</section>

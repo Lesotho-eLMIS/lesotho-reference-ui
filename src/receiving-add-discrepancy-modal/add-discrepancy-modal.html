@@ -1,0 +1,60 @@
+<div class="modal add-products-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" aria-label="Close" ng-click="$hide()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">
+          {{'receivingAddDiscrepancyModal.title' | message}}
+        </h4>
+      </div>
+
+      <div class="modal-body">
+        <section class="openlmis-table-container">
+          <section class="is-primary">
+              <form class="form-inline" name="discrepancyForm" ng-submit="vm.addDiscrepancy()">
+                  <div>
+                      <label for="discrepancySelect">{{'receivingAddDiscrepancyModal.addDiscrepancy' | message}}</label>
+                      <select id="discrepancySelect" ng-model="vm.selectedDiscrepancy"
+                          ng-change="vm.discrepancySelectionChanged()"
+                          ng-options="discrepancy for discrepancy in vm.discrepancyOptions"
+                          required>
+                      </select>
+                  </div>
+                  <button type="submit" class="add">{{'receivingAddDiscrepancyModal.add'| message}}</button>
+              </form>
+          </section>
+          <table suppress-tr-openlmis-invalid>
+              <caption ng-if="!vm.discrepancies.length">{{'receivingAddDiscrepancyModal.noDiscrepancies'| message}}</caption>
+              <thead>
+                  <tr>
+                      <th>{{'receivingAddDiscrepancyModal.discrepancy'| message}}</th>
+                      <th>{{'receivingAddDiscrepancyModal.quantity'| message}}</th>
+                      <th>{{'receivingAddDiscrepancyModal.comments'| message}}</th>
+                      <th>{{'receivingAddDiscrepancyModal.action'| message}}</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr  ng-repeat="discrepancy in vm.discrepancies">
+                      <td>{{discrepancy.name}}</td>
+                      <td><input type="number" type="number" min="0" step="1" oninput="validity.valid||(value='');" value=" " length="10" ng-model="discrepancy.quantity"></td>
+                      <td><input type="text" value=" " length="70" ng-model="discrepancy.comments"></td>
+                      <td><button type="submit" ng-click="vm.removeDispency($index)" class="danger">{{'receivingAddDiscrepancyModal.remove'| message}}</button></td>
+                  </tr>
+              </tbody>
+          </table>
+      </section>
+      </div>
+
+      <div class="modal-footer">
+        <button ng-click="$hide()">{{'stockAddProductsModal.cancel' | message}}</button>
+        <button ng-click="vm.confirm()" class="primary">
+          {{'receivingAddDiscrepancyModal.addDiscrepancies' | message}}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

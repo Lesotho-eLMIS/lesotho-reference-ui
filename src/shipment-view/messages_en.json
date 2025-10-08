@@ -1,0 +1,7 @@
+{
+    "shipmentView.title": "Fulfilling Request - ${orderCode}",
+    "shipmentView.order": "Request",
+    "shipmentView.orderQuantity": "Request Quantity",
+    "shipmentView.lotCode": "Batch Number",
+    "shipmentView.doses": "Unit of Issue"
+}

@@ -1,0 +1,21 @@
+{
+  "stockCard.date": "Date",
+  "stockCard.from": "Receive from",
+  "stockCard.to": "Issue to",
+  "stockCard.reason": "Reason",
+  "stockCard.reasonAndFreeText": "${name}: ${freeText}",
+  "stockCard.srcDstAndFreeText": "${name}: ${freeText}",
+  "stockCard.adjustment": "Quantity",
+  "stockCard.soh": "Stock on hand",
+  "stockCard.signature": "Signature",
+  "stockCard.binCardName": "Stock Card for ",
+  "stockCard.productCode": "Product code",
+  "stockCard.facilityName": "Facility name",
+  "stockCard.program": "Program",
+  "stockCard.lot": "Batch number",
+  "stockCard.expiryDate": "Expiry date",
+  "stockCard.physicalInventory": "Physical Inventory",
+  "stockCard.print": "Print",
+  "stockCard.reasonComments": "Reason Comments",
+  "stockCard.unitPrice": "Unit Price"
+}
