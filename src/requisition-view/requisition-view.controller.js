@@ -43,8 +43,8 @@
                                        RequisitionWatcher, accessTokenFactory, messageService, stateTrackerService,
                                        RequisitionStockCountDateModal, localStorageFactory, canSubmit, canAuthorize,
                                        canApproveAndReject, canDelete, canSkip, canSync, program, facility, 
-                                       processingPeriod, rejectionReasonModalService, $q, homeFacility,
-                                       TB_STORAGE, LEPROSY_STORAGE, $rootScope, RequisitionViewService) {
+                                       processingPeriod, rejectionReasonModalService, $q, TB_STORAGE, LEPROSY_STORAGE, 
+                                       $rootScope, RequisitionViewService, homeFacility) {
 
         var vm = this,
             watcher = new RequisitionWatcher($scope, requisition, localStorageFactory('requisitions'));
