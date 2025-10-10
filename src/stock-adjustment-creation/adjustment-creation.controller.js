@@ -27,25 +27,25 @@
     .module('stock-adjustment-creation')
     .controller('StockAdjustmentCreationController', controller);
 
-    controller.$inject = [
-        '$scope', '$state', '$stateParams', '$filter', 'confirmDiscardService', 'program', 'facility',
-        'orderableGroups', 'reasons', 'confirmService', 'messageService', 'user', 'adjustmentType',
-        'srcDstAssignments', 'stockAdjustmentCreationService', 'notificationService', 'offlineService',
-        'orderableGroupService', 'MAX_INTEGER_VALUE', 'VVM_STATUS', 'loadingModalService', 'alertService',
-        'dateUtils', 'displayItems', 'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS',
-        'hasPermissionToAddNewLot', 'LotResource', '$q', 'editLotModalService', 'moment', 'QUANTITY_UNIT',
-        'quantityUnitCalculateService'
-    ];
+    // controller.$inject = [
+    //     '$scope', '$state', '$stateParams', '$filter', 'confirmDiscardService', 'program', 'facility',
+    //     'orderableGroups', 'reasons', 'confirmService', 'messageService', 'user', 'adjustmentType',
+    //     'srcDstAssignments', 'stockAdjustmentCreationService', 'notificationService', 'offlineService',
+    //     'orderableGroupService', 'MAX_INTEGER_VALUE', 'VVM_STATUS', 'loadingModalService', 'alertService',
+    //     'dateUtils', 'displayItems', 'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS',
+    //     'hasPermissionToAddNewLot', 'LotResource', '$q', 'editLotModalService', 'moment', 'QUANTITY_UNIT',
+    //     'quantityUnitCalculateService'
+    // ];
 
-    function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program,
-                        facility, orderableGroups, reasons, confirmService, messageService, user,
-                        adjustmentType, srcDstAssignments, stockAdjustmentCreationService, notificationService,
-                        offlineService, orderableGroupService, MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService,
-                        alertService, dateUtils, displayItems, ADJUSTMENT_TYPE, UNPACK_REASONS, REASON_TYPES,
-                        STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService, moment,
-                        QUANTITY_UNIT, quantityUnitCalculateService) {
-        var vm = this,
-            previousAdded = {};
+    // function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program,
+    //                     facility, orderableGroups, reasons, confirmService, messageService, user,
+    //                     adjustmentType, srcDstAssignments, stockAdjustmentCreationService, notificationService,
+    //                     offlineService, orderableGroupService, MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService,
+    //                     alertService, dateUtils, displayItems, ADJUSTMENT_TYPE, UNPACK_REASONS, REASON_TYPES,
+    //                     STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService, moment,
+    //                     QUANTITY_UNIT, quantityUnitCalculateService) {
+    //     var vm = this,
+    //         previousAdded = {};
   controller.$inject = [
     '$scope',
     '$state',
@@ -86,7 +86,10 @@
     'pointOfDeliveryService',
     'suppliers',
     'ReferenceNumbers',
-    'facilityWithType'
+    'facilityWithType',
+    'QUANTITY_UNIT', 
+    'quantityUnitCalculateService'
+    
   ];
 
   function controller(
@@ -129,7 +132,9 @@
     pointOfDeliveryService, 
     suppliers,
     ReferenceNumbers,
-    facilityWithType
+    facilityWithType,
+    QUANTITY_UNIT, quantityUnitCalculateService
+
   ) {
     var vm = this,
       previousAdded = {};
@@ -302,8 +307,8 @@
      */
     function addProduct() {
 
+      console.log('Adding product');
       var selectedItem;
-
       if (vm.selectedOrderableGroup && vm.selectedOrderableGroup.length) {
         vm.newLot.tradeItemId =
           vm.selectedOrderableGroup[0].orderable.identifiers.tradeItem;
@@ -312,16 +317,11 @@
       if (vm.newLot.lotCode) {
         var createdLot = angular.copy(vm.newLot);
         selectedItem = orderableGroupService.findByLotInOrderableGroup(
-          vm.selectedOrderableGroup,
-          createdLot,
-          true
-        );
+          vm.selectedOrderableGroup, createdLot, true);
         selectedItem.$isNewItem = true;
       } else {
         selectedItem = orderableGroupService.findByLotInOrderableGroup(
-          vm.selectedOrderableGroup,
-          vm.selectedLot
-        );
+          vm.selectedOrderableGroup, vm.selectedLot);
       }
 
       vm.newLot.expirationDateInvalid = undefined;
@@ -333,30 +333,26 @@
         !vm.newLot.expirationDateInvalid && !vm.newLot.lotCodeInvalid;
 
       if (noErrors) {
-        selectedItem.referenceNumber = vm.referenceNumber;  
-
         /*Lesotho eLMIS* Autopopulating total number of cartons from POD during stock receive, Start*/
-        if (adjustmentType.state === 'receive'){
+        selectedItem.referenceNumber = vm.referenceNumber;
+        if (adjustmentType.state === 'receive') {
           for (var i = 0; i < ReferenceNumbers.length; i++) {
             if (ReferenceNumbers[i].referenceNumber === vm.referenceNumber) {
               selectedItem.totalCartonNumber = ReferenceNumbers[i].cartonsQuantityAccepted;
             };
           }
         }
-        /*Lesotho eLMIS* Autopopulating total number of cartons from POD during stock receive, End*/
-        
         var timestamp = new Date().getTime();
         selectedItem.timestamp = timestamp; // Add a time stamp to the selected line item
-        vm.addedLineItems.unshift(
-          _.extend(
-            {
-              $errors: {},
-              $previewSOH: selectedItem.stockOnHand
-            },
-            selectedItem,
-            copyDefaultValue()
-          )
-        );
+
+
+
+        vm.addedLineItems.unshift(_.extend({
+          $errors: {},
+          $previewSOH: selectedItem.stockOnHand
+        },
+          selectedItem, copyDefaultValue()));
+
         previousAdded = vm.addedLineItems[0];
         vm.search();
       }
@@ -926,9 +922,7 @@
     }
       
     function onInit() { 
-      
-      // console.log("Facility: ", $stateParams )
-
+  
       vm.srcDstAssignments = srcDstAssignments;
       vm.suppliers = suppliers;
       if (adjustmentType.state === 'receive'){
@@ -1213,4 +1207,4 @@
 
     onInit();
   }
-}})();
+})();

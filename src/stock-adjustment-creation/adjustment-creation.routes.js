@@ -39,8 +39,8 @@
                 facility: undefined,
                 stockCardSummaries: undefined,
                 reasons: undefined,
-                displayItems: undefined,
-                addedLineItems: undefined,
+                displayItems: [],
+                addedLineItems: [],
                 orderableGroups: undefined, 
                 supervised: undefined
             },
@@ -68,14 +68,15 @@
                         $stateParams.orderableGroups = existingStockOrderableGroupsFactory
                             .getGroups($stateParams, program, facility);
                     }
-
                     return $stateParams.orderableGroups;
                 },
-                displayItems: function($stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams);
+                viewdislayitems:function($stateParams, registerDisplayItemsService) {
+                    return registerDisplayItemsService($stateParams)
+                },
+                displayItems: function(viewdislayitems, $stateParams, registerDisplayItemsService) {
+                    return registerDisplayItemsService($stateParams)
                 },
                 reasons: function($stateParams, stockReasonsFactory, facilityWithType) {
-                    console.log("Params:", $stateParams);
                     if (_.isUndefined($stateParams.reasons)) {
                         return stockReasonsFactory.getAdjustmentReasons($stateParams.programId, facilityWithType.type.id);
                     }
