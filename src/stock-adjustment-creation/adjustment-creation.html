@@ -75,11 +75,12 @@
                         {{vm.key('cartonNumber') | message}}</th>
                     <th ng-if="vm.showDeliveryNoteAttributes" ng-hide="true">{{vm.key('invoiceNumber') | message}}</th>
 
+                    <th ng-show="vm.showDeliveryNoteAttributes">Quantity (in Packs)</th> <!--new line -->
+
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('deliveryNoteQuantity') | message}}</th>
 
                     <th ng-show="!vm.showDeliveryNoteAttributes && !vm.showPrepackingAttributes">{{vm.showInDoses() ? vm.key('quantityDoses') : vm.key('quantityPacks') | message}}</th>
-                    <th ng-if="!vm.showInDoses()">{{vm.key('totalQuantityInDoses') |
-                        message}}</th>
+                    <th ng-if="!vm.showInDoses()">{{vm.key('totalQuantityInDoses') | message}}</th>
 
                     <th ng-if="vm.showPrepackingAttributes">{{vm.key('prepackSize') | message}}</th>
                     <th ng-if="vm.showPrepackingAttributes">{{vm.key('numberOfPrepacks') | message}}</th>
@@ -90,6 +91,8 @@
 
 
                     <th ng-show="vm.showDeliveryNoteAttributes">{{vm.key('acceptedQuantity') | message}}</th>
+
+                    <!-- <th ng-show="vm.showDeliveryNoteAttributes">Total Quantity (in doses)</th> -->
 
                     <th ng-if="vm.showDeliveryNoteAttributes || vm.showPrepackingAttributes">{{vm.key('comments') |
                         message}}</th>
@@ -177,6 +180,7 @@
                             item="lineItem" 
                             on-change-quantity="vm.validateQuantity(lineItem)"
                             input-class="{'error': lineItem.$errors.quantityInvalid}"/>
+                    </td>
 
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="true"><input class="form-control" type="text"
                             value="INV" ng-model="lineItem.invoiceNumber"
@@ -206,13 +210,14 @@
                             ng-model="lineItem.remainingStock" readonly type="number" style="width: 120px;" min="0">
                     </td> -->
 
+                    <td ng-if="!vm.showInDoses()">{{lineItem.quantity}}</td>
+
                     <td ng-if="!vm.showPrepackingAttributes" openlmis-invalid="{{lineItem.$errors.quantityInvalid}}"
                         class="digit-cell">
                         <input class="form-control" ng-model="lineItem.quantity" style="width: 50px;"
                             ng-disabled="lineItem.expired" ng-class="{'error': lineItem.$errors.quantityInvalid}"
                             ng-change="vm.validateQuantity(lineItem)" ng-blur="vm.validateQuantity(lineItem)">
                     </td>
-                    <td ng-if="!vm.showInDoses()">{{lineItem.quantity}}</td>
 
                     <!-- LESOTHO-ELMIS -- These should be added to prepack payload -->
                     <td ng-if="vm.showPrepackingAttributes"><input class="form-control" type="text"

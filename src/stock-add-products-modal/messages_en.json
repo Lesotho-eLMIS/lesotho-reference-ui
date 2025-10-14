@@ -12,7 +12,7 @@
   "stockAddProductsModal.cancel": "Cancel",
   "stockAddProductsModal.remove": "Remove",
   "stockAddProductsModal.required": "This field is required",
-  "stockAddProductsModal.add": "Add"
+  "stockAddProductsModal.add": "Add",
   "stockAddProductsModal.lotCode": "Batch",
   "stockAddProductsModal.newLotCode": "New Batch"
 }
