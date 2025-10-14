@@ -27,115 +27,22 @@
     .module('stock-adjustment-creation')
     .controller('StockAdjustmentCreationController', controller);
 
-    // controller.$inject = [
-    //     '$scope', '$state', '$stateParams', '$filter', 'confirmDiscardService', 'program', 'facility',
-    //     'orderableGroups', 'reasons', 'confirmService', 'messageService', 'user', 'adjustmentType',
-    //     'srcDstAssignments', 'stockAdjustmentCreationService', 'notificationService', 'offlineService',
-    //     'orderableGroupService', 'MAX_INTEGER_VALUE', 'VVM_STATUS', 'loadingModalService', 'alertService',
-    //     'dateUtils', 'displayItems', 'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS',
-    //     'hasPermissionToAddNewLot', 'LotResource', '$q', 'editLotModalService', 'moment', 'QUANTITY_UNIT',
-    //     'quantityUnitCalculateService'
-    // ];
+  controller.$inject = ['$scope', '$state', '$stateParams', '$filter', 'confirmDiscardService', 'program', 'facility',
+    'orderableGroups', 'reasons', 'confirmService', 'messageService', 'user', 'adjustmentType', 'srcDstAssignments',
+    'stockAdjustmentCreationService', 'notificationService', 'offlineService', 'orderableGroupService',
+    'MAX_INTEGER_VALUE', 'VVM_STATUS', 'loadingModalService', 'alertService', 'dateUtils', 'displayItems',
+    'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS', 'hasPermissionToAddNewLot',
+    'LotResource', '$q', 'editLotModalService', 'moment', 'rejectionReasonService', 'receivingAddDiscrepancyModalService',
+    'complaintFormModalService', 'suppliers', 'ReferenceNumbers', 'facilityWithType',
+    'QUANTITY_UNIT', 'quantityUnitCalculateService'];
 
-    // function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program,
-    //                     facility, orderableGroups, reasons, confirmService, messageService, user,
-    //                     adjustmentType, srcDstAssignments, stockAdjustmentCreationService, notificationService,
-    //                     offlineService, orderableGroupService, MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService,
-    //                     alertService, dateUtils, displayItems, ADJUSTMENT_TYPE, UNPACK_REASONS, REASON_TYPES,
-    //                     STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService, moment,
-    //                     QUANTITY_UNIT, quantityUnitCalculateService) {
-    //     var vm = this,
-    //         previousAdded = {};
-  controller.$inject = [
-    '$scope',
-    '$state',
-    '$stateParams',
-    '$filter',
-    'confirmDiscardService',
-    'program',
-    'facility',
-    'orderableGroups',
-    'reasons',
-    'confirmService',
-    'messageService',
-    'user',
-    'adjustmentType',
-    'srcDstAssignments',
-    'stockAdjustmentCreationService',
-    'notificationService',
-    'offlineService',
-    'orderableGroupService',
-    'MAX_INTEGER_VALUE',
-    'VVM_STATUS',
-    'loadingModalService',
-    'alertService',
-    'dateUtils',
-    'displayItems',
-    'ADJUSTMENT_TYPE',
-    'UNPACK_REASONS',
-    'REASON_TYPES',
-    'STOCKCARD_STATUS',
-    'hasPermissionToAddNewLot',
-    'LotResource',
-    '$q',
-    'editLotModalService',
-    'moment',
-    'rejectionReasonService',
-    'receivingAddDiscrepancyModalService',
-    'complaintFormModalService',
-    'pointOfDeliveryService',
-    'suppliers',
-    'ReferenceNumbers',
-    'facilityWithType',
-    'QUANTITY_UNIT', 
-    'quantityUnitCalculateService'
-    
-  ];
-
-  function controller(
-    $scope,
-    $state,
-    $stateParams,
-    $filter,
-    confirmDiscardService,
-    program,
-    facility,
-    orderableGroups,
-    reasons,
-    confirmService,
-    messageService,
-    user,
-    adjustmentType,
-    srcDstAssignments,
-    stockAdjustmentCreationService,
-    notificationService,
-    offlineService,
-    orderableGroupService,
-    MAX_INTEGER_VALUE,
-    VVM_STATUS,
-    loadingModalService,
-    alertService,
-    dateUtils,
-    displayItems,
-    ADJUSTMENT_TYPE,
-    UNPACK_REASONS,
-    REASON_TYPES,
-    STOCKCARD_STATUS,
-    hasPermissionToAddNewLot,
-    LotResource,
-    $q,
-    editLotModalService,
-    moment,
-    rejectionReasonService,
-    receivingAddDiscrepancyModalService,
-    complaintFormModalService,
-    pointOfDeliveryService, 
-    suppliers,
-    ReferenceNumbers,
-    facilityWithType,
-    QUANTITY_UNIT, quantityUnitCalculateService
-
-  ) {
+  function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program, facility,
+    orderableGroups, reasons, confirmService, messageService, user, adjustmentType, srcDstAssignments,
+    stockAdjustmentCreationService, notificationService, offlineService, orderableGroupService,
+    MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService, alertService, dateUtils, displayItems, ADJUSTMENT_TYPE,
+    UNPACK_REASONS, REASON_TYPES, STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService,
+    moment, rejectionReasonService, receivingAddDiscrepancyModalService, complaintFormModalService,
+    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService) {
     var vm = this,
       previousAdded = {};
 
@@ -146,40 +53,40 @@
     vm.addProduct = addProduct;
     vm.podReferenceNumbers = undefined;
     vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
-        vm.formatDate = formatDate;
-        vm.showInDoses = showInDoses;
-        vm.recalculateSOHQuantity = recalculateSOHQuantity;
+    vm.formatDate = formatDate;
+    vm.showInDoses = showInDoses;
+    vm.recalculateSOHQuantity = recalculateSOHQuantity;
 
-        /**
-         * @ngdoc property
-         * @propertyOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name quantityUnit
-         * @type {Object}
-         *
-         * @description
-         * Holds quantity unit.
-         */
-        vm.quantityUnit = undefined;
+    /**
+     * @ngdoc property
+     * @propertyOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name quantityUnit
+     * @type {Object}
+     *
+     * @description
+     * Holds quantity unit.
+     */
+    vm.quantityUnit = undefined;
 
-        /**
-         * @ngdoc method
-         * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name showInDoses
-         *
-         * @description
-         * Returns whether the screen is showing quantities in doses.
-         *
-         * @return {boolean} true if the quantities are in doses, false otherwise
-         */
-        function showInDoses() {
-            return vm.quantityUnit === QUANTITY_UNIT.DOSES;
-        }
-    vm.discrepancyOptions = ["Wrong Item", "Wrong Quantity", "Defective Item", "Missing Item","More..."];
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name showInDoses
+     *
+     * @description
+     * Returns whether the screen is showing quantities in doses.
+     *
+     * @return {boolean} true if the quantities are in doses, false otherwise
+     */
+    function showInDoses() {
+      return vm.quantityUnit === QUANTITY_UNIT.DOSES;
+    }
+    vm.discrepancyOptions = ["Wrong Item", "Wrong Quantity", "Defective Item", "Missing Item", "More..."];
     vm.rejectionReasons = []; // To Store Shipment rejection Reasons
-    vm.FromSupplier = false; 
-    vm.hideColumns=function(){
-     vm.addedLineItems[0].assignment.name
-      vm.UPrice=$scope.lineItem.assignment.name;
+    vm.FromSupplier = false;
+    vm.hideColumns = function () {
+      vm.addedLineItems[0].assignment.name
+      vm.UPrice = $scope.lineItem.assignment.name;
     };
     vm.mergeFacilities = mergeFacilities;
     vm.filteredFacilities = filterFacilities;
@@ -232,28 +139,28 @@
      */
     vm.offline = offlineService.isOffline;
 
-    vm.addDiscrepancyOnModal = function(itemTimestamp) {
-      receivingAddDiscrepancyModalService.show(itemTimestamp).then(function() {
-          $stateParams.noReload = true;
-          draft.$modified = true;
-          vm.cacheDraft();
-          //Only reload current state and avoid reloading parent state
-          $state.go($state.current.name, $stateParams, {
-              reload: $state.current.name
-          });
-      }); 
+    vm.addDiscrepancyOnModal = function (itemTimestamp) {
+      receivingAddDiscrepancyModalService.show(itemTimestamp).then(function () {
+        $stateParams.noReload = true;
+        draft.$modified = true;
+        vm.cacheDraft();
+        //Only reload current state and avoid reloading parent state
+        $state.go($state.current.name, $stateParams, {
+          reload: $state.current.name
+        });
+      });
     }
 
-    vm.addComplaintOnModal = function(itemTimestamp) {
-      complaintFormModalService.show(itemTimestamp,program,facility,orderableGroups,hasPermissionToAddNewLot).then(function() {
-          $stateParams.noReload = true;
-          draft.$modified = true;
-          vm.cacheDraft();
-          //Only reload current state and avoid reloading parent state
-          $state.go($state.current.name, $stateParams, {
-              reload: $state.current.name
-          });
-      }); 
+    vm.addComplaintOnModal = function (itemTimestamp) {
+      complaintFormModalService.show(itemTimestamp, program, facility, orderableGroups, hasPermissionToAddNewLot).then(function () {
+        $stateParams.noReload = true;
+        draft.$modified = true;
+        vm.cacheDraft();
+        //Only reload current state and avoid reloading parent state
+        $state.go($state.current.name, $stateParams, {
+          reload: $state.current.name
+        });
+      });
     }
 
     vm.key = function (secondaryKey) {
@@ -366,14 +273,14 @@
         defaultDate = dateUtils.toStringDate(new Date());
       }
 
-      return{
+      return {
         assignment: previousAdded.assignment,
         srcDstFreeText: previousAdded.srcDstFreeText,
         reason:
           adjustmentType.state === ADJUSTMENT_TYPE.KIT_UNPACK.state
             ? {
-                id: UNPACK_REASONS.KIT_UNPACK_REASON_ID,
-              }
+              id: UNPACK_REASONS.KIT_UNPACK_REASON_ID,
+            }
             : previousAdded.reason,
         reasonFreeText: previousAdded.reasonFreeText,
         occurredDate: defaultDate
@@ -392,13 +299,13 @@
      */
     vm.remove = function (lineItem) {
 
-      if(lineItem.prepackSize || lineItem.numberOfPrepacks){
+      if (lineItem.prepackSize || lineItem.numberOfPrepacks) {
         lineItem.prepackSize = 0;
         lineItem.numberOfPrepacks = 0;
-       vm.validatePrepackQuantity(lineItem);
-     }
-      var index = vm.addedLineItems.indexOf(lineItem);      
-      vm.addedLineItems.splice(index, 1);   
+        vm.validatePrepackQuantity(lineItem);
+      }
+      var index = vm.addedLineItems.indexOf(lineItem);
+      vm.addedLineItems.splice(index, 1);
 
       vm.search();
     };
@@ -431,26 +338,26 @@
      * @param {Object} lineItem line item to be validated.
      */
     vm.validateQuantity = function (lineItem) {
-            lineItem = quantityUnitCalculateService.recalculateInputQuantity(
-                lineItem, lineItem.orderable.netContent, vm.showInDoses()
-            );
+      lineItem = quantityUnitCalculateService.recalculateInputQuantity(
+        lineItem, lineItem.orderable.netContent, vm.showInDoses()
+      );
 
       if (
         lineItem.quantity > lineItem.$previewSOH &&
         lineItem.reason &&
         lineItem.reason.reasonType === REASON_TYPES.DEBIT) {
         lineItem.$errors.quantityInvalid = messageService.get('stockAdjustmentCreation.quantityGreaterThanStockOnHand');
-      } 
+      }
       else if (lineItem.quantity > MAX_INTEGER_VALUE) {
         lineItem.$errors.quantityInvalid = messageService.get('stockmanagement.numberTooLarge');
       }
       else if (lineItem.quantity > lineItem.deliveryNoteQuantity) {
         lineItem.$errors.quantityInvalid = messageService.get(
           'stockAdjustmentCreation.acceptedQuantityError');
-      } 
+      }
       else if (lineItem.quantity >= 0) {
         lineItem.$errors.quantityInvalid = false;
-      } 
+      }
       else {
         lineItem.$errors.quantityInvalid = messageService.get(
           vm.key('positiveInteger'));
@@ -458,14 +365,14 @@
       return lineItem;
     };
 
-    vm.validateCartonNumberRange = function(lineItem){
-      if(adjustmentType.state === "receive"){
+    vm.validateCartonNumberRange = function (lineItem) {
+      if (adjustmentType.state === "receive") {
         if (!lineItem.hasOwnProperty('totalCartonNumber') || lineItem.individualCartonNumberRange > lineItem.totalCartonNumber ||
-          isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumberRange === 0 ) {
-        
+          isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumberRange === 0) {
+
           lineItem.$errors.cartonsInvalid = messageService.get('stockAdjustmentCreation.cartonsInvalidError');
-        }else if(lineItem.individualCartonNumberRange > 0 && lineItem.individualCartonNumberRange <= lineItem.totalCartonNumber && lineItem.individualCartonNumberRange >= lineItem.individualCartonNumber){
-        
+        } else if (lineItem.individualCartonNumberRange > 0 && lineItem.individualCartonNumberRange <= lineItem.totalCartonNumber && lineItem.individualCartonNumberRange >= lineItem.individualCartonNumber) {
+
           lineItem.$errors.cartonsInvalid = false;
           let cartonNumber = lineItem.individualCartonNumber + " to " + lineItem.individualCartonNumberRange + " of " + lineItem.totalCartonNumber;
           lineItem.cartonNumber = cartonNumber;
@@ -474,15 +381,15 @@
       return lineItem;
     };
 
-    vm.validateCartonNumber = function(lineItem){
+    vm.validateCartonNumber = function (lineItem) {
       lineItem.individualCartonNumberRange = lineItem.individualCartonNumber;
-      if(adjustmentType.state === "receive"){
+      if (adjustmentType.state === "receive") {
         if (!lineItem.hasOwnProperty('totalCartonNumber') || lineItem.individualCartonNumber > lineItem.totalCartonNumber ||
-          isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumber === 0 ) {
-        
+          isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumber === 0) {
+
           lineItem.$errors.cartonsInvalid = messageService.get('stockAdjustmentCreation.cartonsInvalidError');
-        }else if(lineItem.individualCartonNumber > 0 && lineItem.individualCartonNumber <= lineItem.totalCartonNumber){
-        
+        } else if (lineItem.individualCartonNumber > 0 && lineItem.individualCartonNumber <= lineItem.totalCartonNumber) {
+
           lineItem.$errors.cartonsInvalid = false;
           let cartonNumber = lineItem.individualCartonNumber + " to " + lineItem.individualCartonNumberRange + " of " + lineItem.totalCartonNumber;
           lineItem.cartonNumber = cartonNumber;
@@ -528,27 +435,27 @@
       return lineItem;
     };
 
-     /**
-     * @ngdoc method
-     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-     * @name fixQuantityWhenExpired
-     *
-     * @description
-     * Set Quantity Expired As SOH if the adjustment reason = Expired
-     *
-     * @param {Object} lineItem line item to be validated.
-     */
-     vm.fixQuantityWhenExpired = function (lineItem) {
+    /**
+    * @ngdoc method
+    * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+    * @name fixQuantityWhenExpired
+    *
+    * @description
+    * Set Quantity Expired As SOH if the adjustment reason = Expired
+    *
+    * @param {Object} lineItem line item to be validated.
+    */
+    vm.fixQuantityWhenExpired = function (lineItem) {
       if (adjustmentType.state === 'adjustment') {
         lineItem.$errors.reasonInvalid = isEmpty(lineItem.reason);
-        if(lineItem.reason.name === 'Expired'){
+        if (lineItem.reason.name === 'Expired') {
           lineItem.quantity = lineItem.$previewSOH;
           lineItem.expired = true;
         }
-        else{
+        else {
           lineItem.quantity = undefined;
           lineItem.expired = false;
-        } 
+        }
       }
       return lineItem;
     };
@@ -565,7 +472,7 @@
       vm.canAddNewLot =
         vm.selectedLot &&
         vm.selectedLot.lotCode ===
-          messageService.get('orderableGroupService.addMissingLot');
+        messageService.get('orderableGroupService.addMissingLot');
       initiateNewLotObject();
     }
 
@@ -610,20 +517,20 @@
     vm.submit = function () {
 
       $scope.$broadcast('openlmis-form-submit');
-          if (validateAllAddedItems()) {
-            var confirmMessage = messageService.get(vm.key('confirmInfo'), {
-              username: user.username,
-              number: vm.addedLineItems.length,
-            });
-            confirmService
-              .confirm(confirmMessage, vm.key('confirm'))
-              .then(confirmSubmit);
-          } else {
-            vm.keyword = null;
-            reorderItems();
-            alertService.error('stockAdjustmentCreation.submitInvalid');
-          }
-      
+      if (validateAllAddedItems()) {
+        var confirmMessage = messageService.get(vm.key('confirmInfo'), {
+          username: user.username,
+          number: vm.addedLineItems.length,
+        });
+        confirmService
+          .confirm(confirmMessage, vm.key('confirm'))
+          .then(confirmSubmit);
+      } else {
+        vm.keyword = null;
+        reorderItems();
+        alertService.error('stockAdjustmentCreation.submitInvalid');
+      }
+
     };
 
     /**
@@ -688,11 +595,11 @@
         vm.validateDate(item);
         vm.validateAssignment(item);
         vm.validateReason(item);
-        if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber') ){
+        if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
       });
-       return _.chain(vm.addedLineItems)
+      return _.chain(vm.addedLineItems)
         .groupBy(function (item) {
           return item.lot ? item.lot.id : item.orderable.id;
         })
@@ -743,8 +650,8 @@
       var lotResource = new LotResource();
       addedLineItems.forEach(function (lineItem) {
         if (adjustmentType.state === 'receive') {
-          facilityWithType.type.code === 'service_point' ? lineItem.quantity = lineItem.quantity : 
-                                lineItem.quantity = lineItem.quantity * lineItem.orderable.netContent;
+          facilityWithType.type.code === 'service_point' ? lineItem.quantity = lineItem.quantity :
+            lineItem.quantity = lineItem.quantity * lineItem.orderable.netContent;
         }
         if (
           lineItem.lot &&
@@ -771,15 +678,15 @@
             .catch(function (response) {
               if (
                 response.data.messageKey ===
-                  'referenceData.error.lot.lotCode.mustBeUnique' ||
+                'referenceData.error.lot.lotCode.mustBeUnique' ||
                 response.data.messageKey ===
-                  'referenceData.error.lot.tradeItem.required'
+                'referenceData.error.lot.tradeItem.required'
               ) {
                 errorLots.push({
                   lotCode: lot.lotCode,
                   error:
                     response.data.messageKey ===
-                    'referenceData.error.lot.lotCode.mustBeUnique'
+                      'referenceData.error.lot.lotCode.mustBeUnique'
                       ? 'stockPhysicalInventoryDraft.lotCodeMustBeUnique'
                       : 'stockPhysicalInventoryDraft.tradeItemRequuiredToAddLotCode',
                 });
@@ -849,7 +756,7 @@
               }
               return result;
             },
-            {});
+              {});
             for (var error in errorLotsReduced) {
               alertService.error(error, errorLotsReduced[error].join(', '));
             }
@@ -920,29 +827,29 @@
       }
       return vm.srcDstAssignments;
     }
-      
-    function onInit() { 
-  
+
+    function onInit() {
+
       vm.srcDstAssignments = srcDstAssignments;
       vm.suppliers = suppliers;
-      if (adjustmentType.state === 'receive'){
+      if (adjustmentType.state === 'receive') {
         vm.references = populateReferenceNumbers(ReferenceNumbers);
       }
 
       //Getting Rejection Reasons
       var rej = rejectionReasonService.getAll();
-      rej.then(function(reasons) {             
-          reasons.content.forEach(reason => {
-              // Load only those of type POD/Point of Delivery
-              if(reason.rejectionReasonCategory.code == "POD"){
-                  vm.rejectionReasons.push(reason.name);
-              }            
-           });                   
-        })
-        .catch(function(error) {
-         // Handle errors
-             console.error('Error getting reasons:', error);
-      });    
+      rej.then(function (reasons) {
+        reasons.content.forEach(reason => {
+          // Load only those of type POD/Point of Delivery
+          if (reason.rejectionReasonCategory.code == "POD") {
+            vm.rejectionReasons.push(reason.name);
+          }
+        });
+      })
+        .catch(function (error) {
+          // Handle errors
+          console.error('Error getting reasons:', error);
+        });
 
       var copiedOrderableGroups = angular.copy(orderableGroups);
       vm.allItems = _.flatten(copiedOrderableGroups);
@@ -979,18 +886,18 @@
         $scope,
         'openlmis.stockmanagement.stockCardSummaries'
       );
-      
+
       $scope.$on('$stateChangeStart', function () {
         angular.element('.popover').popover('destroy');
       });
     }
 
     function populateReferenceNumbers(pods) {
-      
+
       var referencesArray = [];
       for (var i = 0; i < pods.length; i++) {
         referencesArray.push(pods[i].referenceNumber);
-        
+
       }
       return referencesArray;
     }
@@ -1016,19 +923,19 @@
       vm.servicePointUser =
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
-     
+
       vm.addedLineItems = $stateParams.addedLineItems || [];
       $stateParams.displayItems = displayItems;
       vm.displayItems = $stateParams.displayItems || [];
       vm.keyword = $stateParams.keyword;
 
       vm.orderableGroups = orderableGroups;
-      vm.hasLot = false; 
+      vm.hasLot = false;
       vm.orderableGroups.forEach(function (group) {
         vm.hasLot =
           vm.hasLot ||
           orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length >
-            0;
+          0;
       });
       vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(
         vm.orderableGroups
@@ -1130,29 +1037,29 @@
       }
     }
 
-        /**
-         * @ngdoc method
-         * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name expirationDateChanged
-         *
-         * @description
-         * Hides the error message if exists after changed expiration date.
-         */
-        function expirationDateChanged() {
-            vm.newLot.expirationDateInvalid = undefined;
-        }
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name expirationDateChanged
+     *
+     * @description
+     * Hides the error message if exists after changed expiration date.
+     */
+    function expirationDateChanged() {
+      vm.newLot.expirationDateInvalid = undefined;
+    }
 
-        /**
-         * @ngdoc method
-         * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name formatDate
-         *
-         * @description
-         * Format date
-         */
-        function formatDate(date) {
-            return dateUtils.toStringDateWithDefaultFormat(date);
-        }
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name formatDate
+     *
+     * @description
+     * Format date
+     */
+    function formatDate(date) {
+      return dateUtils.toStringDateWithDefaultFormat(date);
+    }
 
     /**
      * @ngdoc method
@@ -1166,44 +1073,44 @@
       vm.newLot.lotCodeInvalid = undefined;
     }
 
-        /**
-         * @ngdoc method
-         * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name validateLotCode
-         *
-         * @description
-         * Validate if on line item list exists the same orderable with the same lot code
-         */
-        function validateLotCode(listItems, selectedItem) {
-            if (selectedItem && selectedItem.$isNewItem) {
-                listItems.forEach(function(lineItem) {
-                    if (lineItem.orderable && lineItem.lot && selectedItem.lot &&
-                        lineItem.orderable.productCode === selectedItem.orderable.productCode &&
-                        selectedItem.lot.lotCode === lineItem.lot.lotCode &&
-                        ((!lineItem.$isNewItem) || (lineItem.$isNewItem &&
-                        selectedItem.lot.expirationDate !== lineItem.lot.expirationDate))) {
-                        vm.newLot.lotCodeInvalid = messageService.get('stockEditLotModal.lotCodeInvalid');
-                    }
-                });
-            }
-        }
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateLotCode
+     *
+     * @description
+     * Validate if on line item list exists the same orderable with the same lot code
+     */
+    function validateLotCode(listItems, selectedItem) {
+      if (selectedItem && selectedItem.$isNewItem) {
+        listItems.forEach(function (lineItem) {
+          if (lineItem.orderable && lineItem.lot && selectedItem.lot &&
+            lineItem.orderable.productCode === selectedItem.orderable.productCode &&
+            selectedItem.lot.lotCode === lineItem.lot.lotCode &&
+            ((!lineItem.$isNewItem) || (lineItem.$isNewItem &&
+              selectedItem.lot.expirationDate !== lineItem.lot.expirationDate))) {
+            vm.newLot.lotCodeInvalid = messageService.get('stockEditLotModal.lotCodeInvalid');
+          }
+        });
+      }
+    }
 
-        /**
-         * @ngdoc method
-         * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
-         * @name recalculateSOHQuantity
-         *
-         * @description
-         * Recalculates the given stockOnHand to packs or doses
-         *
-         * @param  {number}  stockOnHand  the quantity in doses to be recalculated
-         * @param  {number}  netContent   quantity of doses in one pack
-         * 
-         * @return {String}                the stockOnHand in Doses or Packs
-         */
-        function recalculateSOHQuantity(stockOnHand, netContent) {
-            return quantityUnitCalculateService.recalculateSOHQuantity(stockOnHand, netContent, vm.showInDoses());
-        }
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name recalculateSOHQuantity
+     *
+     * @description
+     * Recalculates the given stockOnHand to packs or doses
+     *
+     * @param  {number}  stockOnHand  the quantity in doses to be recalculated
+     * @param  {number}  netContent   quantity of doses in one pack
+     * 
+     * @return {String}                the stockOnHand in Doses or Packs
+     */
+    function recalculateSOHQuantity(stockOnHand, netContent) {
+      return quantityUnitCalculateService.recalculateSOHQuantity(stockOnHand, netContent, vm.showInDoses());
+    }
 
     onInit();
   }
