@@ -61,40 +61,40 @@
                     <th>{{vm.showInDoses() ? vm.key('sohDoses') : vm.key('sohPacks') | message}}</th>
 
                     <th ng-show="vm.srcDstAssignments"
-                        ng-hide="vm.showPrepackingAttributes || vm.showReasonsInAdjustment">{{vm.key('srcDstLabel') |
+                        ng-hide="vm.showReasonsInAdjustment">{{vm.key('srcDstLabel') |
                         message}}</th>
-                    <th ng-hide="vm.showDeliveryNoteAttributes || vm.showReasonsInAdjustment || vm.showPrepackingAttributes"
+                    <th ng-hide="vm.showDeliveryNoteAttributes || vm.showReasonsInAdjustment"
                         ng-show="vm.srcDstAssignments">{{vm.key('srcDstComments') | message}}</th>
-                    <th ng-if="vm.showReasonDropdown && !vm.showPrepackingAttributes">{{vm.key('reason') | message}}
+                    <th ng-if="vm.showReasonDropdown">{{vm.key('reason') | message}}
                     </th>
                     <th ng-hide="vm.showDeliveryNoteAttributes"
-                        ng-if="vm.showReasonDropdown && !vm.showPrepackingAttributes">{{vm.key('reasonComments') |
+                        ng-if="vm.showReasonDropdown">{{vm.key('reasonComments') |
                         message}}</th>
 
                     <th colspan="5" ng-if="vm.showDeliveryNoteAttributes && !vm.servicePointUser">
                         {{vm.key('cartonNumber') | message}}</th>
-                    <th ng-if="vm.showDeliveryNoteAttributes" ng-hide="true">{{vm.key('invoiceNumber') | message}}</th>
+                    <!-- <th ng-if="vm.showDeliveryNoteAttributes" ng-hide="true">{{vm.key('invoiceNumber') | message}}</th> -->
 
-                    <th ng-show="vm.showDeliveryNoteAttributes">Quantity (in Packs)</th> <!--new line -->
+                    <!-- <th ng-show="vm.showDeliveryNoteAttributes">Quantity (in Packs)</th> new line -->
 
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('deliveryNoteQuantity') | message}}</th>
 
-                    <th ng-show="!vm.showDeliveryNoteAttributes && !vm.showPrepackingAttributes">{{vm.showInDoses() ? vm.key('quantityDoses') : vm.key('quantityPacks') | message}}</th>
+                    <th ng-show="vm.showDeliveryNoteAttributes">{{vm.showInDoses() ? vm.key('quantityDoses') : vm.key('quantityPacks') | message}}</th>
                     <th ng-if="!vm.showInDoses()">{{vm.key('totalQuantityInDoses') | message}}</th>
 
-                    <th ng-if="vm.showPrepackingAttributes">{{vm.key('prepackSize') | message}}</th>
-                    <th ng-if="vm.showPrepackingAttributes">{{vm.key('numberOfPrepacks') | message}}</th>
-
+                    <!-- <th ng-if="vm.showPrepackingAttributes">{{vm.key('prepackSize') | message}}</th>
+                    <th ng-if="vm.showPrepackingAttributes">{{vm.key('numberOfPrepacks') | message}}</th> -->
+<!-- 
                     <th ng-show="vm.showPrepackingAttributes">{{vm.key('quantityToPrepack') | message}}</th>
                     <th ng-show="vm.showPrepackingAttributes">{{vm.key('stockRemaining') | message}}</th>
-                    <th ng-show="vm.showPrepackingAttributes">{{vm.key('collectedBy') | message}}</th>
+                    <th ng-show="vm.showPrepackingAttributes">{{vm.key('collectedBy') | message}}</th> -->
 
 
-                    <th ng-show="vm.showDeliveryNoteAttributes">{{vm.key('acceptedQuantity') | message}}</th>
+                    <!-- <th ng-show="vm.showDeliveryNoteAttributes">{{vm.key('acceptedQuantity') | message}}</th> -->
 
-                    <!-- <th ng-show="vm.showDeliveryNoteAttributes">Total Quantity (in doses)</th> -->
+                    <th ng-show="vm.showDeliveryNoteAttributes">Total Quantity (in doses)</th>
 
-                    <th ng-if="vm.showDeliveryNoteAttributes || vm.showPrepackingAttributes">{{vm.key('comments') |
+                    <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('comments') |
                         message}}</th>
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('unitPrice') | message}}</th>
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('amount') | message}}</th>
@@ -122,7 +122,7 @@
                     <td ng-show="vm.hasLot">{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
                     <td align="right">{{vm.recalculateSOHQuantity(lineItem.$previewSOH, lineItem.orderable.netContent)}}</td>
                     <td ng-show="vm.srcDstAssignments"
-                        ng-hide="vm.showPrepackingAttributes || vm.showReasonsInAdjustment"
+                        ng-hide="vm.showReasonsInAdjustment"
                         openlmis-invalid="{{lineItem.$errors.assignmentInvalid ? 'openlmisForm.required' : '' | message}}">
                         <select ng-model="lineItem.assignment"
                             ng-change="vm.validateAssignment(lineItem);vm.clearFreeText(lineItem, 'srcDstFreeText');vm.hideColumns()"
@@ -130,12 +130,12 @@
                             autofocus>
                         </select>
                     </td>
-                    <td ng-hide="vm.showDeliveryNoteAttributes || vm.showReasonsInAdjustment || vm.showPrepackingAttributes"
+                    <td ng-hide="vm.showDeliveryNoteAttributes || vm.showReasonsInAdjustment"
                         ng-show="vm.srcDstAssignments">
                         <textarea ng-show="lineItem.assignment.isFreeTextAllowed" ng-model="lineItem.srcDstFreeText"
                             rows="1" cols="15"></textarea>
                     </td>
-                    <td ng-if="vm.showReasonDropdown && !vm.showPrepackingAttributes"
+                    <td ng-if="vm.showReasonDropdown"
                         openlmis-invalid="{{lineItem.$errors.reasonInvalid ? 'openlmisForm.required' : '' | message}}"
                         class="digit-cell">
                         <select ng-model="lineItem.reason"
@@ -144,7 +144,7 @@
                         </select>
                     </td>
                     <td ng-hide="vm.showDeliveryNoteAttributes"
-                        ng-if="vm.showReasonDropdown && !vm.showPrepackingAttributes">
+                        ng-if="vm.showReasonDropdown">
                         <input type="text" ng-show="lineItem.reason.isFreeTextAllowed"
                             ng-model="lineItem.reasonFreeText" rows="1" cols="15"></input>
                     </td>
@@ -174,24 +174,27 @@
                             ng-class="{'error': lineItem.$errors.cartonsInvalid}"
                             ng-blur="vm.validateCartonNumber(lineItem)" style="width: 30px;" disabled>
                     </td>
+                    <!-- Quantity In Packs and Doses -->
+                    <td ng-if="vm.showDeliveryNoteAttributes"><input ng-model="lineItem.deliveryNoteQuantity"
+                        class="form-control" type="number" style="width: 50px;" min="0" step="1"
+                        oninput="validity.valid||(value='');" ng-change="vm.validateQuantity(lineItem)"
+                        ng-show="lineItem.assignment.name.includes('NDSO')" required>
+                </td>
+
                     <td class="digit-cell" openlmis-invalid="{{lineItem.$errors.quantityInvalid}}">
                         <openlmis-quantity-unit-input 
                             show-in-doses="vm.showInDoses()" 
                             item="lineItem" 
-                            on-change-quantity="vm.validateQuantity(lineItem)"
+                            on-change-quantity="vm.test(lineItem); vm.validateQuantity(lineItem)"
                             input-class="{'error': lineItem.$errors.quantityInvalid}"/>
                     </td>
+                    <td ng-if="!vm.showInDoses()">{{lineItem.quantity}}</td>
 
-                    <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="true"><input class="form-control" type="text"
+                    <!-- <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="true"><input class="form-control" type="text"
                             value="INV" ng-model="lineItem.invoiceNumber"
-                            ng-show="lineItem.assignment.name.includes('NDSO')"></td>
+                            ng-show="lineItem.assignment.name.includes('NDSO')"></td> -->
 
-                    <td ng-if="vm.showDeliveryNoteAttributes"><input ng-model="lineItem.deliveryNoteQuantity"
-                            class="form-control" type="number" style="width: 50px;" min="0" step="1"
-                            oninput="validity.valid||(value='');" ng-change="vm.validateQuantity(lineItem)"
-                            ng-show="lineItem.assignment.name.includes('NDSO')" required>
-                    </td>
-
+                    
                     <!-- <td ng-if="vm.showPrepackingAttributes"><input class="form-control" ng-model="lineItem.prepackSize"
                             ng-change="vm.validatePrepackQuantity(lineItem)" type="number" min="0" style="width: 70px;">
                     </td> -->
@@ -210,20 +213,20 @@
                             ng-model="lineItem.remainingStock" readonly type="number" style="width: 120px;" min="0">
                     </td> -->
 
-                    <td ng-if="!vm.showInDoses()">{{lineItem.quantity}}</td>
 
-                    <td ng-if="!vm.showPrepackingAttributes" openlmis-invalid="{{lineItem.$errors.quantityInvalid}}"
+
+                    <!-- <td openlmis-invalid="{{lineItem.$errors.quantityInvalid}}"
                         class="digit-cell">
                         <input class="form-control" ng-model="lineItem.quantity" style="width: 50px;"
                             ng-disabled="lineItem.expired" ng-class="{'error': lineItem.$errors.quantityInvalid}"
-                            ng-change="vm.validateQuantity(lineItem)" ng-blur="vm.validateQuantity(lineItem)">
-                    </td>
+                            ng-change="vm.validateQuantity(lineItem); vm.test(lineItem)" ng-blur="vm.validateQuantity(lineItem)">
+                    </td> -->
 
                     <!-- LESOTHO-ELMIS -- These should be added to prepack payload -->
-                    <td ng-if="vm.showPrepackingAttributes"><input class="form-control" type="text"
-                            style="width: 150px;"></td>
-                    <td ng-if="vm.showDeliveryNoteAttributes || vm.showPrepackingAttributes"><input class="form-control"
-                            type="text" style="width: 100px;"></td>
+                    <!-- <td ng-if="vm.showPrepackingAttributes"><input class="form-control" type="text"
+                            style="width: 150px;"></td> -->
+                    <td ng-if="vm.showDeliveryNoteAttributes"><input class="form-control"
+                            type="text" style="width: 100px;"></td> 
                     <!-- The two above should be added to prepack payload -->
 
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input class="form-control"
@@ -232,7 +235,7 @@
                             ng-show="lineItem.assignment.name.includes('NDSO')"></td>
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input type="text" readonly
                             style="width: 85px;"
-                            value="{{ (lineItem.quantity*lineItem.unitPrice) || 0 | openlmisCurrency}}"
+                            value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | openlmisCurrency}}"
                             ng-show="lineItem.assignment.name.includes('NDSO')" /></td>
                     <td ng-if="vm.showVVMStatusColumn">
                         <select ng-if="lineItem.orderable.extraData.useVVM == 'true'" ng-model="lineItem.vvmStatus"

@@ -56,6 +56,7 @@
     vm.formatDate = formatDate;
     vm.showInDoses = showInDoses;
     vm.recalculateSOHQuantity = recalculateSOHQuantity;
+    vm.test = test;
 
     /**
      * @ngdoc property
@@ -79,7 +80,13 @@
      * @return {boolean} true if the quantities are in doses, false otherwise
      */
     function showInDoses() {
+      // console.log("QTY IN Fn", vm.quantityUnit === QUANTITY_UNIT.DOSES);
       return vm.quantityUnit === QUANTITY_UNIT.DOSES;
+      // return true;
+      
+    }
+    function test(lineItem){
+      console.log("Line Item", lineItem);
     }
     vm.discrepancyOptions = ["Wrong Item", "Wrong Quantity", "Defective Item", "Missing Item", "More..."];
     vm.rejectionReasons = []; // To Store Shipment rejection Reasons
@@ -111,7 +118,7 @@
     vm.showReasonDropdown = true;
 
     /* eLMIS Lesotho : start */
-    vm.showPrepackingAttributes = false;
+    // vm.showPrepackingAttributes = false;
     vm.showDeliveryNoteAttributes = false;
     vm.showReasonsInAdjustment = false;
     vm.servicePointUser = false;
@@ -338,10 +345,11 @@
      * @param {Object} lineItem line item to be validated.
      */
     vm.validateQuantity = function (lineItem) {
+      console.log("Validating_1: ", lineItem);
       lineItem = quantityUnitCalculateService.recalculateInputQuantity(
         lineItem, lineItem.orderable.netContent, vm.showInDoses()
       );
-
+      console.log("Validating_2: ", lineItem);
       if (
         lineItem.quantity > lineItem.$previewSOH &&
         lineItem.reason &&
@@ -835,7 +843,8 @@
       if (adjustmentType.state === 'receive') {
         vm.references = populateReferenceNumbers(ReferenceNumbers);
       }
-
+      console.log("QTY: ", QUANTITY_UNIT);
+      console.log("QTY: ", vm.quantityUnit);
       //Getting Rejection Reasons
       var rej = rejectionReasonService.getAll();
       rej.then(function (reasons) {
@@ -914,8 +923,8 @@
         adjustmentType.state !== ADJUSTMENT_TYPE.KIT_UNPACK.state;
 
       /* eLMIS Lesotho : start */
-      vm.showPrepackingAttributes =
-        adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
+      // vm.showPrepackingAttributes =
+      //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
       vm.showDeliveryNoteAttributes =
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state;
       vm.showReasonsInAdjustment =
