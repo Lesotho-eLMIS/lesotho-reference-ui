@@ -120,7 +120,6 @@
          * Returns information about quantity unit toggle visibility.
          */
         function isQuantityUnitToggleVisible() {
-            // return '${QUANTITY_UNIT_OPTION}' === QUANTITY_UNIT.BOTH;
             return true;
         }
 

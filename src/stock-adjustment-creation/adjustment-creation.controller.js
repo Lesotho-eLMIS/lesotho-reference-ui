@@ -359,10 +359,10 @@
       else if (lineItem.quantity > MAX_INTEGER_VALUE) {
         lineItem.$errors.quantityInvalid = messageService.get('stockmanagement.numberTooLarge');
       }
-      else if (lineItem.quantity > lineItem.deliveryNoteQuantity) {
-        lineItem.$errors.quantityInvalid = messageService.get(
-          'stockAdjustmentCreation.acceptedQuantityError');
-      }
+      // else if (lineItem.quantity > lineItem.deliveryNoteQuantity) {
+      //   lineItem.$errors.quantityInvalid = messageService.get(
+      //     'stockAdjustmentCreation.acceptedQuantityError');
+      // }
       else if (lineItem.quantity >= 0) {
         lineItem.$errors.quantityInvalid = false;
       }
@@ -657,10 +657,10 @@
       var distinctLots = [];
       var lotResource = new LotResource();
       addedLineItems.forEach(function (lineItem) {
-        if (adjustmentType.state === 'receive') {
-          facilityWithType.type.code === 'service_point' ? lineItem.quantity = lineItem.quantity :
-            lineItem.quantity = lineItem.quantity * lineItem.orderable.netContent;
-        }
+        // if (adjustmentType.state === 'receive') {
+        //   // facilityWithType.type.code === 'service_point' ? lineItem.quantity = lineItem.quantity :
+        //   //   lineItem.quantity = lineItem.quantity * lineItem.orderable.netContent;
+        // }
         if (
           lineItem.lot &&
           lineItem.$isNewItem &&

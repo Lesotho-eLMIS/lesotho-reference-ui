@@ -121,7 +121,6 @@
                 programId: programId,
                 facilityId: facilityId
             };
-           
             if(adjustmentType.state == 'receive'){
                 //Set Reason as transfer in for all recieving transactions
                 event.lineItems = _.map(lineItems, function(item) {

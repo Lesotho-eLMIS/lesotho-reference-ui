@@ -87,10 +87,6 @@
          */
         function recalculateInputQuantity(item, netContent, inDoses, quantityKey) {
             var usedQuantityKey = quantityKey || 'quantity';
-            console.log("INPUT SERVICE_ITEM: ", item);
-            console.log("INPUT SERVICE_NETCONTENT: ", netContent);
-            console.log("INPUT SERVICE_INDOSES: ", inDoses);
-            console.log("INPUT SERVICE_IKEY: ", quantityKey);
             if (isNetContentUndefinedOrZero(item.orderable.netContent)) {
                 return 0;
             } else if (inDoses) {
@@ -138,7 +134,6 @@
         }
 
         function isNetContentUndefinedOrZero(netContent) {
-            console.log("NET CONTENT: ", netContent);
             if (netContent === undefined || netContent === 0) {
                 return true;
             }
