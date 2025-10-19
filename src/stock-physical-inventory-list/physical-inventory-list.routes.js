@@ -53,8 +53,8 @@
                     }
                     var programIds = _.map(programs, function(program) {
                         return program.id;
-                    });
-
+                    });                    
+                    console.log("Programs: ", programs);
                     return physicalInventoryFactory.getDrafts(programIds, facility.id);
                 },
                 draftsForCyclic: function(physicalInventoryFactory, programs, facility) {
@@ -64,7 +64,6 @@
                     var programIds = _.map(programs, function(program) {
                         return program.id;
                     });
-
                     return physicalInventoryFactory.getDraftsForCyclic(programIds, facility.id);
                 },
                 drafts: function (draftsForCyclic,draftsForMajor) {

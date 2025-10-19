@@ -159,6 +159,9 @@
         }
 
         function onInit() {
+            console.log("Drafts:", drafts);
+            console.log("Drafts:", draftsForCyclic);
+
             if (networkStateHasBeenChanged()) {
                 reloadPage();
             }

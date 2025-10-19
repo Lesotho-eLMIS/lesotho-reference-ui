@@ -1,10 +1,10 @@
 <h2 ng-show="vm.facility">{{'stockPhysicalInventory.title' | message: {'facility': vm.facility.name} }}</h2>
-Bona taba ke ena
-<!-- <section class="openlmis-table-container openlmis-physical-inventory">
+
+<section class="openlmis-table-container openlmis-physical-inventory">
   <div>
     <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()" physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
   </div>
-  <!-- <table>
+  <table>
     <caption ng-if="!vm.drafts.length">{{'stockPhysicalInventory.noPhysicalInventoryFound' |
       message}}
     </caption>
@@ -29,19 +29,6 @@ Bona taba ke ena
       </td>
     </tr>
     </tbody>
-  </table>  -->
+  </table> 
 
-<!-- </section> --> -
-<div>
-  <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()" physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
-</div>
-<form class="sidebar" ng-submit="vm.proceed()">
-  <openlmis-facility-program-select
-      is-supervised="vm.isSupervised"
-      facility="vm.facility"
-      program="vm.program"
-      module="'requisition-initiate'">
-  </openlmis-facility-program-select>
-
-  <input type="submit"  value="{{vm.key('proceed') | message}}"/>
-</form>
+</section>
