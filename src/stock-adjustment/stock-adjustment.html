@@ -1,0 +1,18 @@
+<h2 ng-show="vm.facility">{{ vm.key('title') | message: {'facility': vm.facility.name} }}</h2>
+<p class="alert is-offline" ng-if="vm.offline() && vm.offlineStockEvents()">
+    {{ vm.key('offline1') | message}}<br>
+    {{ vm.key('offline2') | message}}
+    <a ng-click="vm.goToPendingOfflineEventsPage()">{{ vm.key('pendingOfflineEvents') | message}}</a>
+    {{ vm.key('offline3') | message}}<br>
+</p>
+
+<form class="sidebar" ng-submit="vm.proceed()">
+    <openlmis-facility-program-select
+        is-supervised="vm.isSupervised"
+        facility="vm.facility"
+        program="vm.program"
+        module="'requisition-initiate'">
+    </openlmis-facility-program-select>
+
+    <input type="submit"  value="{{vm.key('proceed') | message}}"/>
+</form>

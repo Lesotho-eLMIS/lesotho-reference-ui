@@ -1,0 +1,53 @@
+<header>
+    <h2>{{'requisitionRedistribution.reportAndRequisitionFor' | message}} {{vm.program.name}} ({{vm.facility.type.name}})</h2>
+    <button ng-disabled="vm.isOffline()" ng-click="vm.syncRnrAndPrint()" class="primary">{{'requisitionRedistribution.print' | message}}</button>
+</header>
+<p class="alert is-error" ng-if="vm.requisition.$outdated">
+    {{ 'requisitionRedistribution.outdated' | message}}
+    <button ng-click="vm.updateRequisition();">{{ 'requisitionRedistribution.update' | message }}</button>
+</p>
+<ng-include src="'requisition-view/header.html'"></ng-include>
+<status-messages requisition="vm.requisition"></status-messages>
+
+<div>
+    
+    <section class="openlmis-table-container">
+        <table suppress-tr-openlmis-invalid>
+            <thead>
+                <tr>
+                    <th>{{'requisitionRedistribution.productCode'|message}}</th>
+                    <th>{{'requisitionRedistribution.productName'|message}}</th>
+                    <th>{{'requisitionRedistribution.requestedQuantity'|message}}</th>
+                    <th>{{'requisitionRedistribution.requestedQuantityExplanation'|message}}</th>
+                    <th>{{'requisitionRedistribution.approvedQuantity'|message}}</th>
+                    <th>{{'requisitionRedistribution.supplyingFacility'|message}}</th>
+                    <th>{{'requisitionRedistribution.quantityToIssue'|message}}</th>
+                    <th>{{'requisitionRedistribution.remarks'|message}}</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>  
+                <tr ng-repeat="item in vm.requisitionLineItems">
+                    <td>{{item.orderable.productCode}}</td>
+                    <td>{{item.orderable.fullProductName}}</td>
+                    <td>{{item.requestedQuantity}}</td>
+                    <td>{{item.requestedQuantityExplanation}}</td>
+                    <td>{{item.approvedQuantity}}</td>
+                    <td><select id="supplyingFacility"
+                        ng-model="item.supplyingFacility"
+                        ng-required="true"
+                        ng-options="facility.name for facility in vm.filteredSupplyingFacilities | orderBy:'name'"></select></td>
+                    <td><input type="number" min="0" step="1" oninput="validity.valid||(value='');" style="width: 60px;" 
+                        ng-model="item.quantityToIssue" ng-change="vm.showAddButton($index)" ng-required="true"></td>
+                    <td><input id="remarks" type="text" maxlength="50" ng-model="item.remarks"/></td>
+                    <td><button ng-show="item.addRowButton" ng-click="vm.addRow($index, item)">+{{'requisitionRedistribution.addRow'| message}}</button>
+                    <button ng-show="item.removeRowButton" ng-click="vm.removeLineItem($index)" class="danger">{{'requisitionRedistribution.removeRow'| message}}</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</div>  
+
+<ng-include src="'requisition-redistribution/redistribution-toolbar.html'"></ng-include>
+
