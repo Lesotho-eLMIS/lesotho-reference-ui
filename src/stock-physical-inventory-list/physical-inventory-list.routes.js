@@ -53,8 +53,7 @@
                     }
                     var programIds = _.map(programs, function(program) {
                         return program.id;
-                    });                    
-                    console.log("Programs: ", programs);
+                    });   
                     return physicalInventoryFactory.getDrafts(programIds, facility.id);
                 },
                 draftsForCyclic: function(physicalInventoryFactory, programs, facility) {
