@@ -58,7 +58,6 @@
                 },
                 adjustmentType: function(facility, requisitionsToReceive) {
                     facility.requisitionsToReceive = requisitionsToReceive; // Attach to facility for easy access in controller
-                    console.log('facility in resolve', facility);
                     return ADJUSTMENT_TYPE.RECEIVE;
                 }
             }

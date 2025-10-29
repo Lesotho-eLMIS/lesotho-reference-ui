@@ -54,7 +54,6 @@
                     return $stateParams.program;
                 },
                 facility: function($stateParams, facilityFactory) {
-                    console.log('Requisition to receive against - ', $stateParams.requisitionToReceiveAgainst);
                     if (!$stateParams.facility) {
                         return facilityFactory.getUserHomeFacility();
                     }

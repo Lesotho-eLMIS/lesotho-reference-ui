@@ -50,6 +50,17 @@
         /**
          * @ngdoc property
          * @propertyOf stock-adjustment.controller:StockAdjustmentController
+         * @name facility
+         * @type {Object}
+         *
+         * @description
+         * Holds user's home facility.
+         */
+        vm.isServicePoint = facility.type.code == 'service_point';
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-adjustment.controller:StockAdjustmentController
          * @name requisitionsToReceive
          * @type {Object}
          *
@@ -117,6 +128,7 @@
         // };
 
         vm.proceed = function () {
+            console.log('this is a service point:', vm.isServicePoint);
             if (!vm.requisitionToReceiveAgainst) {
                 $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
                 programId: vm.program.id,
@@ -125,7 +137,7 @@
                 supervised: vm.isSupervised
              });
             }else {
-                console.log('selected requisition', vm.requisitionToReceiveAgainst);
+                //console.log('selected requisition', vm.requisitionToReceiveAgainst);
                 $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
                 programId: vm.program.id,
                 program: vm.program,

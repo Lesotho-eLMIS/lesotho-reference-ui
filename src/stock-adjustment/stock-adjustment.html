@@ -14,8 +14,8 @@
         module="'requisition-initiate'">
     </openlmis-facility-program-select>
 
-    <label ng-if="vm.adjustmentType === 'receive'" for="orderFilRequisition">Select Requisition</label>
-    <select ng-if="vm.adjustmentType === 'receive'"
+    <label ng-if="vm.adjustmentType === 'receive' && !vm.isServicePoint" for="orderFilRequisition">Select Requisition</label>
+    <select ng-if="vm.adjustmentType === 'receive' && !vm.isServicePoint"
             id="orderFilRequisition"
             ng-model="vm.requisitionToReceiveAgainst"
             ng-options="requisition.processingPeriod.name for requisition in vm.requisitionsToReceive"></select>
