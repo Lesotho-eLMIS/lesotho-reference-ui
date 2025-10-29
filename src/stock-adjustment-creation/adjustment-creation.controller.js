@@ -259,6 +259,11 @@
         var timestamp = new Date().getTime();
         selectedItem.timestamp = timestamp; // Add a time stamp to the selected line item
 
+        //Add requisition extra data when receiving against a requisition
+        if(adjustmentType.state === 'receive' && !vm.servicePointUser && !($stateParams.requisitionToReceiveAgainst === undefined)){
+          selectedItem.requisition = $stateParams.requisitionToReceiveAgainst.id;
+        }
+
 
 
         vm.addedLineItems.unshift(_.extend({
@@ -267,6 +272,7 @@
         },
           selectedItem, copyDefaultValue()));
 
+        console.log("Added Line Items ", vm.addedLineItems);
         previousAdded = vm.addedLineItems[0];
         vm.search();
       }
@@ -843,8 +849,8 @@
       if (adjustmentType.state === 'receive') {
         vm.references = populateReferenceNumbers(ReferenceNumbers);
       }
-      console.log("QTY: ", QUANTITY_UNIT);
-      console.log("QTY: ", vm.quantityUnit);
+      //console.log("QTY: ", QUANTITY_UNIT);
+      //console.log("QTY: ", vm.quantityUnit);
       //Getting Rejection Reasons
       var rej = rejectionReasonService.getAll();
       rej.then(function (reasons) {

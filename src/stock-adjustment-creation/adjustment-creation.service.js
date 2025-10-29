@@ -132,7 +132,8 @@
                         quantity: item.quantity,
                         rejectedQuantity: item.rejectedQuantity,
                         extraData: {
-                            vvmStatus: item.vvmStatus
+                            vvmStatus: item.vvmStatus,
+                            requisition: item.requisition // Include requisition extra data when receiving against a requisition
                         },
                         occurredDate: item.occurredDate,
                         reasonId: item.reason ? item.reason.id : null, 
