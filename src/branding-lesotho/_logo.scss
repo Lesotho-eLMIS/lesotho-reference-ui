@@ -1,7 +1,8 @@
 
 .header > .openlmis-header > .title,
 .header > .openlmis-header.is-offline > .title {
-	background-image: url('../assets/branding-lesotho/logo-header.png');
+	background: url('../assets/branding-lesotho/logo-header.png');
+	// background-color: red;
 	background-size: auto;
 	text-indent: 0px;
 	overflow: visible;
@@ -14,7 +15,7 @@
 }
 
 .auth-modal .modal-body {
-	background-image: url('../assets/branding-lesotho/logo.png') !important;;
+	background-image: url('../assets/branding-lesotho/logo.png') !important;
 	background-size: auto !important;
 	background-position: $space-size*2 $space-size !important;
 	min-height: 258px + $space-size !important;
