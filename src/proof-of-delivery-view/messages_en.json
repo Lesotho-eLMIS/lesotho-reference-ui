@@ -1,0 +1,8 @@
+{
+    "proofOfDeliveryView.orderingFacility": "Requesting Facility",
+    "proofOfDeliveryView.orderDate": "Request Date",
+    "proofOfDeliveryView.orderNumber": "Request No.",
+    "proofOfDeliveryView.quantityOrdered": "Quantity Requested",
+    "proofOfDeliveryView.lotCode": "Batch Number",
+    "proofOfDeliveryView.orderStatus": "Request Status"
+}
