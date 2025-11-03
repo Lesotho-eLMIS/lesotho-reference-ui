@@ -28,12 +28,57 @@
         .module('stock-adjustment')
         .controller('StockAdjustmentController', controller);
 
-    controller.$inject = ['facility', 'programs', 'adjustmentType', '$state', 'offlineService',
+    controller.$inject = ['facility', 'programs', 'adjustmentType', '$scope', '$state', 'offlineService',
         'localStorageService', 'ADJUSTMENT_TYPE'];
 
-    function controller(facility, programs, adjustmentType, $state, offlineService, localStorageService,
+    function controller(facility, programs, adjustmentType, $scope, $state, offlineService, localStorageService,
                         ADJUSTMENT_TYPE) {
         var vm = this;
+
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-adjustment.controller:StockAdjustmentController
+         * @name adjustmentType
+         * @type {Object}
+         *
+         * @description
+         * Holds adjustment type.
+         */
+        vm.adjustmentType = adjustmentType.state;
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-adjustment.controller:StockAdjustmentController
+         * @name facility
+         * @type {Object}
+         *
+         * @description
+         * Holds user's home facility.
+         */
+        vm.isServicePoint = facility.type.code == 'service_point';
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-adjustment.controller:StockAdjustmentController
+         * @name requisitionsToReceive
+         * @type {Object}
+         *
+         * @description
+         * Holds requisitions to receive against.
+         */
+        vm.requisitionsToReceive = facility.requisitionsToReceive;
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-adjustment.controller:StockAdjustmentController
+         * @name requisitionsToReceive
+         * @type {Object}
+         *
+         * @description
+         * Holds selected requisition to receive against.
+         */
+        vm.requisitionToReceiveAgainst = null;
 
         /**
          * @ngdoc property
@@ -83,14 +128,45 @@
         // };
 
         vm.proceed = function () {
-            
-            $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
+            console.log('this is a service point:', vm.isServicePoint);
+            if (!vm.requisitionToReceiveAgainst) {
+                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
                 programId: vm.program.id,
                 program: vm.program,
                 facility: vm.facility,
                 supervised: vm.isSupervised
-            });
+             });
+            }else {
+                //console.log('selected requisition', vm.requisitionToReceiveAgainst);
+                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
+                programId: vm.program.id,
+                program: vm.program,
+                facility: vm.facility,
+                supervised: vm.isSupervised,
+                requisitionToReceiveAgainst: vm.requisitionToReceiveAgainst
+             });
+            }
+            
         };
+
+        $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
+            
+            if (newVal === oldVal) return;
+            if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
+
+            if(newVal == null || newVal == undefined) {
+                vm.requisitionsToReceive = facility.requisitionsToReceive;
+                vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
+                return;
+            }else {
+                vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
+                // filter requisitions to receive by selected program
+                vm.requisitionsToReceive = facility.requisitionsToReceive.filter(function (r) {
+                    return r.program.id === newVal.id;
+                });
+            }
+        });
+
 
 
         /**

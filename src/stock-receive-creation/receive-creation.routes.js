@@ -43,7 +43,8 @@
                 addedLineItems: undefined,
                 orderableGroups: undefined,
                 srcDstAssignments: undefined,
-                supervised: undefined
+                supervised: undefined,
+                requisitionToReceiveAgainst: undefined,
             },
             resolve: {
                 program: function($stateParams, programService) {

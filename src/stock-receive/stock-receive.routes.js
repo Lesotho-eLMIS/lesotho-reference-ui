@@ -48,7 +48,16 @@
                 programs: function(user, stockProgramUtilService) {
                     return stockProgramUtilService.getPrograms(user.user_id, STOCKMANAGEMENT_RIGHTS.STOCK_ADJUST);
                 },
-                adjustmentType: function() {
+                requisitionsToReceive: function(requisitionService, facility) {
+                    return requisitionService.search(false, {
+                        facility: facility.id,
+                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0] //Pull requisitions initiated in the last 90 days
+                    }).then(function(response) {
+                        return response.content;
+                    });
+                },
+                adjustmentType: function(facility, requisitionsToReceive) {
+                    facility.requisitionsToReceive = requisitionsToReceive; // Attach to facility for easy access in controller
                     return ADJUSTMENT_TYPE.RECEIVE;
                 }
             }
