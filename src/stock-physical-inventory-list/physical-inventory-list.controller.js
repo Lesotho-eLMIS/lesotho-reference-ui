@@ -29,10 +29,10 @@
         .controller('PhysicalInventoryListController', controller);
 
     controller.$inject = ['facility', 'programs', 'drafts', 'messageService', '$state', 'physicalInventoryService',
-        'FunctionDecorator', 'offlineService', '$q', '$scope', '$stateParams','draftsForCyclic'];
+        'FunctionDecorator', 'offlineService', '$q', '$scope', '$stateParams','draftsForCyclic', 'alertService'];
 
     function controller(facility, programs, drafts, messageService, $state, physicalInventoryService,
-                        FunctionDecorator, offlineService, $q, $scope, $stateParams,draftsForCyclic) {
+                        FunctionDecorator, offlineService, $q, $scope, $stateParams,draftsForCyclic, alertService) {
         var vm = this;
         vm.$onInit = onInit;
 
@@ -76,6 +76,18 @@
             .decorateFunction(editDraft)
             .withLoading(true)
             .getDecoratedFunction();
+
+            vm.getSelectedDraft = function () {
+                if (!vm.program) {
+                    alertService.error('stockPhysicalInventory.noProgramSelected');
+                }else if(!vm.facility)
+                {
+                    alertService.error('stockPhysicalInventory.noFacilitySelected');
+                }
+                return _.find(vm.drafts, function (draft) {
+                    return draft.programId === vm.program.id;
+                });
+            };        
 
         /**
          * @ngdoc method
@@ -128,9 +140,6 @@
         function editDraft(draft) {
             $stateParams.stateOffline = setOfflineState();
 
-            var program = _.find(vm.programs, function(program) {
-                return program.id === draft.programId;
-            });
             vm.drafts.forEach(function(item) {
                 if (item.programId === draft.programId && draft.isStarter === true) {
                     item.isStarter = false;
@@ -139,19 +148,21 @@
             if (offlineService.isOffline() || draft.id) {
                 $state.go('openlmis.stockmanagement.physicalInventory.draft', {
                     id: draft.id,
-                    program: program,
-                    facility: facility,
+                    program: vm.program,
+                    facility: vm.facility,
+                    supervised: vm.isSupervised,
                     includeInactive: false,
                     physicalInventoryType : vm.physicalInventoryType
                 });
                 return $q.resolve();
             }
-            return physicalInventoryService.createDraft(program.id, facility.id).then(function(data) {
+            return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function(data) {
                 draft.id = data.id;
                 $state.go('openlmis.stockmanagement.physicalInventory.draft', {
                     id: draft.id,
-                    program: program,
-                    facility: facility,
+                    program: vm.program,
+                    facility: vm.facility,
+                    supervised: vm.isSupervised,
                     includeInactive: false,
                     physicalInventoryType : vm.physicalInventoryType
                 });
@@ -159,8 +170,6 @@
         }
 
         function onInit() {
-            console.log("Drafts:", drafts);
-            console.log("Drafts:", draftsForCyclic);
 
             if (networkStateHasBeenChanged()) {
                 reloadPage();
@@ -191,3 +200,4 @@
         }
     }
 })();
+

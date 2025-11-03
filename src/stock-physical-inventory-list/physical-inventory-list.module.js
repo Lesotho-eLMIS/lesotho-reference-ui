@@ -29,6 +29,8 @@
         'referencedata-program',
         'stock-physical-inventory',
         'stock-physical-inventory-draft',
-        'openlmis-function-decorator'
+        'openlmis-function-decorator',
+        'openlmis-facility-program-select',
+        'ui.router'
     ]);
 })();
