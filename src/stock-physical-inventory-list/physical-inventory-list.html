@@ -12,14 +12,20 @@
     module="'stock-card-summary-list'">
   </openlmis-facility-program-select>
 
-  <div>
+  <!-- <div>
     <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton"  type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
       value="{{(vm.getSelectedDraft().isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.continue') | message}}"
       class="primary"/>
 
     <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
-  </div>
+  </div> -->
+  <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(draft)"
+               value="{{(draft.isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+               class="primary"/>
+        <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(draft)"
+               value="{{'stockPhysicalInventory.start' | message}}"
+               class="primary"/>
 </form>
 
 

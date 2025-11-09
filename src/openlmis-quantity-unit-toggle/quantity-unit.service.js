@@ -86,6 +86,9 @@
          * @return {item}                  number of doses
          */
         function recalculateInputQuantity(item, netContent, inDoses, quantityKey) {
+            console.log(item);
+            console.log("Netconter:", netContent);
+
             var usedQuantityKey = quantityKey || 'quantity';
             if (isNetContentUndefinedOrZero(item.orderable.netContent)) {
                 return 0;
@@ -93,9 +96,17 @@
                 item.quantityInPacks = Math.floor(item[usedQuantityKey] / netContent);
                 item.quantityRemainderInDoses = item[usedQuantityKey] % netContent;
             } else {
-                item[usedQuantityKey] = getTotalQuantityInDoses(
-                    item.quantityInPacks, item.quantityRemainderInDoses, netContent
-                );
+                if(item.orderable.netContent){
+                    item[usedQuantityKey] = getTotalQuantityInDoses(
+                        item.quantityInPacks, item.quantityRemainderInDoses, item.orderable.netContent
+                    );
+
+                }else{
+                    item[usedQuantityKey] = getTotalQuantityInDoses(
+                        item.quantityInPacks, item.quantityRemainderInDoses, netContent
+                    );
+                }
+                
             }
 
             return item;
