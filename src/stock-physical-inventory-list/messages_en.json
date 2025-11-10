@@ -11,5 +11,7 @@
   "stockPhysicalInventory.notStarted": "Not yet started",
   "stockPhysicalInventory.draft": "Draft",
   "stockPhysicalInventory.noProgramSelected": "Select a Program",
-  "stockPhysicalInventory.noFacilitySelected": "Select a Facility"
+  "stockPhysicalInventory.noFacilitySelected": "Select a Facility",
+  "stockPhysicalInventory.countInventory": "countInventory",
+  "stockPhysicalInventory.majorCount": "Start Major Count"
 }

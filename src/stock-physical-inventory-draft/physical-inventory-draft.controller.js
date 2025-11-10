@@ -807,6 +807,7 @@
          * @param   {Object}    lineItem    the lineItem containing stock adjustments
          */
         function checkUnaccountedStockAdjustments(lineItem) {
+            console.log("LineItem:", lineItem);
             lineItem.unaccountedQuantity =
                 stockReasonsCalculations.calculateUnaccounted(lineItem, lineItem.stockAdjustments);
             draft.$modified = true;
@@ -927,7 +928,6 @@
             //Group the selected items by Category
             vm.groupedCategories = $filter('groupByProgramProductCategory')(vm.itemsSelectedForCyclic, vm.program.id);
         }
-
         vm.validateOnPageChange();
     }
 })();
