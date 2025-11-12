@@ -982,7 +982,6 @@
      * @param   {Object}    lineItem    the lineItem containing stock adjustments
      */
     function checkUnaccountedStockAdjustments(lineItem) {
-      console.log("LineItem:", lineItem);
       lineItem.unaccountedQuantity =
         stockReasonsCalculations.calculateUnaccounted(
           lineItem,
@@ -1122,6 +1121,12 @@
       // Remove the group from the array of items selected for cyclic count
       const index = vm.itemsSelectedForCyclic.indexOf(group);
       if (index !== -1) {
+        group.forEach(function (batch) {
+          batch.quantity = undefined;
+          batch.quantityInPacks = NaN;
+          batch.quantityRemainderInDoses = NaN;
+          batch.stockAdjustments = Array(0);
+        });
         vm.itemsSelectedForCyclic.splice(index, 1);
       }
       // Re-group the remaining items by Category
