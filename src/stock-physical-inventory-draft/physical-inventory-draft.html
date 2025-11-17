@@ -28,7 +28,7 @@
     </openlmis-progressbar>
     <quantity-unit-toggle class="is-primary" quantity-unit="vm.quantityUnit"></quantity-unit-toggle>
 
-    <button ng-if="vm.stateParams.physicalInventoryType === 'Major'" class="pull-right add" ng-click="vm.addProducts()">
+    <button class="pull-right add" ng-click="vm.addProducts()">
         {{'stockPhysicalInventoryDraft.addProduct' | message}}
     </button>
     <div ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" class="pull-right add">
@@ -36,7 +36,7 @@
         <select  id="productSelect" ng-model="vm.selectedProductForCyclic"
             ng-options="product.orderable.fullProductName for product in vm.productsForCyclic" ng-required="true">
         </select>
-            <button ng-click="vm.selectProductForCyclic()"> {{'stockPhysicalInventoryDraft.addProduct' | message}}  </button>
+            <button ng-click="vm.selectProductForCyclic()">Add</button>
     </div>
 
     <saving-indicator class="draft-indicator" object="vm.dataChanged"/>
@@ -59,7 +59,9 @@
                 <th ng-if="vm.showVVMStatusColumn" class="col-sticky sticky-right">{{'stockPhysicalInventoryDraft.VVMStatus' | message}}</th>
                 <th class="col-sticky sticky-right">{{'stockPhysicalInventoryDraft.reasons' | message}}</th>
                 <th class="col-sticky sticky-right">{{'stockPhysicalInventoryDraft.unaccountedQuantity' | message}}</th>
-                <th ng-if="vm.showHideButtonColumn" >{{'stockPhysicalInventoryDraft.actions' | message}}</th>
+                <!--<th ng-if="vm.showHideButtonColumn" >{{'stockPhysicalInventoryDraft.actions' | message}}</th>-->
+                <th ng-if="vm.showHideButtonColumn && vm.stateParams.physicalInventoryType === 'Major'" >{{'stockPhysicalInventoryDraft.actions' | message}}</th>
+                <th ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" >Actions</th>
             </tr>
         </thead>
         <tbody ng-repeat="(category, groupedLineItems) in vm.groupedCategories track by category"  tbody-title="{{category}}">
@@ -73,7 +75,12 @@
                 <td ng-if="vm.showVVMStatusColumn"></td>
                 <td align="right"></td>
                 <td align="right"></td>
-                <td align="right" ng-if="vm.showHideButtonColumn"></td>
+                <!--<td align="right" ng-if="vm.showHideButtonColumn"></td>-->
+                <td align="right" ng-if="vm.showHideButtonColumn && vm.stateParams.physicalInventoryType === 'Major'"></td>
+                <td align="right" ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'">
+                <button type="button" class="danger" ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" ng-disabled="offlineService.isOffline()"
+                                    ng-click="vm.removeGroup(lineItems)">Remove</button>
+                </td>
             </tr>
             <tr ng-repeat="lineItem in lineItems | orderBy:'lot?lot.lotCode:\'\''" ng-repeat-end>
                 <td>{{lineItems.length > 1 ? '' : lineItem.orderable.productCode}}</td>
@@ -89,8 +96,8 @@
                 <td>{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
                 <td align="right">{{vm.recalculateQuantity(lineItem.stockOnHand, lineItem.orderable.netContent)}}</td>
                 <td class="digit-cell" openlmis-invalid="{{lineItem.quantityInvalid ? lineItem.quantityInvalid : ''}}">
-                    <openlmis-quantity-unit-input 
-                        show-in-doses="vm.showInDoses()" 
+                    <openlmis-quantity-unit-input
+                        show-in-doses="vm.showInDoses()"
                         item="lineItem"
                         net-content="lineItem.orderable.netContent"
                         on-change-quantity="vm.quantityChanged(lineItem)"
@@ -118,9 +125,14 @@
                     {{vm.recalculateQuantity(lineItem.unaccountedQuantity, lineItem.orderable.netContent)}}
                 </td>
                 </td>
-                <td ng-if="vm.showHideButtonColumn">
+                <!--<td ng-if="vm.showHideButtonColumn">-->
+                <td ng-if="vm.showHideButtonColumn && vm.stateParams.physicalInventoryType === 'Major'">
                     <button type="button" class="danger" ng-if="lineItem.stockOnHand === 0 && lineItem.active && !lineItem.$isNewItem" ng-disabled="offlineService.isOffline()"
                     ng-click="vm.hideLineItem(lineItem)">{{'stockPhysicalInventoryDraft.deactivate' | message}}</button>
+                </td>
+                <td align="right" ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" >
+                    <button type="button" class="danger" ng-if="vm.stateParams.physicalInventoryType === 'Cyclic' && lineItems.length == 1" ng-disabled="offlineService.isOffline()"
+                                    ng-click="vm.removeGroup(lineItems)">Remove</button>
                 </td>
             </tr>
         </tbody>
