@@ -1,13 +1,21 @@
 
+.openlmis-header .header-logo {
+  background: url('../assets/branding-lesotho/400X500.png') no-repeat center center;
+  background-size: contain;
+  display: inline-block;
+  width: 30px;
+  height: 32px;
+  overflow: hidden;
+}
+
 .header > .openlmis-header > .title,
 .header > .openlmis-header.is-offline > .title {
-	background: url('../assets/branding-lesotho/logo-header.png');
-	// background-color: red;
+	background: url('../assets/branding-lesotho/logo-header.png') no-repeat top left;
 	background-size: auto;
-	text-indent: 0px;
+	text-indent: 0;
 	overflow: visible;
-	padding: 0px;
-	padding-left: 36px + $space-size/2;
+	padding: 0;
+	padding-left: 2px + $space-size/2;
 }
 
 .header > .openlmis-header.is-offline > .title {

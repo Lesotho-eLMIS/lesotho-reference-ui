@@ -1,8 +1,10 @@
 <div class="home-page">
   <!-- <h2>{{'openlmisHome.welcome' | message}}</h2> -->
+
+
   <div class="system-notification-list" ng-if="!vm.isOffline">
     <h2> {{'openlmisSystemNotifications.systemNotifications' | message}} </h2>
-    <h3 ng-if="!vm.homePageSystemNotifications || vm.homePageSystemNotifications.length === 0">
+    <h3 ng-if="!vm.homePageSystemNotifications || (vm.homePageSystemNotifications.length === 0 && vm.userNotifications.length === 0)">
       {{'openlmisSystemNotifications.noSystemNotifications' | message}}
     </h3>
     <div class="scroll">
