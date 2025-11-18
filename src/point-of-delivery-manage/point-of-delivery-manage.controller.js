@@ -71,7 +71,6 @@
             $rootScope.referenceNoPOD = undefined; // Clear Var on Root Scope 
             if ($stateParams.podId) {
                 vm.tempPOD = filterShipmentById(podEvents, $stateParams.podId);
-                console.log("Editing POD Event:", vm.tempPOD);
                 populatePODView(vm.tempPOD);
             }
 
