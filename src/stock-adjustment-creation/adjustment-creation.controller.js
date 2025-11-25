@@ -939,9 +939,11 @@
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
 
-      vm.addedLineItems = $stateParams.addedLineItems || [];
+      // vm.addedLineItems = $stateParams.addedLineItems || [];
+      vm.addedLineItems = [];
       $stateParams.displayItems = displayItems;
-      vm.displayItems = $stateParams.displayItems || [];
+      // vm.displayItems = $stateParams.displayItems || [];
+      vm.displayItems = [];
       vm.keyword = $stateParams.keyword;
 
       vm.orderableGroups = orderableGroups;
