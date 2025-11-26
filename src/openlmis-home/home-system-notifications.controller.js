@@ -69,7 +69,7 @@
         function onInit() {
             vm.isOffline = offlineService.isOffline();
             vm.homePageSystemNotifications = homePageSystemNotifications;
-
+            
             homeService.getNotifications(user.id).then(function(notifications) {
                 // Handle the notifications here
                 vm.userNotifications = notifications.filter(msg => msg.isRead !== true); // Show only notifications that have not been read.

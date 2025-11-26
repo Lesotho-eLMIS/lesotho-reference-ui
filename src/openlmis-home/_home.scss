@@ -2,6 +2,7 @@ $image-height: 136px;
 
 .home-page{
   @extend .page-hero;
+  // position: relative; //
   padding-bottom: 4em;
   display: flex;
   flex-wrap: wrap;
@@ -17,7 +18,7 @@ $image-height: 136px;
     background: url('../assets/openlmis-home/home-background.png') no-repeat right bottom;
     @media screen and (max-width: $res-sm) {
       height: 100%;
-      background-size: 1200%
+      background-size: 1200%;
     }
   }
   .system-notification-list {
@@ -36,9 +37,7 @@ $image-height: 136px;
     background: url('../assets/openlmis-home/WelcomeScreen2.png');
     background-repeat: no-repeat;
     background-size: cover;
-    // background-position: center;
     width: 100%;
-    // height: auto;
     height: 550px;
     padding-left: 60px;
   }
