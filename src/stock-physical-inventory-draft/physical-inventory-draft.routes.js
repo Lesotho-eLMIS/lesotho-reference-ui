@@ -50,7 +50,13 @@
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
-                    var currentDraft = getDraftFromParent(drafts, $stateParams);
+                    var currentDraft =  undefined; // getDraftFromParent(drafts, $stateParams);
+                    if($stateParams.supervised){
+                        currentDraft = physicalInventoryFactory.getDraft($stateParams.program.id,$stateParams.facility.id);
+                    }else{
+                        currentDraft = getDraftFromParent(drafts, $stateParams);
+                    }
+                    //var currentDraft = getDraftFromParent(drafts, $stateParams);
                     return physicalInventoryFactory.getPhysicalInventory(currentDraft);
                 },
                 program: function($stateParams, programService, draft) {
