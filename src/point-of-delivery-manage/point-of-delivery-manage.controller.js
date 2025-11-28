@@ -104,7 +104,7 @@
          * @description
          * Loads view with POD data to edit
          */
-        function populatePODView(podObject) {
+        async function populatePODView(podObject) {
             vm.POD.referenceNo = podObject.referenceNumber;
             vm.POD.receivedDate = podObject.packingDate;
             vm.POD.packedBy = podObject.packedBy;
@@ -114,6 +114,8 @@
             // vm.POD.containersQuantityOnWayBill = podObject.containersQuantityOnWaybill;
             // vm.POD.containersQuantityAccepted = podObject.containersQuantityAccepted;
             // vm.POD.containersQuantityRejected = podObject.containersQuantityRejected;
+            let supplyingFacility = await vm.getSupplyingFacilityName(podObject.sourceId);
+            vm.POD.supplyingFacility = vm.supplyingFacilities.find(facility => facility.id === supplyingFacility.id);
         }
 
         /**
@@ -270,7 +272,7 @@
         vm.getSupplyingFacilityName = async function (supplyingFacilityId) {
             try {
                 var facilityObject = await facilityService.get(supplyingFacilityId);
-                return facilityObject.name;
+                return facilityObject;
             } catch (error) {
                 // Handle any errors that may occur during the query
                 console.error("Error:", error);
@@ -288,7 +290,7 @@
                     if (singlePODEvent.sourceId) {
                         try {
                             const resolvedObject = await vm.getSupplyingFacilityName(singlePODEvent.sourceId);
-                            singlePODEvent.sourceName = resolvedObject;
+                            singlePODEvent.sourceName = resolvedObject.name;
                         } catch (error) {
                             // Handle errors
                             console.error('Error in controller:', error);

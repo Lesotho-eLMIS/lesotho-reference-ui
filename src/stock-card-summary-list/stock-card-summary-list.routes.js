@@ -49,8 +49,7 @@
                     return $q.resolve();
                 },
                 params: function($stateParams) {
-                    console.log("StockCard: ", $stateParams);
-                    
+                                        
                     var paramsCopy = angular.copy($stateParams);
 
                     paramsCopy.facilityId = $stateParams.facility;
