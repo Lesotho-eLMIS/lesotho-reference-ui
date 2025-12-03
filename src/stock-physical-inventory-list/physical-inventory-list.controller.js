@@ -78,24 +78,24 @@
             if (newVal === oldVal) return;
             // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
 
-            if(newVal == null || newVal == undefined) {
+            if (newVal == null || newVal == undefined) {
                 // vm.requisitionsToReceive = facility.requisitionsToReceive;
                 // vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
                 console.log("Starting");
                 return;
 
-            }else {
-                console.log('Drafts' , vm.drafts);
+            } else {
+                console.log('Drafts', vm.drafts);
                 console.log("Programme: ", newVal);
                 var draft = vm.getDraft();
                 console.log("Draft: ", draft);
                 if (draft.id) {
                     draft.isStarter = false;
                     return draft;
-                } 
+                }
             }
         });
-       
+
 
         vm.editDraft = new FunctionDecorator()
             .decorateFunction(editDraft)
@@ -197,18 +197,47 @@
                 });
                 return $q.resolve();
             }
-            return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
-                //    console.log("Data: ", data);
-                selectedDraft.id = data.id;
-                $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                    id: selectedDraft.id,
-                    program: vm.program,
-                    facility: vm.facility,
-                    supervised: vm.isSupervised,
-                    includeInactive: false,
-                    physicalInventoryType: vm.physicalInventoryType
-                });
+
+            return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function (data) {
+
+                if (Array.isArray(data) && data.length > 0 && data[0].id) {
+                     selectedDraft.id = data[0].id;
+                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                            id: selectedDraft.id,
+                            program: vm.program,
+                            facility: vm.facility,
+                            supervised: vm.isSupervised,
+                            includeInactive: false,
+                            physicalInventoryType: vm.physicalInventoryType
+                        });
+                } else {
+                    return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
+                        //    console.log("Data: ", data);
+                        selectedDraft.id = data.id;
+                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                            id: selectedDraft.id,
+                            program: vm.program,
+                            facility: vm.facility,
+                            supervised: vm.isSupervised,
+                            includeInactive: false,
+                            physicalInventoryType: vm.physicalInventoryType
+                        });
+                    });
+                }
+
             });
+            // return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
+            //     //    console.log("Data: ", data);
+            //     selectedDraft.id = data.id;
+            //     $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+            //         id: selectedDraft.id,
+            //         program: vm.program,
+            //         facility: vm.facility,
+            //         supervised: vm.isSupervised,
+            //         includeInactive: false,
+            //         physicalInventoryType: vm.physicalInventoryType
+            //     });
+            // });
         }
 
         function onInit() {

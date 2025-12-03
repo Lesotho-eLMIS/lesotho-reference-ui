@@ -696,8 +696,9 @@
                     .finally(function () {
                       $state.go("openlmis.stockmanagement.stockCardSummaries", {
                         program: program.id,
-                        facility: facility.id,
+                        facility: draft.facilityId, //go to facility of the submitted draft in stock card summaries
                         includeInactive: false,
+                        supervised: $stateParams.supervised
                       });
                     });
                 },
