@@ -21,5 +21,6 @@
   "stockCard.print": "Print",
   "stockCard.reasonComments": "Reason Comments",
   "stockCard.unitPrice": "Unit Price",
+  "stockCard.soh": "Stock on Hand",
   "stockCard.notCached.error": "This stock card isn't cached. You'll need to go online to view and save it for offline use."
 }
