@@ -1,0 +1,64 @@
+<div class="view-tab openlmis-table-container">
+	<h4 ng-show="vm.showSkipControls" id="reqisition-skip-label">{{'requisitionViewTab.skip' | message}}</h4>
+	<ul ng-show="vm.showSkipControls" id="reqisition-skip-controls">
+		<li><a ng-click="vm.skipAllFullSupplyLineItems()">{{'requisitionViewTab.all' | message}}</a></li>
+		<li><a ng-click="vm.skipCurrentPageFullSupplyLineItems()">{{'requisitionViewTab.page' | message}}</a></li>
+		<li><a ng-click="vm.unskipAllFullSupplyLineItems()">{{'requisitionViewTab.none' | message}}</a></li>
+	</ul>
+	<span ng-if="vm.showAddFullSupplyProductControls">
+		{{ vm.skippedFullSupplyProductCountMessage() }}
+	</span>
+	<div ng-show="vm.showOrderableFilter" class="productNameFilter">
+		<input type="text" placeholder="{{ 'requisitionViewTab.filterPlaceholder' | message}}"
+			ng-model="vm.orderableFilterProperties.name" ng-change="vm.filterByOrderableParams()">
+	</div>
+	<div ng-show="vm.showSkipControls" id="skipped-line-items-visibility">
+		<label for="skippedItemsVisibility">{{:: 'requisitionViewTab.skippedItemsVisibility' | message  }}</label>
+		<input
+			type="checkbox"
+			name="skippedItemsVisibility"
+			id="skippedItemsVisibility"
+			ng-model="vm.showSkippedLineItems"
+			ng-change="vm.filterByOrderableParams()">
+	</div>
+	<button class="add" ng-if="vm.showAddFullSupplyProductsButton" ng-click="vm.addFullSupplyProducts()" >{{'requisitionViewTab.addProduct' | message}}</button>
+	<button class="add" ng-if="vm.showAddNonFullSupplyProductsButton" ng-click="vm.addNonFullSupplyProducts()" >{{'requisitionViewTab.addProduct' | message}}</button>
+	<button class="add" ng-if="vm.showUnskipFullSupplyProductsButton" ng-click="vm.unskipFullSupplyProducts()" >{{'requisitionViewTab.addProduct' | message}}</button>
+	<saving-indicator ng-show="vm.requisition.$isEditable" class="requisition-indicator" object="vm.requisition.requisitionLineItems"/>
+	<table>
+		<caption ng-if="!vm.items.length">{{vm.noProductsMessage | message}}</caption>
+		<thead>
+			<tr>
+				<th class="col-{{column.name}}" ng-repeat="column in vm.columns | orderBy : 'displayOrder'"
+					ng-class="{'col-sticky': !column.$canChangeOrder}" openlmis-popover="{{vm.getDescriptionForColumn(column)}}"
+					popover-trigger-area="element">{{column.label}}</th>
+				<th class="col-sticky sticky-right" ng-if="vm.showDeleteColumn()"></th>
+			</tr>
+		</thead>
+		<tbody ng-repeat="(category, lineItems) in vm.items | groupBy:'$program.orderableCategoryDisplayName'" tbody-title="{{category}}">
+			<tr ng-repeat="lineItem in lineItems | orderBy : '$program.displayOrder'" ng-class="{'skipped-line-item' : lineItem.skipped}">
+				<td ng-repeat="column in vm.columns | orderBy : 'displayOrder'"
+					product-grid-cell
+					requisition="vm.requisition"
+					column="column"
+					line-item="lineItem"
+					user-can-edit="vm.userCanEditColumn(column)"
+					program="vm.program"
+					can-approve="vm.canApproveAndReject">
+				</td>
+				<td ng-if="vm.showDeleteColumn()">
+					<button class="hide-line-item"
+						ng-click="vm.deleteLineItem(lineItem)"
+						ng-if="lineItem.$deletable">
+						<i class="fa fa-remove"></i>
+					</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<openlmis-pagination
+		list="vm.filteredItems"
+		paged-list="vm.items"
+		pagination-id="vm.paginationId"
+		on-page-change="vm.cacheRequisition"/>
+</div>
