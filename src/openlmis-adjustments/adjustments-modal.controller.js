@@ -166,7 +166,7 @@
             vm.newAdjustment= {orderable:{netContent : lineItem.orderable.netContent}};
             if (!showInDoses) {
                 angular.forEach(adjustments, function(adjustment) {
-                    console.log("Adjustements: ", adjustment);
+                    
                     adjustment.quantities = quantityUnitCalculateService.
                         recalculateInputQuantity(adjustment,
                             lineItem.orderable.netContent, true);

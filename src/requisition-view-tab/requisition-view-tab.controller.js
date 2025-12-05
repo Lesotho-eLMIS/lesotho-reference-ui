@@ -215,7 +215,6 @@
         }
 
         function search() {
-            console.log("Keyword", vm.searchKeyword);
             $stateParams.searchKeyword = vm.searchKeyword;
             $state.go('openlmis.requisitions.requisition.fullSupply', $stateParams, {
                 reload: true

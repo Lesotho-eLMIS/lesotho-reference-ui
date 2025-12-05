@@ -215,7 +215,7 @@
             var ncha = actions.slice(0,2);
 
             ncha.forEach(function (fn) {
-                console.log(fn);
+               // console.log(fn);
                 promises.push($q.when(fn.apply(undefined, params)));
             });
 

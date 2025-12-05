@@ -79,16 +79,13 @@
             // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
 
             if (newVal == null || newVal == undefined) {
-                // vm.requisitionsToReceive = facility.requisitionsToReceive;
-                // vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
-                console.log("Starting");
+
                 return;
 
             } else {
-                console.log('Drafts', vm.drafts);
-                console.log("Programme: ", newVal);
+
                 var draft = vm.getDraft();
-                console.log("Draft: ", draft);
+               
                 if (draft.id) {
                     draft.isStarter = false;
                     return draft;
@@ -111,8 +108,8 @@
             // }
             var programId = vm.program.id;
             return _.find(vm.drafts, function (programId) {
-                console.log("Program: ", vm.program);
-                console.log("Draft: ", draft);
+                // console.log("Program: ", vm.program);
+                // console.log("Draft: ", draft);
                 return draft.programId === programId;
             });
         };

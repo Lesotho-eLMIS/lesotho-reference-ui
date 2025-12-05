@@ -105,7 +105,7 @@
             .state('openlmis.buq.prepareBuq', {
                 label: 'buq.prepareBuq',
                 url: '/prepare',
-                showInNavigation: true,
+                showInNavigation: false,
                 priority: 13,
                 accessRights: [BUQ_RIGHTS.PREPARE_BUQ],
                 resolve: createResolve(true)
