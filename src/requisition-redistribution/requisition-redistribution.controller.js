@@ -96,9 +96,8 @@
         //Select facilities in the same district as requesting facility as well as all DHMT facilities
         function filterFacilities(){
            
-           console.log(vm.facility);
             var supplierFacilities = getSupplyingFacilities(vm.hospitals, vm.healthCenters, vm.dhmts);
-            console.log(supplierFacilities);
+          
             if(vm.facility.type.code === 'dist_store'){
                 const zoneId = vm.facility.geographicZone.id;
                 return supplierFacilities.filter(item => item.geographicZone.parent.id === zoneId || item.type.code === 'dist_store');
@@ -191,14 +190,14 @@
                 .then((fetchedOrder) => {
                     requestedItems.forEach((lineItem) => {
                         let packs = calculatePacksToShip(lineItem);
-                        console.log(packs);
+                     
                         fetchedOrder.orderLineItems.push({                                    
                             orderable: lineItem.orderable,
                             orderedQuantity: packs, //lineItem.packsToShip,
                             soh: 45
                         });
                     }); 
-                    console.log(fetchedOrder);                 
+                                   
                     return orderCreateService.send(fetchedOrder);
                 })
                 .then(() => {

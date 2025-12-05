@@ -48,7 +48,7 @@
          * @return {StockEvent}                  the new instance of stock event
          */
         function createFromPhysicalInventory(physicalInventory, physicalInventoryType ) {
-           // console.log(physicalInventory)
+
            if(physicalInventoryType === "Cyclic"){
             physicalInventory.lineItems = physicalInventory.lineItems.filter(item => item.quantity >= 0)
            }
@@ -84,7 +84,6 @@
                         }, stockAdjustments
                     );
                 });
-            console.log(physicalInventoryCopy.lineItems)
 
             return new StockEvent(physicalInventoryCopy);
         }

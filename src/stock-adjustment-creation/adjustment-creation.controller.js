@@ -56,7 +56,7 @@
     vm.formatDate = formatDate;
     vm.showInDoses = showInDoses;
     vm.recalculateSOHQuantity = recalculateSOHQuantity;
-    vm.test = test;
+  
 
     /**
      * @ngdoc property
@@ -80,14 +80,11 @@
      * @return {boolean} true if the quantities are in doses, false otherwise
      */
     function showInDoses() {
-      // console.log("QTY IN Fn", vm.quantityUnit === QUANTITY_UNIT.DOSES);
       return vm.quantityUnit === QUANTITY_UNIT.DOSES;
       // return true;
       
     }
-    function test(lineItem){
-      console.log("Line Item", lineItem);
-    }
+  
     vm.discrepancyOptions = ["Wrong Item", "Wrong Quantity", "Defective Item", "Missing Item", "More..."];
     vm.rejectionReasons = []; // To Store Shipment rejection Reasons
     vm.FromSupplier = false;
@@ -221,8 +218,7 @@
      */
     function addProduct() {
 
-      console.log('Adding product');
-      var selectedItem;
+    var selectedItem;
       if (vm.selectedOrderableGroup && vm.selectedOrderableGroup.length) {
         vm.newLot.tradeItemId =
           vm.selectedOrderableGroup[0].orderable.identifiers.tradeItem;
@@ -271,8 +267,6 @@
           $previewSOH: selectedItem.stockOnHand
         },
           selectedItem, copyDefaultValue()));
-
-        console.log("Added Line Items ", vm.addedLineItems);
         previousAdded = vm.addedLineItems[0];
         vm.search();
       }
@@ -351,11 +345,10 @@
      * @param {Object} lineItem line item to be validated.
      */
     vm.validateQuantity = function (lineItem) {
-      console.log("Validating_1: ", lineItem);
+
       lineItem = quantityUnitCalculateService.recalculateInputQuantity(
         lineItem, lineItem.orderable.netContent, vm.showInDoses()
       );
-      console.log("Validating_2: ", lineItem);
       if (
         lineItem.quantity > lineItem.$previewSOH &&
         lineItem.reason &&
@@ -723,7 +716,6 @@
                 lineItem.lot.tradeItemId === lot.tradeItemId
               ) {
                 lineItem.lot = lot;
-                console.log(lineItem);
               }
             });
             return addedLineItems;
@@ -849,8 +841,7 @@
       if (adjustmentType.state === 'receive') {
         vm.references = populateReferenceNumbers(ReferenceNumbers);
       }
-      //console.log("QTY: ", QUANTITY_UNIT);
-      //console.log("QTY: ", vm.quantityUnit);
+      
       //Getting Rejection Reasons
       var rej = rejectionReasonService.getAll();
       rej.then(function (reasons) {

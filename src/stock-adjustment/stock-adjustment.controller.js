@@ -128,7 +128,7 @@
         // };
 
         vm.proceed = function () {
-            console.log('this is a service point:', vm.isServicePoint);
+           
             if (!vm.requisitionToReceiveAgainst) {
                 $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
                 programId: vm.program.id,
@@ -137,7 +137,6 @@
                 supervised: vm.isSupervised
              });
             }else {
-                //console.log('selected requisition', vm.requisitionToReceiveAgainst);
                 $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
                 programId: vm.program.id,
                 program: vm.program,

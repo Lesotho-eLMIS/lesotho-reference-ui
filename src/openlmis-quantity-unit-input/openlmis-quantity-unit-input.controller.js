@@ -61,7 +61,6 @@
          * Recalculate input quantity.
          */
         function changeValue(item) {
-            console.log("Itemmm: ", item);
             //vm.newAdjustment.netContent = lineItem.orderable.netContent;
             item = quantityUnitCalculateService.recalculateInputQuantity(
                 item, item.netContent, vm.showInDoses

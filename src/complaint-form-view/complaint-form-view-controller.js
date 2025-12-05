@@ -55,7 +55,7 @@
         vm.$onInit = onInit;
 
         function onInit() {
-           // console.log("Facility: ", vm.facility);
+          
             vm.facilityName = vm.facility.name;
             getFacility();
         }
@@ -114,7 +114,7 @@
             });
             Promise.all(promises).then(() => {
                 lineItems;
-                //console.log("New Line Items: ", lineItems);
+           
             });
         }
 
@@ -122,13 +122,13 @@
             var promises = vm.complaints.map(complaint =>{
                 //Resolve service area (Facility) name
                 facilityService.get(complaint.facilityId).then(response =>{
-                   // console.log(response);
+            
                     complaint.facilityName = response.name;
                 });
             });
             Promise.all(promises).then(() => {
                 vm.complaints;
-               // console.log("New Complaints: ",  vm.complaints);
+             
             });
         }
     

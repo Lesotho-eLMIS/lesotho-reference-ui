@@ -147,23 +147,6 @@
      */
     vm.displayLineItemsGroup = displayLineItemsGroup;
 
-    // $scope.$on("$stateChangeStart", function () {
-    //   //Delete cyclic Draft before the state changes if it was not submitted yet.
-    //   if (
-    //     vm.stateParams.physicalInventoryType === "Cyclic" &&
-    //     !vm.isSubmitted
-    //   ) {
-    //     physicalInventoryService
-    //       .deleteDraft(draft.id)
-    //       .then(function () {
-    //         console.log("Cyclic Draft Deleted");
-    //       })
-    //       .catch(function () {
-    //         console.log("Cyclic Draft Delete Failed");
-    //       });
-    //   }
-    // });
-
     vm.updateProgress = function () {
       vm.itemsWithQuantity = _.filter(
         vm.displayLineItemsGroup,

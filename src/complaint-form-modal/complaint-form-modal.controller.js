@@ -125,7 +125,7 @@
         };
 
         vm.setComplaintReason = function (product) {
-            console.log(product);
+           
             //set the nature of complaint
             if (typeof product.natureOfComplaintName === "object") {
                 product.natureOfComplaint = product.natureOfComplaintName.name;
@@ -143,7 +143,7 @@
         };
 
         vm.setComplaintDetail = function (product) {
-            console.log(product);
+         
             // Set complaint details for the selected complaint reason
             product.reasonDetailOptions = vm.complaintDetailsOptions.find(
                 detail => detail.name === product.complaintReason

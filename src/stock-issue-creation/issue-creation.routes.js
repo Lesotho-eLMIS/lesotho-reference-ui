@@ -103,7 +103,7 @@
                             $stateParams.programId, facility.id
                         );
                     }
-                    console.log("Issue Creation Routes");
+                    
                     return $stateParams.srcDstAssignments;
                 },
                 suppliers: function(facilityService){
