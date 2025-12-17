@@ -56,6 +56,9 @@
     vm.formatDate = formatDate;
     vm.showInDoses = showInDoses;
     vm.recalculateSOHQuantity = recalculateSOHQuantity;
+    vm.orderableGroupOptions = [];
+    vm.orderableGroupMap = {};
+    vm.selectedOrderableGroupId = null;
   
 
     /**
@@ -197,6 +200,7 @@
         vm.addedLineItems,
         vm.hasLot
       );
+      updateNeedToConfirmFlag();
 
       $stateParams.addedLineItems = vm.addedLineItems;
       $stateParams.displayItems = vm.displayItems;
@@ -331,6 +335,7 @@
         .then(function () {
           vm.addedLineItems = _.difference(vm.addedLineItems, vm.displayItems);
           vm.displayItems = [];
+          vm.search();
         });
     };
 
@@ -549,6 +554,8 @@
      * Reset form status and change content inside lots drop down list.
      */
     vm.orderableSelectionChanged = function () {
+      vm.selectedOrderableGroup = vm.orderableGroupMap[vm.selectedOrderableGroupId];
+
       //reset selected lot, so that lot field has no default value
       vm.selectedLot = null;
 
@@ -560,6 +567,12 @@
 
       //make form good as new, so errors won't persist
       $scope.productForm.$setPristine();
+
+      if (!vm.selectedOrderableGroup) {
+        vm.lots = [];
+        vm.selectedOrderableHasLots = false;
+        return;
+      }
 
       vm.lots = orderableGroupService.lotsOf(
         vm.selectedOrderableGroup,
@@ -766,8 +779,7 @@
             for (var error in errorLotsReduced) {
               alertService.error(error, errorLotsReduced[error].join(', '));
             }
-            vm.selectedOrderableGroup = undefined;
-            vm.selectedLot = undefined;
+            resetOrderableSelectionState();
             vm.lotChanged();
             return $q.reject(errorResponse.data.message);
           }
@@ -820,6 +832,38 @@
       addedLineItems.push.apply(addedLineItems, constituentLineItems);
     }
 
+    function updateNeedToConfirmFlag() {
+      $scope.needToConfirm = vm.addedLineItems.length > 0;
+    }
+
+    function resetOrderableSelectionState() {
+      vm.selectedOrderableGroupId = null;
+      vm.selectedOrderableGroup = undefined;
+      vm.selectedLot = undefined;
+      vm.selectedOrderableHasLots = false;
+      vm.lots = [];
+      vm.canAddNewLot = false;
+      initiateNewLotObject();
+    }
+
+    function buildOrderableGroupLookups() {
+      vm.orderableGroupOptions = [];
+      vm.orderableGroupMap = {};
+
+      vm.orderableGroups.forEach(function (group) {
+        if (!group || !group.length || !group[0].orderable) {
+          return;
+        }
+
+        var orderable = group[0].orderable;
+        vm.orderableGroupMap[orderable.id] = group;
+        vm.orderableGroupOptions.push({
+          id: orderable.id,
+          displayName: orderable.fullProductName
+        });
+      });
+    }
+
     //Merging Facility Arrays
     function mergeFacilities(...arrays) {
       return arrays.reduce((acc, array) => acc.concat(array), []);
@@ -857,8 +901,7 @@
           console.error('Error getting reasons:', error);
         });
 
-      var copiedOrderableGroups = angular.copy(orderableGroups);
-      vm.allItems = _.flatten(copiedOrderableGroups);
+      vm.allItems = _.flatten(orderableGroups);
 
       $state.current.label = messageService.get(vm.key('title'), {
         facilityCode: facility.code,
@@ -869,25 +912,6 @@
       initViewModel();
       initStateParams();
 
-      $scope.$watch(
-        function () {
-          return vm.addedLineItems;
-        },
-        function (newValue) {
-          $scope.needToConfirm = newValue.length > 0;
-          if (!vm.keyword) {
-            vm.addedLineItems = vm.displayItems;
-          }
-          $stateParams.addedLineItems = vm.addedLineItems;
-          $stateParams.displayItems = vm.displayItems;
-          $stateParams.keyword = vm.keyword;
-          $state.go($state.current.name, $stateParams, {
-            reload: false,
-            notify: false,
-          });
-        },
-        true
-      );
       confirmDiscardService.register(
         $scope,
         'openlmis.stockmanagement.stockCardSummaries'
@@ -936,8 +960,10 @@
       // vm.displayItems = $stateParams.displayItems || [];
       vm.displayItems = [];
       vm.keyword = $stateParams.keyword;
+      updateNeedToConfirmFlag();
 
       vm.orderableGroups = orderableGroups;
+      buildOrderableGroupLookups();
       vm.hasLot = false;
       vm.orderableGroups.forEach(function (group) {
         vm.hasLot =
@@ -949,8 +975,7 @@
         vm.orderableGroups
       );
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
-      vm.canAddNewLot = false;
-      initiateNewLotObject();
+      resetOrderableSelectionState();
     }
 
     function initiateNewLotObject() {
