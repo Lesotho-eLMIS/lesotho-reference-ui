@@ -1,0 +1,7 @@
+Built a new lesothoelmis-requisition-ui image on 10th Dec 2025.
+The lesothoelmis-reference-ui is now using this requisition image entirely
+hence why there are no requisition files in the lesotho reference-ui src folder
+exept the requisition redistribution which is a newly introduced feature in the 
+lesotho elmis ui.
+This convention is worthy of note for future reference since all other ui components 
+like fulfilment and stock management do not use this image convention.

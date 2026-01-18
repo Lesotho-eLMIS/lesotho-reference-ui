@@ -24,8 +24,8 @@
                 <div class="form-inline">
                     <div>
                         <label for="productSelect">{{vm.key('product') | message}}</label>
-                        <select id="productSelect" ng-model="vm.selectedOrderableGroup"
-                            ng-options="orderableGroup[0].orderable.fullProductName for orderableGroup in vm.orderableGroups"
+                        <select id="productSelect" ng-model="vm.selectedOrderableGroupId"
+                            ng-options="option.id as option.displayName for option in vm.orderableGroupOptions track by option.id"
                             ng-change="vm.orderableSelectionChanged()" required>
                         </select>
                     </div>
