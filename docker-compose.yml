@@ -50,7 +50,7 @@ services:
     volumes:
       - '/openlmis-report-ui'
   requisition-ui:
-    image: elmislesotho/requisition-ui:0.0.1
+    image: elmislesotho/requisition-ui:0.0.3 
     volumes:
       - '/openlmis-requisition-ui'
   stockmanagement-ui:
