@@ -1,14 +1,15 @@
 <h2 ng-show="vm.facility">{{'stockPhysicalInventory.title' | message: {'facility': vm.facility.name} }}</h2>
 
-<div>
-  <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()" physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
-</div>
+
 
 <form class="sidebar">
-  <openlmis-facility-program-select
-    is-supervised="vm.isSupervised"
-    facility="vm.facility"
-    program="vm.program"
+
+  <div>
+    <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()"
+      physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
+  </div>
+
+  <openlmis-facility-program-select is-supervised="vm.isSupervised" facility="vm.facility" program="vm.program"
     module="'stock-card-summary-list'">
   </openlmis-facility-program-select>
 
@@ -21,12 +22,8 @@
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
   </div> -->
   <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(draft)"
-               value="{{(draft.isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
-               class="primary"/>
-        <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(draft)"
-               value="{{'stockPhysicalInventory.start' | message}}"
-               class="primary"/>
+    value="{{(draft.isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+    class="primary" />
+  <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(draft)"
+    value="{{'stockPhysicalInventory.start' | message}}" class="primary" />
 </form>
-
-
-
