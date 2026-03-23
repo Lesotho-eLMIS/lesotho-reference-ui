@@ -30,12 +30,12 @@
 
     controller.$inject = [
         'proofOfDeliveryManageService', '$state', 'loadingModalService', 'notificationService', 'pods',
-        '$stateParams', 'programs', 'requestingFacilities', 'supplyingFacilities', 'ProofOfDeliveryPrinter'
+        '$stateParams', 'programs', 'requestingFacilities', 'supplyingFacilities', 'ProofOfDeliveryPrinter', 'facility'
     ];
 
     function controller(proofOfDeliveryManageService, $state, loadingModalService, notificationService,
                         pods, $stateParams, programs, requestingFacilities, supplyingFacilities,
-                        ProofOfDeliveryPrinter) {
+                        ProofOfDeliveryPrinter, facility) {
         var vm = this;
 
         vm.$onInit = onInit;
@@ -46,11 +46,11 @@
         /**
          * @ngdoc property
          * @propertyOf proof-of-delivery-manage.controller:ProofOfDeliveryManageController
-         * @name pods
-         * @type {Array}
+         * @name facility
+         * @type {Object}
          *
          * @description
-         * Holds pods that will be displayed.
+         * Holds user's home facility.
          */
         vm.pods = undefined;
 
@@ -152,6 +152,7 @@
          * setting data to be available on the view.
          */
         function onInit() {
+            vm.facility = facility;
             vm.pods = pods;
             vm.programs = programs;
             vm.requestingFacilities = requestingFacilities;
@@ -159,6 +160,16 @@
             vm.program = getSelectedObjectById(programs, $stateParams.programId);
             vm.requestingFacility = getSelectedObjectById(requestingFacilities, $stateParams.requestingFacilityId);
             vm.supplyingFacility = getSelectedObjectById(supplyingFacilities, $stateParams.supplyingFacilityId);
+            
+            // Auto-populate requesting facility with home facility if not already set
+            if (!vm.requestingFacility && vm.facility && vm.requestingFacilities) {
+                var homeFacility = vm.requestingFacilities.find(function(reqFacility) {
+                    return reqFacility.id === vm.facility.id;
+                });
+                if (homeFacility) {
+                    vm.requestingFacility = homeFacility;
+                }
+            }
             vm.facilityName = getName(vm.requestingFacility);
             vm.programName = getName(vm.program);
         }
