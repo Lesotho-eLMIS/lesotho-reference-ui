@@ -134,17 +134,218 @@
     function showInDoses() {
       return vm.quantityUnit === QUANTITY_UNIT.DOSES;
     }
-    vm.selectProductForCyclic = selectProductForCyclic;
-
+    
+    // ================ CHANGES START HERE ================
+    
     /**
      * @ngdoc property
      * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
-     * @name displayLineItemsGroup
+     * @name productSelectionMode
+     * @type {String}
+     *
+     * @description
+     * Tracks current product selection mode: 'select' for existing products, 'add' for new products
+     */
+    vm.productSelectionMode = null;
+    
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name searchText
+     * @type {String}
+     *
+     * @description
+     * Search text for finding existing products
+     */
+    vm.searchText = '';
+    
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name searchResults
      * @type {Array}
      *
      * @description
-     * Holds current display physical inventory draft line items grouped by orderable id.
+     * Search results for existing products
      */
+    vm.searchResults = [];
+    
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name isSearching
+     * @type {Boolean}
+     *
+     * @description
+     * Flag indicating if search is in progress
+     */
+    vm.isSearching = false;
+    
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name newProductData
+     * @type {Object}
+     *
+     * @description
+     * Form data for adding new products
+     */
+    vm.newProductData = {
+        productCode: '',
+        fullProductName: '',
+        netContent: null,
+        dispensingUnit: ''
+    };
+    
+    // Keep original method for backward compatibility
+    vm.selectProductForCyclic = selectProductForCyclic;
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name searchProducts
+     *
+     * @description
+     * Searches for existing products in real-time
+     */
+    vm.searchProducts = function() {
+        if (!vm.searchText || vm.searchText.length < 2) {
+            vm.searchResults = [];
+            return;
+        }
+
+        vm.isSearching = true;
+
+        setTimeout(function() {
+            var searchLower = vm.searchText.toLowerCase();
+            // Search against productsForCyclic — these are already deduplicated
+            // and exclude products already added to the count
+            vm.searchResults = _.filter(vm.productsForCyclic, function(item) {
+                return item.orderable.productCode.toLowerCase().indexOf(searchLower) !== -1 ||
+                       item.orderable.fullProductName.toLowerCase().indexOf(searchLower) !== -1;
+            });
+
+            vm.isSearching = false;
+            $scope.$apply();
+        }, 300);
+    };
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name selectExistingProductForCyclic
+     *
+     * @description
+     * Adds an existing product to cyclic inventory
+     */
+    vm.selectExistingProductForCyclic = function(productItem) {
+        if (!productItem) return;
+
+        // Find the full group in displayLineItemsGroup by orderable id
+        var fullGroup = _.find(vm.displayLineItemsGroup, function(group) {
+            return group[0].orderable.id === productItem.orderable.id;
+        });
+
+        if (!fullGroup) return;
+
+        // Guard: already selected
+        if (vm.itemsSelectedForCyclic.some(function(g) {
+            return g[0].orderable.id === fullGroup[0].orderable.id;
+        })) {
+            alertService.error('This product is already added to the count');
+            return;
+        }
+
+        vm.itemsSelectedForCyclic.push(fullGroup);
+
+        // Remove from available products so it won't appear in future searches
+        vm.productsForCyclic = vm.productsForCyclic.filter(function(p) {
+            return p.orderable.id !== fullGroup[0].orderable.id;
+        });
+
+        notificationService.success('Product added to cyclic count');
+
+        // Collapse panel and clear search
+        vm.productSelectionMode = null;
+        vm.selectedProductForCyclic = null;
+        vm.searchText = '';
+        vm.searchResults = [];
+
+        // Re-group
+        regroupCyclicItems();
+    };
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name addNewProductForCyclic
+     *
+     * @description
+     * Creates and adds a new product to cyclic inventory
+     */
+    vm.addNewProductForCyclic = function() {
+        if (!vm.newProductData.productCode || !vm.newProductData.fullProductName) {
+            alertService.error('Product code and name are required');
+            return;
+        }
+
+        var newCode = vm.newProductData.productCode.toUpperCase();
+
+        // Guard: duplicate product code — only check items already confirmed in the list
+        if (vm.itemsSelectedForCyclic.some(function(g) {
+            return g[0].orderable.productCode === newCode;
+        })) {
+            alertService.error('A product with this code already exists in the count');
+            return;
+        }
+
+        // Build a minimal orderable. We deliberately do NOT include a programs map
+        // because the groupByProgramProductCategory filter reads programs from the
+        // server-side orderable structure which we cannot fully replicate here.
+        // Instead we manage groupedCategories manually for new products.
+        var newOrderable = {
+            id: 'new_' + Date.now(),
+            productCode: newCode,
+            fullProductName: vm.newProductData.fullProductName,
+            netContent: vm.newProductData.netContent || 1,
+            dispensingUnit: vm.newProductData.dispensingUnit || 'each',
+            extraData: {}
+        };
+
+        var newLineItems = [{
+            active: true,
+            stockOnHand: 0,
+            lot: null,
+            orderable: newOrderable,
+            quantity: null,
+            vvmStatus: null,
+            stockAdjustments: [],
+            isNewProduct: true,
+            $isNewItem: true
+        }];
+
+        vm.itemsSelectedForCyclic.push(newLineItems);
+
+        regroupCyclicItems();
+
+        // Reset UI
+        vm.productSelectionMode = null;
+        vm.newProductData = {
+            productCode: '',
+            fullProductName: '',
+            netContent: null,
+            dispensingUnit: ''
+        };
+
+        notificationService.success('New product added to cyclic count');
+        // NOTE: We deliberately do NOT call cacheDraft() here.
+        // New products have a temporary fake orderable ID that the cache service
+        // would try to resolve against the server via getByVersionIdentities,
+        // returning a 403/error that crashes the route resolver on next page load.
+    };
+
+    // ================ CHANGES END HERE ================
+
     vm.displayLineItemsGroup = displayLineItemsGroup;
 
     vm.updateProgress = function () {
@@ -513,6 +714,16 @@
         )
         .then(function () {
           loadingModalService.open();
+
+          // For Cyclic, strip any client-side-only new product line items before
+          // sending to the server — they have fake IDs the server cannot resolve.
+          var originalLineItems = draft.lineItems;
+          if (vm.stateParams.physicalInventoryType === 'Cyclic') {
+            draft.lineItems = draft.lineItems.filter(function(item) {
+              return !item.isNewProduct;
+            });
+          }
+
           return saveLots(draft, function () {
             return physicalInventoryFactory.saveDraft(draft).then(
               function () {
@@ -521,7 +732,16 @@
                 );
 
                 draft.$modified = undefined;
-                vm.cacheDraft();
+                // Restore full line items array (including any new products) for
+                // continued in-session use, but only cache if there are no new
+                // products present (fake IDs break the cache service on reload).
+                draft.lineItems = originalLineItems;
+                var hasNewProducts = vm.itemsSelectedForCyclic.some(function(g) {
+                  return g[0].isNewProduct;
+                });
+                if (!hasNewProducts) {
+                  vm.cacheDraft();
+                }
 
                 $stateParams.isAddProduct = false;
                 $stateParams.program = vm.program;
@@ -538,6 +758,8 @@
                 });
               },
               function (errorResponse) {
+                // Restore line items on failure too
+                draft.lineItems = originalLineItems;
                 loadingModalService.close();
                 alertService.error(errorResponse.data.message);
               },
@@ -651,6 +873,14 @@
           draft.occurredDate = resolvedData.occurredDate;
           draft.signature = resolvedData.signature;
 
+          // Strip client-side-only new product line items before sending to server
+          var originalLineItems = draft.lineItems;
+          if (vm.stateParams.physicalInventoryType === 'Cyclic') {
+            draft.lineItems = draft.lineItems.filter(function(item) {
+              return !item.isNewProduct;
+            });
+          }
+
           return saveLots(draft, function () {
             physicalInventoryService
               .submitPhysicalInventory(
@@ -686,6 +916,7 @@
                     });
                 },
                 function (errorResponse) {
+                  draft.lineItems = originalLineItems;
                   loadingModalService.close();
                   alertService.error(errorResponse.data.message);
                   physicalInventoryDraftCacheService.removeById(draft.id);
@@ -898,17 +1129,14 @@
       //Prepare product for select for cyclic stock count
       displayLineItemsGroup.forEach(function (group) {
         if (hasValidQuantity(group[0])) {
-          // If the group has a valid quantity, push it to the add it to the table of items selected for cyclic count
           vm.itemsSelectedForCyclic.push(group);
-          vm.groupedCategories = $filter("groupByProgramProductCategory")(
-            vm.itemsSelectedForCyclic,
-            vm.program.id,
-          );
         } else {
-          // If the group does not have a valid quantity, push it to the array of products to choose from in the dropdown
           vm.productsForCyclic.push(group[0]);
         }
       });
+      if (vm.itemsSelectedForCyclic.length > 0) {
+        regroupCyclicItems();
+      }
       vm.hasLot = _.any(draft.lineItems, function (item) {
         return item.lot;
       });
@@ -971,8 +1199,12 @@
           lineItem,
           lineItem.stockAdjustments,
         );
-      draft.$modified = true;
-      vm.cacheDraft();
+      // Do not cache if this line item belongs to a new product with a fake
+      // orderable ID — that would corrupt the cache and break route resolution.
+      if (!lineItem.isNewProduct) {
+        draft.$modified = true;
+        vm.cacheDraft();
+      }
     }
 
     /**
@@ -1101,25 +1333,122 @@
         vm.program.id,
       );
     }
-    function removeGroup(group) {
-      // Remove the group from the array of items selected for cyclic count
-      const index = vm.itemsSelectedForCyclic.indexOf(group);
-      if (index !== -1) {
-        group.forEach(function (batch) {
-          batch.quantity = undefined;
-          batch.quantityInPacks = NaN;
-          batch.quantityRemainderInDoses = NaN;
-          batch.stockAdjustments = Array(0);
+    
+    // ================ UPDATED removeGroup FUNCTION ================
+    
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name removeGroup
+     *
+     * @description
+     * Removes a product group with confirmation
+     */
+    /**
+     * Safely regroups vm.itemsSelectedForCyclic into vm.groupedCategories.
+     * Splits new products (incomplete orderable) from real ones so the
+     * groupByProgramProductCategory filter never receives an orderable
+     * that lacks the server-side programs map it needs.
+     */
+    function regroupCyclicItems() {
+        var realItems = vm.itemsSelectedForCyclic.filter(function(g) {
+            return !g[0].isNewProduct;
         });
-        vm.itemsSelectedForCyclic.splice(index, 1);
-      }
-      // Re-group the remaining items by Category
-      vm.groupedCategories = $filter("groupByProgramProductCategory")(
-        vm.itemsSelectedForCyclic,
-        vm.program.id,
-      );
+        var newItems = vm.itemsSelectedForCyclic.filter(function(g) {
+            return g[0].isNewProduct;
+        });
+
+        var grouped = realItems.length > 0
+            ? $filter("groupByProgramProductCategory")(realItems, vm.program.id)
+            : {};
+
+        if (newItems.length > 0) {
+            grouped['New Products'] = newItems;
+        }
+
+        vm.groupedCategories = grouped;
     }
 
+    function removeGroup(group) {
+        var productName = group[0].orderable.fullProductName;
+
+        confirmService.confirm(
+            'Are you sure you want to remove "' + productName + '" from the cyclic count?',
+            'Confirm Removal'
+        ).then(function() {
+            group.forEach(function(batch) {
+                batch.quantity = null;
+                batch.quantityInPacks = NaN;
+                batch.quantityRemainderInDoses = NaN;
+                batch.stockAdjustments = [];
+            });
+
+            var index = vm.itemsSelectedForCyclic.indexOf(group);
+            if (index !== -1) {
+                vm.itemsSelectedForCyclic.splice(index, 1);
+
+                if (!group[0].isNewProduct) {
+                    vm.productsForCyclic.push(group[0]);
+                    vm.productsForCyclic.sort(function(a, b) {
+                        return a.orderable.fullProductName.localeCompare(b.orderable.fullProductName);
+                    });
+                }
+
+                notificationService.success('"' + productName + '" removed from cyclic count');
+            }
+
+            regroupCyclicItems();
+        });
+    }
+
+
+
+    // ================ END UPDATED FUNCTION ================
+
     vm.validateOnPageChange();
+    
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name toggleProductSelectionMode
+     *
+     * @description
+     * Toggles between Select Existing and Add New product modes
+     * Updated to add CSS classes for active states
+     */
+    vm.toggleProductSelectionMode = function(mode) {
+        // If clicking the same active tab, close it
+        if (vm.productSelectionMode === mode) {
+            vm.productSelectionMode = null;
+        } else {
+            vm.productSelectionMode = mode;
+            vm.selectedProductForCyclic = null;
+            vm.searchResults = [];
+            vm.searchText = '';
+            vm.newProductData = {
+                productCode: '',
+                fullProductName: '',
+                netContent: null,
+                dispensingUnit: ''
+            };
+        }
+    };
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name getTabClass
+     *
+     * @description
+     * Returns CSS class for active tab
+     */
+    vm.getTabClass = function(mode) {
+        if (vm.productSelectionMode === mode) {
+            return mode === 'select' ? 'select-mode-active' : 'add-mode-active';
+        }
+        return '';
+    };
+
   }
+
 })();

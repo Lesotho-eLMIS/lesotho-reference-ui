@@ -28,22 +28,143 @@
     </openlmis-progressbar>
     <quantity-unit-toggle class="is-primary" quantity-unit="vm.quantityUnit"></quantity-unit-toggle>
 
-    <button class="pull-right add" ng-click="vm.addProducts()">
+    <button class="pull-right add" ng-if="vm.stateParams.physicalInventoryType !== 'Cyclic'" ng-click="vm.addProducts()">
         {{'stockPhysicalInventoryDraft.addProduct' | message}}
     </button>
-    <div ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" class="pull-right add">
-        <label for="productSelect">{{'Select Product'}}</label>
-        <select  id="productSelect" ng-model="vm.selectedProductForCyclic"
-            ng-options="product.orderable.fullProductName for product in vm.productsForCyclic" ng-required="true">
-        </select>
-            <button ng-click="vm.selectProductForCyclic()">Add</button>
+    <div ng-if="vm.stateParams.physicalInventoryType === 'Cyclic'" class="cyclic-product-selector">
+
+        <!-- Mode Toggle Tabs -->
+        <div class="cyclic-mode-tabs">
+            <button type="button"
+                    class="cyclic-tab-btn"
+                    ng-class="{'cyclic-tab-btn--active': vm.productSelectionMode === 'select'}"
+                    ng-click="vm.toggleProductSelectionMode('select')">
+                {{'stockPhysicalInventoryDraft.selectExistingProduct' | message}}
+            </button>
+            <button type="button"
+                    class="cyclic-tab-btn"
+                    ng-class="{'cyclic-tab-btn--active': vm.productSelectionMode === 'add'}"
+                    ng-click="vm.toggleProductSelectionMode('add')">
+                {{'stockPhysicalInventoryDraft.addNewProduct' | message}}
+            </button>
+        </div>
+
+        <!-- Select Existing Product Panel -->
+        <div ng-if="vm.productSelectionMode === 'select'" class="cyclic-panel">
+            <p class="cyclic-panel__hint">{{'stockPhysicalInventoryDraft.selectExistingProductDesc' | message}}</p>
+            <div class="cyclic-search-row">
+                <input type="text"
+                       class="cyclic-search-input"
+                       ng-model="vm.searchText"
+                       ng-change="vm.searchProducts()"
+                       placeholder="{{'stockPhysicalInventoryDraft.searchFieldHint' | message}}"
+                       autocomplete="off"/>
+                <span ng-if="vm.isSearching" class="cyclic-searching-label">
+                    {{'stockPhysicalInventoryDraft.searching' | message}}
+                </span>
+            </div>
+
+            <!-- Search Results -->
+            <div ng-if="vm.searchText.length >= 2 && !vm.isSearching" class="cyclic-results">
+                <div ng-if="vm.searchResults.length === 0" class="cyclic-results__empty">
+                    {{'stockPhysicalInventoryDraft.noProductsFound' | message}}
+                </div>
+                <ul ng-if="vm.searchResults.length > 0" class="cyclic-results__list">
+                    <li ng-repeat="item in vm.searchResults"
+                        class="cyclic-results__item"
+                        ng-click="vm.selectExistingProductForCyclic(item)">
+                        <span class="cyclic-results__code">{{item.orderable.productCode}}</span>
+                        <span class="cyclic-results__name">{{item.orderable.fullProductName}}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <p ng-if="!vm.searchText || vm.searchText.length < 2" class="cyclic-panel__tip">
+                {{'stockPhysicalInventoryDraft.startTyping' | message}}
+            </p>
+        </div>
+
+        <!-- Add New Product Panel -->
+        <div ng-if="vm.productSelectionMode === 'add'" class="cyclic-panel">
+            <p class="cyclic-panel__hint">{{'stockPhysicalInventoryDraft.addNewProductDesc' | message}}</p>
+            <p class="cyclic-panel__warning">{{'stockPhysicalInventoryDraft.warningNewProduct' | message}}</p>
+            <div class="cyclic-new-product-form">
+                <div class="cyclic-form-row">
+                    <label class="cyclic-form-label">
+                        {{'stockPhysicalInventoryDraft.productCode' | message}} *
+                    </label>
+                    <input type="text"
+                           class="cyclic-form-input"
+                           ng-model="vm.newProductData.productCode"
+                           placeholder="{{'stockPhysicalInventoryDraft.productCodePlaceholder' | message}}"
+                           pattern="[A-Z0-9\-]+"
+                           ng-model-options="{updateOn: 'default blur', debounce: {'default': 0, 'blur': 0}}"
+                           ng-change="vm.newProductData.productCode = vm.newProductData.productCode.toUpperCase()"
+                           required/>
+                    <span class="cyclic-form-hint">{{'stockPhysicalInventoryDraft.productCodeHint' | message}}</span>
+                </div>
+                <div class="cyclic-form-row">
+                    <label class="cyclic-form-label">
+                        {{'stockPhysicalInventoryDraft.productName' | message}} *
+                    </label>
+                    <input type="text"
+                           class="cyclic-form-input"
+                           ng-model="vm.newProductData.fullProductName"
+                           placeholder="{{'stockPhysicalInventoryDraft.productNamePlaceholder' | message}}"
+                           required/>
+                    <span class="cyclic-form-hint">{{'stockPhysicalInventoryDraft.productNameHint' | message}}</span>
+                </div>
+                <div class="cyclic-form-row cyclic-form-row--inline">
+                    <div class="cyclic-form-col">
+                        <label class="cyclic-form-label">
+                            {{'stockPhysicalInventoryDraft.netContent' | message}}
+                        </label>
+                        <input type="number"
+                               class="cyclic-form-input"
+                               ng-model="vm.newProductData.netContent"
+                               placeholder="{{'stockPhysicalInventoryDraft.netContentPlaceholder' | message}}"
+                               min="1"/>
+                        <span class="cyclic-form-hint">{{'stockPhysicalInventoryDraft.netContentHint' | message}}</span>
+                    </div>
+                    <div class="cyclic-form-col">
+                        <label class="cyclic-form-label">
+                            {{'stockPhysicalInventoryDraft.dispensingUnit' | message}}
+                        </label>
+                        <input type="text"
+                               class="cyclic-form-input"
+                               ng-model="vm.newProductData.dispensingUnit"
+                               placeholder="{{'stockPhysicalInventoryDraft.dispensingUnitPlaceholder' | message}}"/>
+                        <span class="cyclic-form-hint">{{'stockPhysicalInventoryDraft.dispensingUnitHint' | message}}</span>
+                    </div>
+                </div>
+                <div class="cyclic-form-actions">
+                    <button type="button"
+                            class="cyclic-submit-btn"
+                            ng-click="vm.addNewProductForCyclic()"
+                            ng-disabled="!vm.newProductData.productCode || !vm.newProductData.fullProductName">
+                        {{'stockPhysicalInventoryDraft.createNewProduct' | message}}
+                    </button>
+                    <button type="button"
+                            class="cyclic-cancel-btn"
+                            ng-click="vm.toggleProductSelectionMode('add')">
+                        {{'stockPhysicalInventoryDraft.cancel' | message}}
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <saving-indicator class="draft-indicator" object="vm.dataChanged"/>
 
     <table>
-        <caption ng-if="!vm.displayLineItemsGroup.length && !vm.stateParams.keyword">
+        <caption ng-if="!vm.displayLineItemsGroup.length && !vm.stateParams.keyword && vm.stateParams.physicalInventoryType !== 'Cyclic'">
             {{'stockPhysicalInventoryDraft.noLineItems' | message}}
+        </caption>
+        <caption ng-if="vm.stateParams.physicalInventoryType === 'Cyclic' && !vm.itemsSelectedForCyclic.length && !vm.stateParams.keyword" class="cyclic-empty-state">
+            <span class="cyclic-empty-icon">📋</span>
+            <strong>{{'stockPhysicalInventoryDraft.noProductsCyclic' | message}}</strong>
+            <span class="cyclic-empty-hint">{{'stockPhysicalInventoryDraft.noProductsCyclicHint' | message}}</span>
         </caption>
         <caption ng-if="!vm.displayLineItemsGroup.length && vm.stateParams.keyword">
             {{'stockPhysicalInventoryDraft.noSearchResults' | message}}
@@ -67,7 +188,7 @@
         <tbody ng-repeat="(category, groupedLineItems) in vm.groupedCategories track by category"  tbody-title="{{category}}">
            <tr ng-if="lineItems.length > 1" ng-repeat-start="lineItems in groupedLineItems">
                 <td>{{lineItems[0].orderable.productCode}}</td>
-                <td>{{lineItems[0].orderable | productName}}</td>
+                <td>{{lineItems[0].isNewProduct ? lineItems[0].orderable.fullProductName : (lineItems[0].orderable | productName)}}</td>
                 <td></td>
                 <td></td>
                 <td align="right">{{vm.calculate(lineItems, 'stockOnHand')}}</td>
@@ -84,7 +205,7 @@
             </tr>
             <tr ng-repeat="lineItem in lineItems | orderBy:'lot?lot.lotCode:\'\''" ng-repeat-end>
                 <td>{{lineItems.length > 1 ? '' : lineItem.orderable.productCode}}</td>
-                <td>{{lineItems.length > 1 ? '' : (lineItem.orderable | productName)}}</td>
+                <td>{{lineItems.length > 1 ? '' : (lineItem.isNewProduct ? lineItem.orderable.fullProductName : (lineItem.orderable | productName))}}</td>
                 <td ng-if="vm.canEditLot(lineItem)">
                     <button class="edit" ng-click="vm.editLot(lineItem)">
                         {{lineItem.displayLotMessage}}
@@ -93,7 +214,7 @@
                 <td ng-if="!vm.canEditLot(lineItem)">
                     {{lineItem.displayLotMessage}}
                 </td>
-                <td>{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
+                <td>{{lineItem.lot ? (vm.formatDate(lineItem.lot.expirationDate) | message) : ''}}</td>
                 <td align="right">{{vm.recalculateQuantity(lineItem.stockOnHand, lineItem.orderable.netContent)}}</td>
                 <td class="digit-cell" openlmis-invalid="{{lineItem.quantityInvalid ? lineItem.quantityInvalid : ''}}">
                     <openlmis-quantity-unit-input

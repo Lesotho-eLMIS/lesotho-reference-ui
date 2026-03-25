@@ -13,3 +13,320 @@
     }
   }
 }
+
+// ============================================================
+// Cyclic Product Selector — OpenLMIS-consistent styles
+// ============================================================
+
+$openlmis-blue:        #2196F3;
+$openlmis-blue-dark:   #1976D2;
+$openlmis-blue-light:  #E3F2FD;
+$openlmis-border:      #e0e0e0;
+$openlmis-bg:          #f8f9fa;
+$openlmis-text:        #212529;
+$openlmis-muted:       #6c757d;
+$openlmis-danger:      #c0392b;
+$openlmis-warning-bg:  #fff8e1;
+$openlmis-warning-border: #ffe082;
+$openlmis-form-height: 30px;
+$openlmis-font-size:   13px;
+$openlmis-radius:      3px;
+
+.cyclic-product-selector {
+  display: block;
+  margin-bottom: 12px;
+  clear: both;
+}
+
+// ---- Tab Buttons ----
+.cyclic-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 0;
+  align-items: center;
+}
+
+.cyclic-tab-btn {
+  height: $openlmis-form-height;
+  padding: 0 14px;
+  font-size: $openlmis-font-size;
+  font-family: inherit;
+  border: 1px solid $openlmis-border;
+  border-bottom: none;
+  border-radius: $openlmis-radius $openlmis-radius 0 0;
+  background: $openlmis-bg;
+  color: $openlmis-text;
+  cursor: pointer;
+  line-height: $openlmis-form-height;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: darken($openlmis-bg, 4%);
+  }
+
+  &--active {
+    background: $openlmis-blue;
+    color: #fff;
+    border-color: $openlmis-blue;
+
+    &:hover {
+      background: $openlmis-blue-dark;
+      border-color: $openlmis-blue-dark;
+    }
+  }
+}
+
+// ---- Expanded Panel ----
+.cyclic-panel {
+  border: 1px solid $openlmis-border;
+  border-radius: 0 $openlmis-radius $openlmis-radius $openlmis-radius;
+  background: #fff;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+
+  &__hint {
+    margin: 0 0 8px;
+    font-size: $openlmis-font-size;
+    color: $openlmis-muted;
+    font-style: italic;
+  }
+
+  &__tip {
+    margin: 6px 0 0;
+    font-size: $openlmis-font-size;
+    color: $openlmis-muted;
+  }
+
+  &__warning {
+    margin: 0 0 10px;
+    font-size: $openlmis-font-size;
+    color: darken($openlmis-warning-border, 30%);
+    background: $openlmis-warning-bg;
+    border: 1px solid $openlmis-warning-border;
+    border-radius: $openlmis-radius;
+    padding: 6px 10px;
+  }
+}
+
+// ---- Search Row ----
+.cyclic-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cyclic-search-input {
+  height: $openlmis-form-height;
+  flex: 1;
+  max-width: 420px;
+  padding: 0 8px;
+  font-size: $openlmis-font-size;
+  font-family: inherit;
+  border: 1px solid $openlmis-border;
+  border-radius: $openlmis-radius;
+  background: #fff;
+  color: $openlmis-text;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $openlmis-blue;
+    box-shadow: 0 0 0 2px rgba($openlmis-blue, 0.15);
+  }
+
+  &::placeholder {
+    color: lighten($openlmis-muted, 15%);
+  }
+}
+
+.cyclic-searching-label {
+  font-size: $openlmis-font-size;
+  color: $openlmis-muted;
+  font-style: italic;
+}
+
+// ---- Search Results ----
+.cyclic-results {
+  margin-top: 6px;
+  border: 1px solid $openlmis-border;
+  border-radius: $openlmis-radius;
+  background: #fff;
+  max-height: 200px;
+  overflow-y: auto;
+
+  &__empty {
+    padding: 10px 12px;
+    font-size: $openlmis-font-size;
+    color: $openlmis-muted;
+    text-align: center;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    font-size: $openlmis-font-size;
+    cursor: pointer;
+    border-bottom: 1px solid $openlmis-border;
+    transition: background 0.1s;
+
+    &:last-child { border-bottom: none; }
+
+    &:hover {
+      background: $openlmis-blue-light;
+    }
+  }
+
+  &__code {
+    font-weight: 600;
+    color: $openlmis-blue-dark;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  &__name {
+    color: $openlmis-text;
+    flex: 1;
+  }
+}
+
+// ---- New Product Form ----
+.cyclic-new-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cyclic-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  &--inline {
+    flex-direction: row;
+    gap: 16px;
+  }
+}
+
+.cyclic-form-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cyclic-form-label {
+  font-size: $openlmis-font-size;
+  font-weight: 600;
+  color: $openlmis-text;
+}
+
+.cyclic-form-input {
+  height: $openlmis-form-height;
+  padding: 0 8px;
+  font-size: $openlmis-font-size;
+  font-family: inherit;
+  border: 1px solid $openlmis-border;
+  border-radius: $openlmis-radius;
+  background: $openlmis-bg;
+  color: $openlmis-text;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $openlmis-blue;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba($openlmis-blue, 0.12);
+  }
+
+  &::placeholder {
+    color: lighten($openlmis-muted, 15%);
+  }
+}
+
+.cyclic-form-hint {
+  font-size: 11px;
+  color: $openlmis-muted;
+}
+
+.cyclic-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cyclic-submit-btn {
+  height: $openlmis-form-height;
+  padding: 0 16px;
+  font-size: $openlmis-font-size;
+  font-family: inherit;
+  border: 1px solid $openlmis-blue;
+  border-radius: $openlmis-radius;
+  background: $openlmis-blue;
+  color: #fff;
+  cursor: pointer;
+  line-height: $openlmis-form-height;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not([disabled]) {
+    background: $openlmis-blue-dark;
+    border-color: $openlmis-blue-dark;
+  }
+
+  &[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.cyclic-cancel-btn {
+  height: $openlmis-form-height;
+  padding: 0 14px;
+  font-size: $openlmis-font-size;
+  font-family: inherit;
+  border: 1px solid $openlmis-border;
+  border-radius: $openlmis-radius;
+  background: $openlmis-bg;
+  color: $openlmis-text;
+  cursor: pointer;
+  line-height: $openlmis-form-height;
+  transition: background 0.15s;
+
+  &:hover {
+    background: darken($openlmis-bg, 5%);
+  }
+}
+
+// ---- Cyclic Empty State ----
+.cyclic-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px;
+  color: $openlmis-muted;
+  font-size: $openlmis-font-size;
+
+  .cyclic-empty-icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  strong {
+    color: $openlmis-text;
+    font-size: 14px;
+  }
+
+  .cyclic-empty-hint {
+    font-size: 12px;
+    color: $openlmis-muted;
+  }
+}
