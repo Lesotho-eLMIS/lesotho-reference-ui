@@ -38,6 +38,9 @@
                 FULFILLMENT_RIGHTS.SHIPMENTS_EDIT
             ],
             resolve: {
+                facility: function(facilityFactory) {
+                    return facilityFactory.getUserHomeFacility();
+                },
                 programs: function(programService, authorizationService) {
                     return programService.getUserPrograms(authorizationService.getUser().user_id);
                 },
@@ -53,13 +56,23 @@
                         FULFILLMENT_RIGHTS.PODS_VIEW
                     ]);
                 },
-                pods: function(paginationService, orderRepository, $stateParams, programs, requestingFacilities) {
+                           pods: function(paginationService, orderRepository, $stateParams, programs, requestingFacilities, facility) {
                     return paginationService.registerUrl($stateParams, function(stateParams) {
                         if (programs.length === 1 && !stateParams.programId) {
                             stateParams.programId = programs[0].id;
                         }
                         if (requestingFacilities.length === 1 && !stateParams.requestingFacilityId) {
                             stateParams.requestingFacilityId = requestingFacilities[0].id;
+                        }
+                        
+                        // Auto-populate home facility if it's in the requesting facilities list
+                        if (!stateParams.requestingFacilityId && facility) {
+                            var homeFacility = requestingFacilities.find(function(reqFacility) {
+                                return reqFacility.id === facility.id;
+                            });
+                            if (homeFacility) {
+                                stateParams.requestingFacilityId = homeFacility.id;
+                            }
                         }
 
                         if (stateParams.programId &&

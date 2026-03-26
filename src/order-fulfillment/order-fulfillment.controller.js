@@ -119,10 +119,19 @@
 
             vm.orders = orders;
             vm.supplyingFacilityId = facility.id;
-            vm.orders = vm.orders.filter(function(order){
-                return order.supplyingFacility.id === vm.supplyingFacilityId; 
-            });
-            
+                // REMOVE THIS FILTER
+                // Do not filter orders on the frontend when using server-side pagination.
+                // At this point, vm.orders already contains only the current page of results
+                // (e.g., 10 items out of a larger total). Filtering here would reduce only
+                // the visible page data without updating the total count from the backend,
+                // causing inconsistencies in the UI (e.g., pagination showing "10 of 39"
+                // while fewer rows are displayed).
+                // Instead, apply this filter in the backend request (via stateParams / API),
+                // so that pagination and total counts remain accurate.
+                // vm.orders = vm.orders.filter(function(order){
+                //     return order.supplyingFacility.id === vm.supplyingFacilityId; 
+                // });
+         
             if ($stateParams.requestingFacilityId) {
                 vm.orderingFacility = vm.orderingFacilities.filter(function(facility) {
                     return facility.id === $stateParams.requestingFacilityId;

@@ -13,5 +13,6 @@
   "stockPhysicalInventory.noProgramSelected": "Select a Program",
   "stockPhysicalInventory.noFacilitySelected": "Select a Facility",
   "stockPhysicalInventory.countInventory": "countInventory",
-  "stockPhysicalInventory.majorCount": "Start Major Count"
+  "stockPhysicalInventory.majorCount": "Start Major Count",
+  "stockPhysicalInventory.cyclicCount": "Start Cyclic Count"
 }

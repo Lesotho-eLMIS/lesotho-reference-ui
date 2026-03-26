@@ -101,13 +101,13 @@
 
         vm.getSelectedDraft = function () {
             if (!vm.program || !vm.facility) {
-                draft.isStarter = false;
+                return null;
             }
             // else if (!vm.facility) {
             //     alertService.error('stockPhysicalInventory.noFacilitySelected');
             // }
             var programId = vm.program.id;
-            return _.find(vm.drafts, function (programId) {
+            return _.find(vm.drafts, function (draft) {
                 // console.log("Program: ", vm.program);
                 // console.log("Draft: ", draft);
                 return draft.programId === programId;
@@ -176,7 +176,14 @@
             // console.log("Facility: ", vm.facility);
             // console.log("Selected:" , vm.getDraft());
             $stateParams.stateOffline = setOfflineState();
-            var selectedDraft = vm.getDraft();
+            if (!draft) {
+                alertService.error('No draft found');
+                return;
+            }
+
+            // Get the draft , prefer passed draft, 
+            // then find existing, else create new
+            var selectedDraft = draft || vm.getDraft();
 
             vm.drafts.forEach(function (item) {
                 if (item.programId === selectedDraft.programId && selectedDraft.isStarter === true) {
