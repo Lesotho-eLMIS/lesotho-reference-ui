@@ -189,13 +189,16 @@
                 })
                 .then((fetchedOrder) => {
                     requestedItems.forEach((lineItem) => {
-                        let packs = calculatePacksToShip(lineItem);
-                     
-                        fetchedOrder.orderLineItems.push({                                    
-                            orderable: lineItem.orderable,
-                            orderedQuantity: packs, //lineItem.packsToShip,
-                            soh: 45
-                        });
+                        // Only include non-skipped products
+                        if (!lineItem.skipped) {
+                            let packs = calculatePacksToShip(lineItem);
+                         
+                            fetchedOrder.orderLineItems.push({                                    
+                                orderable: lineItem.orderable,
+                                orderedQuantity: packs, //lineItem.packsToShip,
+                                soh: 45
+                            });
+                        }
                     }); 
                                    
                     return orderCreateService.send(fetchedOrder);
