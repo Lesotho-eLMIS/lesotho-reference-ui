@@ -526,7 +526,7 @@
      * @description
      * Submit all added items.
      */
-    vm.submit = function () {
+   vm.submit = function () {
 
       $scope.$broadcast('openlmis-form-submit');
       if (validateAllAddedItems()) {
@@ -544,7 +544,7 @@
       }
 
     };
-
+   
     /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
@@ -942,8 +942,8 @@
       vm.reasons = reasons;
       vm.showReasonDropdown =
         adjustmentType.state !== ADJUSTMENT_TYPE.KIT_UNPACK.state;
-
-      /* eLMIS Lesotho : start */
+ 
+        /* eLMIS Lesotho : start */
       // vm.showPrepackingAttributes =
       //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
       vm.showDeliveryNoteAttributes =
@@ -954,11 +954,9 @@
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
 
-      // vm.addedLineItems = $stateParams.addedLineItems || [];
-      vm.addedLineItems = [];
+      vm.addedLineItems = $stateParams.addedLineItems || [];
       $stateParams.displayItems = displayItems;
-      // vm.displayItems = $stateParams.displayItems || [];
-      vm.displayItems = [];
+      vm.displayItems = $stateParams.displayItems || [];
       vm.keyword = $stateParams.keyword;
       updateNeedToConfirmFlag();
 
@@ -976,6 +974,15 @@
       );
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
       resetOrderableSelectionState();
+
+      // Populate reference numbers (FIX)
+if (ReferenceNumbers && ReferenceNumbers.length) {
+  vm.references = populateReferenceNumbers(ReferenceNumbers);
+} else {
+  vm.references = [];
+}
+
+      
     }
 
     function initiateNewLotObject() {
