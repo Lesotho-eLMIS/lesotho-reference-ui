@@ -117,6 +117,18 @@
                         program.id ? program.id : program,
                         facility.type ? facility.type.id : facility
                     );
+                },
+                allSystemProducts: function($stateParams, OrderableResource) {
+                    // Only needed for Cyclic inventory — skip the expensive fetch for Major
+                    if ($stateParams.physicalInventoryType !== 'Cyclic') {
+                        return [];
+                    }
+                    return new OrderableResource().query({
+                        page: 0,
+                        size: 2147483647  // Integer.MAX_VALUE — fetch all products in one request
+                    }).then(function(response) {
+                        return response.content;
+                    });
                 }
             }
         });
