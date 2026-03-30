@@ -1,5 +1,5 @@
 <h2 ng-if="vm.facility && vm.program">
-  {{'stockCardSummaryList.title' | message: { 'facility': vm.facility.name,
+  {{'stockCardSummaryList.title' | message: { 'facility':  vm.facility.name,
   'program': vm.program.name} }}
 </h2>
 <h2 ng-hide="vm.facility && vm.program">
@@ -14,6 +14,15 @@
   >
   {{ 'stockCardSummaryList.offline4' | message}}
 </p>
+
+<!-- Stock Refresh Component -->
+<stock-refresh 
+  facility-id="vm.facility.id"
+  program-id="vm.program.id"
+  on-refresh="vm.refreshStockOnHand()"
+  auto-refresh="true"
+  refresh-interval="30000">
+</stock-refresh>
 
 <form ng-submit="vm.loadStockCardSummaries()" class="sidebar">
   <openlmis-facility-program-select
@@ -69,6 +78,14 @@
     ng-click="vm.print()"
   >
     {{'stockCardSummaryList.print' | message}}
+  </button>
+  <button
+    class="btn btn-secondary"
+    ng-click="vm.forceRefresh()"
+    ng-disabled="vm.isRefreshing"
+  >
+    <i class="fa" ng-class="vm.isRefreshing ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
+    {{vm.isRefreshing ? 'Refreshing...' : 'Force Refresh'}}
   </button>
   <table>
     <caption ng-if="!vm.displayStockCardSummaries.length">

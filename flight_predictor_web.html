@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Drop-Off AI Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .input-section, .results-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+
+        .prediction-result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .prediction-result h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .prediction-result .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .schedule-item {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .schedule-item .time {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .schedule-item .location {
+            color: #333;
+            font-size: 1em;
+            margin: 5px 0;
+        }
+
+        .schedule-item .probability {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-high { background: #4CAF50; }
+        .status-medium { background: #FF9800; }
+        .status-low { background: #F44336; }
+
+        .flight-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .flight-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .flight-item:hover {
+            background: #e9ecef;
+        }
+
+        .flight-item.selected {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛩️ Flight Drop-Off AI Predictor</h1>
+            <p>Advanced AI system for predicting next flight drop-off locations and optimal scheduling</p>
+        </div>
+
+        <div class="input-section">
+            <div class="card">
+                <h3>📍 Flight Information</h3>
+                <div class="form-group">
+                    <label for="origin_airport">Origin Airport</label>
+                    <select id="origin_airport">
+                        <option value="JHB">Johannesburg (JHB)</option>
+                        <option value="CPT">Cape Town (CPT)</option>
+                        <option value="DUR">Durban (DUR)</option>
+                        <option value="PLZ">Port Elizabeth (PLZ)</option>
+                        <option value="ELS">East London (ELS)</option>
+                        <option value="GRJ">George (GRJ)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="flight_duration">Flight Duration (hours)</label>
+                    <input type="number" id="flight_duration" value="2.5" step="0.1" min="0.5" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="cargo_weight">Cargo Weight (kg)</label>
+                    <input type="number" id="cargo_weight" value="500" step="10" min="0" max="2000">
+                </div>
+                <div class="form-group">
+                    <label for="passenger_count">Passenger Count</label>
+                    <input type="number" id="passenger_count" value="4" step="1" min="1" max="20">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🕐 Time & Date</h3>
+                <div class="form-group">
+                    <label for="flight_hour">Flight Hour</label>
+                    <input type="number" id="flight_hour" value="14" step="1" min="0" max="23">
+                </div>
+                <div class="form-group">
+                    <label for="day_of_week">Day of Week</label>
+                    <select id="day_of_week">
+                        <option value="0">Monday</option>
+                        <option value="1">Tuesday</option>
+                        <option value="2">Wednesday</option>
+                        <option value="3">Thursday</option>
+                        <option value="4">Friday</option>
+                        <option value="5">Saturday</option>
+                        <option value="6">Sunday</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="month">Month</label>
+                    <select id="month">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🌤️ Weather Conditions</h3>
+                <div class="form-group">
+                    <label for="wind_speed">Wind Speed (km/h)</label>
+                    <input type="number" id="wind_speed" value="15" step="1" min="0" max="100">
+                </div>
+                <div class="form-group">
+                    <label for="visibility">Visibility (km)</label>
+                    <input type="number" id="visibility" value="10" step="0.5" min="0" max="50">
+                </div>
+                <div class="form-group">
+                    <label for="precipitation">Precipitation (mm)</label>
+                    <input type="number" id="precipitation" value="0" step="0.1" min="0" max="50">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Flight History</h3>
+                <div class="form-group">
+                    <label for="previous_drop">Previous Drop Location</label>
+                    <select id="previous_drop">
+                        <option value="Maseru">Maseru</option>
+                        <option value="Mokhotlong">Mokhotlong</option>
+                        <option value="Berea">Berea</option>
+                        <option value="Leribe">Leribe</option>
+                        <option value="Quthing">Quthing</option>
+                        <option value="Qachas Nek">Qachas Nek</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="flights_today">Flights Today</label>
+                    <input type="number" id="flights_today" value="3" step="1" min="0" max="20">
+                </div>
+                <div class="form-group">
+                    <button class="btn" onclick="makePrediction()">🔮 Predict Next Drop</button>
+                    <button class="btn btn-secondary" onclick="generateOptimalSchedule()">📅 Optimize Schedule</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>AI is analyzing flight patterns...</p>
+        </div>
+
+        <div class="results-section" id="results" style="display: none;">
+            <div class="card">
+                <h3>🎯 Prediction Results</h3>
+                <div class="prediction-result">
+                    <h4>Next Drop Location</h4>
+                    <div class="value" id="predicted_location">--</div>
+                </div>
+                <div class="prediction-result">
+                    <h4>Time to Next Drop</h4>
+                    <div class="value" id="time_to_drop">--</div>
+                </div>
+                <div class="prediction-result">
+                    <h4>Drop Probability</h4>
+                    <div class="value" id="drop_probability">--</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📈 Prediction Confidence</h3>
+                <div class="chart-container">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📅 Optimal Schedule</h3>
+                <div id="schedule_results"></div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Historical Patterns</h3>
+                <div class="chart-container">
+                    <canvas id="patternsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock AI prediction function (in real implementation, this would call the Python backend)
+        function makePrediction() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.classList.add('active');
+            results.style.display = 'none';
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                const flightData = getFlightData();
+                const prediction = simulateAIPrediction(flightData);
+                
+                displayResults(prediction);
+                loading.classList.remove('active');
+                results.style.display = 'grid';
+                
+                // Create charts
+                createConfidenceChart(prediction);
+                createPatternsChart();
+            }, 2000);
+        }
+
+        function getFlightData() {
+            return {
+                origin_airport: document.getElementById('origin_airport').value,
+                flight_duration: parseFloat(document.getElementById('flight_duration').value),
+                cargo_weight: parseFloat(document.getElementById('cargo_weight').value),
+                passenger_count: parseInt(document.getElementById('passenger_count').value),
+                flight_hour: parseInt(document.getElementById('flight_hour').value),
+                day_of_week: parseInt(document.getElementById('day_of_week').value),
+                month: parseInt(document.getElementById('month').value),
+                wind_speed: parseFloat(document.getElementById('wind_speed').value),
+                visibility: parseFloat(document.getElementById('visibility').value),
+                precipitation: parseFloat(document.getElementById('precipitation').value),
+                previous_drop: document.getElementById('previous_drop').value,
+                flights_today: parseInt(document.getElementById('flights_today').value)
+            };
+        }
+
+        function simulateAIPrediction(flightData) {
+            // Simulate AI prediction based on input patterns
+            const locations = ['Maseru', 'Mokhotlong', 'Berea', 'Leribe', 'Quthing', 'Qachas Nek'];
+            
+            // Simple logic for demonstration (real AI would use trained models)
+            let weights = {
+                'Maseru': 0.2,
+                'Mokhotlong': 0.15,
+                'Berea': 0.18,
+                'Leribe': 0.17,
+                'Quthing': 0.15,
+                'Qachas Nek': 0.15
+            };
+            
+            // Adjust weights based on flight characteristics
+            if (flightData.cargo_weight > 600) {
+                weights['Maseru'] += 0.1; // Heavy cargo more likely to go to capital
+            }
+            
+            if (flightData.wind_speed > 20) {
+                weights['Berea'] += 0.05; // Windy conditions favor certain locations
+            }
+            
+            // Select location based on weights
+            const random = Math.random();
+            let cumulative = 0;
+            let predictedLocation = 'Maseru';
+            
+            for (const [location, weight] of Object.entries(weights)) {
+                cumulative += weight;
+                if (random < cumulative) {
+                    predictedLocation = location;
+                    break;
+                }
+            }
+            
+            return {
+                next_drop_location: predictedLocation,
+                time_to_next_drop: 2.5 + Math.random() * 3,
+                drop_probability: 0.6 + Math.random() * 0.3,
+                location_confidence: 0.75 + Math.random() * 0.2
+            };
+        }
+
+        function displayResults(prediction) {
+            document.getElementById('predicted_location').textContent = prediction.next_drop_location;
+            document.getElementById('time_to_drop').textContent = `${prediction.time_to_next_drop.toFixed(1)} hours`;
+            document.getElementById('drop_probability').textContent = `${(prediction.drop_probability * 100).toFixed(1)}%`;
+        }
+
+        function createConfidenceChart(prediction) {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Location Confidence', 'Uncertainty'],
+                    datasets: [{
+                        data: [prediction.location_confidence * 100, (1 - prediction.location_confidence) * 100],
+                        backgroundColor: ['#667eea', '#e0e0e0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPatternsChart() {
+            const ctx = document.getElementById('patternsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['6AM', '9AM', '12PM', '3PM', '6PM'],
+                    datasets: [{
+                        label: 'Drop-off Frequency',
+                        data: [15, 35, 45, 38, 22],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Drop-offs'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateOptimalSchedule() {
+            const scheduleResults = document.getElementById('schedule_results');
+            
+            // Generate sample optimal schedule
+            const schedule = [
+                { time: 2.5, location: 'Maseru', probability: 0.85 },
+                { time: 5.2, location: 'Leribe', probability: 0.72 },
+                { time: 8.1, location: 'Berea', probability: 0.68 },
+                { time: 11.5, location: 'Quthing', probability: 0.61 }
+            ];
+            
+            let html = '';
+            schedule.forEach((item, index) => {
+                const statusClass = item.probability > 0.75 ? 'status-high' : 
+                                 item.probability > 0.6 ? 'status-medium' : 'status-low';
+                
+                html += `
+                    <div class="schedule-item">
+                        <div class="time">
+                            <span class="status-indicator ${statusClass}"></span>
+                            ${item.time.toFixed(1)} hours from now
+                        </div>
+                        <div class="location">📍 ${item.location}</div>
+                        <div class="probability">Probability: ${(item.probability * 100).toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            
+            scheduleResults.innerHTML = html;
+        }
+
+        // Initialize with sample data on load
+        window.addEventListener('load', () => {
+            // Set current time values
+            const now = new Date();
+            document.getElementById('flight_hour').value = now.getHours();
+            document.getElementById('day_of_week').value = now.getDay() === 0 ? 6 : now.getDay() - 1;
+            document.getElementById('month').value = now.getMonth() + 1;
+        });
+    </script>
+</body>
+</html>

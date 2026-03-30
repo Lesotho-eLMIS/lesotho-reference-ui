@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Service Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+</head>
+<body ng-app="stockApp">
+    <div ng-controller="TestController">
+        <h2>Stock On Hand Service Test</h2>
+        <button ng-click="testService()">Test Stock Service</button>
+        <div ng-repeat="(product, soh) in stockResults">
+            {{product}}: {{soh}}
+        </div>
+    </div>
+
+    <script>
+        angular.module('stockApp', [])
+        .controller('TestController', function($scope, $http) {
+            $scope.stockResults = {};
+            
+            $scope.testService = function() {
+                // Simulate the same API call your service makes
+                $http.get('/api/stockCardSummaries?facility=your-facility-id&program=your-program-id&orderable=product-id')
+                    .then(function(response) {
+                        var stockCards = response.data.content || response.data;
+                        if (stockCards && stockCards.length > 0) {
+                            $scope.stockResults['Test Product'] = stockCards[0].stockOnHand;
+                            console.log('✅ Stock on hand from API:', stockCards[0].stockOnHand);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('❌ API call failed:', error);
+                        $scope.stockResults['Test Product'] = 'API Error';
+                    });
+            };
+        });
+    </script>
+</body>
+</html>

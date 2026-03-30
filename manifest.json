@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "THABABET AI Cashout Predictor",
+  "version": "1.0.0",
+  "description": "AI-powered cashout prediction system for THABABET Aviator game",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "host_permissions"
+  ],
+  
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://thababet.co.ls/*",
+        "*://*.thababet.co.ls/*"
+      ],
+      "js": ["THABABET_AI_Extension.js"],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "action": {
+    "default_title": "THABABET AI",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  
+  "web_accessible_resources": [
+    "THABABET_AI_Extension.js"
+  ]
+}
