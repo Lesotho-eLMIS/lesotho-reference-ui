@@ -975,12 +975,6 @@
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
       resetOrderableSelectionState();
 
-      // Populate reference numbers (FIX)
-if (ReferenceNumbers && ReferenceNumbers.length) {
-  vm.references = populateReferenceNumbers(ReferenceNumbers);
-} else {
-  vm.references = [];
-}
 
       
     }
