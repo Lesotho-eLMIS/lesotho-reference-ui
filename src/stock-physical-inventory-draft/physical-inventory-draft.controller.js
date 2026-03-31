@@ -126,7 +126,8 @@
     vm.selectProductForCyclic = selectProductForCyclic;
 
     /**
-     * Searches for existing products in real-time (facility's existing inventory)
+     * Searches for existing products in real-time (facility's existing inventory).
+     * Pool is vm.productsForCyclic, which is built from draft.lineItems in onInit.
      */
     vm.searchProducts = function() {
       if (!vm.searchText || vm.searchText.length < 2) {
@@ -146,27 +147,38 @@
     };
 
     /**
-     * Adds an existing (facility-level) product to cyclic inventory
+     * Adds an existing (facility-level) product to the cyclic count table.
+     * Looks up ALL lots for the product from draft.lineItems — NOT displayLineItemsGroup,
+     * which is empty for a fresh cyclic draft (by design, so the table starts blank).
      */
     vm.selectExistingProductForCyclic = function(productItem) {
       if (!productItem) return;
 
-      var fullGroup = _.find(vm.displayLineItemsGroup, function(group) {
-        return group[0].orderable.id === productItem.orderable.id;
-      });
-      if (!fullGroup) return;
+      var orderableId = productItem.orderable.id;
 
       if (vm.itemsSelectedForCyclic.some(function(g) {
-        return g[0].orderable.id === fullGroup[0].orderable.id;
+        return g[0].orderable.id === orderableId;
       })) {
         alertService.error('This product is already added to the count');
         return;
       }
 
+      // Collect all lot-rows for this orderable from the draft
+      var fullGroup = draft.lineItems.filter(function(item) {
+        return item.orderable.id === orderableId;
+      });
+      if (!fullGroup || fullGroup.length === 0) return;
+
+      // Mark isAdded so the routes resolver keeps them in displayLineItemsGroup on reload
+      fullGroup.forEach(function(item) {
+        item.isAdded = true;
+      });
+
       vm.itemsSelectedForCyclic.push(fullGroup);
 
+      // Remove from search pool
       vm.productsForCyclic = vm.productsForCyclic.filter(function(p) {
-        return p.orderable.id !== fullGroup[0].orderable.id;
+        return p.orderable.id !== orderableId;
       });
 
       notificationService.success('Product added to cyclic count');
@@ -678,29 +690,33 @@
       $stateParams.program = undefined;
       $stateParams.facility = undefined;
 
-      // Partition displayLineItemsGroup into selected-for-count vs available-to-select.
-      //
-      // A group belongs in itemsSelectedForCyclic when ANY of the following is true:
-      //   1. It has a real counted quantity (user already entered a number)
-      //   2. It has a non-null stockOnHand (it exists on a stock card at this facility)
-      //   3. It was flagged isAdded=true by the route resolver — this is the key fix:
-      //      products just added via the "Add from Catalogue" modal have quantity=null
-      //      and stockOnHand=null but ARE marked isAdded=true, so they must appear in
-      //      the table immediately without requiring the user to re-select them.
-      //
       if (vm.stateParams.physicalInventoryType === 'Cyclic') {
+        // Items already counted or explicitly added go straight into the table.
         displayLineItemsGroup.forEach(function (group) {
-          var firstItem = group[0];
-          var hasQty      = hasValidQuantity(firstItem);
-          var hasSoh      = firstItem.stockOnHand !== null && firstItem.stockOnHand !== undefined;
-          var wasAdded    = firstItem.isAdded === true;   // <-- THE FIX
+          vm.itemsSelectedForCyclic.push(group);
+        });
 
-          if (hasQty || hasSoh || wasAdded) {
-            vm.itemsSelectedForCyclic.push(group);
-          } else {
-            vm.productsForCyclic.push(firstItem);
+        // Build the search pool from ALL draft line items so "Select Existing Product"
+        // can find every product at this facility — including those not yet in
+        // displayLineItemsGroup (products with only a stockOnHand but no counted
+        // quantity, correctly excluded from the table by the routes resolver).
+        var alreadySelectedIds = {};
+        vm.itemsSelectedForCyclic.forEach(function(group) {
+          alreadySelectedIds[group[0].orderable.id] = true;
+        });
+
+        var seenIds = {};
+        draft.lineItems.forEach(function(item) {
+          var id = item.orderable.id;
+          if (!alreadySelectedIds[id] && !seenIds[id]) {
+            seenIds[id] = true;
+            vm.productsForCyclic.push(item);
           }
         });
+        vm.productsForCyclic.sort(function(a, b) {
+          return a.orderable.fullProductName.localeCompare(b.orderable.fullProductName);
+        });
+
         if (vm.itemsSelectedForCyclic.length > 0) {
           regroupCyclicItems();
         }
