@@ -62,6 +62,7 @@
     "dateUtils",
     "QUANTITY_UNIT",
     "quantityUnitCalculateService",
+    "allSystemProducts",
   ];
 
   function controller(
@@ -99,6 +100,7 @@
     dateUtils,
     QUANTITY_UNIT,
     quantityUnitCalculateService,
+    allSystemProducts,
   ) {
     var vm = this;
     vm.$onInit = onInit;
@@ -226,46 +228,88 @@
     };
 
     /**
-     * Opens the standard "Add Products to Physical Inventory" modal.
-     * Works for both Major and Cyclic — after the modal resolves the state
-     * reloads and onInit re-partitions all items including newly added ones.
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name addProducts
+     *
+     * @description
+     * Pops up a modal for users to add products for physical inventory.
+     *
+     * For Cyclic counts, the table starts blank by design (the routes resolver only
+     * includes items the user has explicitly added). displayLineItemsGroup is therefore
+     * empty and cannot be used as the exclusion list. Instead we exclude products that
+     * are already in vm.itemsSelectedForCyclic — the array that tracks everything the
+     * user has chosen so far — so the modal only offers products not yet in the count.
      */
     vm.addProducts = function () {
-      var notYetAddedItems = _.chain(draft.lineItems)
-        .difference(_.flatten(vm.displayLineItemsGroup))
-        .value();
+      var notYetAddedItems;
 
-      var orderablesWithoutAvailableLots = draft.lineItems
-        .map(function (item) {
-          return item.orderable;
-        })
-        .filter(function (orderable) {
-          return !notYetAddedItems.find(function (item) {
-            return orderable.id === item.orderable.id;
-          });
-        })
-        .filter(function (orderable, index, filtered) {
-          return filtered.indexOf(orderable) === index;
-        })
-        .map(function (uniqueOrderable) {
-          return {
-            lot: null,
-            orderable: uniqueOrderable,
-            quantity: null,
-            stockAdjustments: [],
-            stockOnHand: null,
-            vvmStatus: null,
-            $allLotsAdded: true,
-          };
+      if ($stateParams.physicalInventoryType === 'Cyclic') {
+        // For Cyclic: source from the full system catalogue and exclude any product
+        // that already exists in this facility's inventory (draft.lineItems).
+        // This means "Add from Catalogue" is strictly for products not yet at the
+        // facility at all — distinct from "Select Existing Product" which handles
+        // products already in the facility's inventory but not yet counted.
+        var facilityProductIds = {};
+        draft.lineItems.forEach(function(item) {
+          facilityProductIds[item.orderable.id] = true;
         });
 
-      orderablesWithoutAvailableLots.forEach(function (item) {
-        notYetAddedItems.push(item);
-      });
+        notYetAddedItems = allSystemProducts
+          .filter(function(orderable) {
+            return !facilityProductIds[orderable.id];
+          })
+          .map(function(orderable) {
+            return {
+              lot: null,
+              orderable: orderable,
+              quantity: null,
+              stockAdjustments: [],
+              stockOnHand: null,
+              vvmStatus: null,
+              $allLotsAdded: false,
+              isNewProduct: true,
+            };
+          });
+      } else {
+        // Original Major logic — unchanged.
+        notYetAddedItems = _.chain(draft.lineItems)
+          .difference(_.flatten(vm.displayLineItemsGroup))
+          .value();
+
+        var orderablesWithoutAvailableLots = draft.lineItems
+          .map(function (item) {
+            return item.orderable;
+          })
+          .filter(function (orderable) {
+            return !notYetAddedItems.find(function (item) {
+              return orderable.id === item.orderable.id;
+            });
+          })
+          .filter(function (orderable, index, filtered) {
+            return filtered.indexOf(orderable) === index;
+          })
+          .map(function (uniqueOrderable) {
+            return {
+              lot: null,
+              orderable: uniqueOrderable,
+              quantity: null,
+              stockAdjustments: [],
+              stockOnHand: null,
+              vvmStatus: null,
+              $allLotsAdded: true,
+            };
+          });
+
+        orderablesWithoutAvailableLots.forEach(function (item) {
+          notYetAddedItems.push(item);
+        });
+      }
 
       addProductsModalService
         .show(notYetAddedItems, draft, vm.showInDoses())
         .then(function () {
+          //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
           $stateParams.program = vm.program;
           $stateParams.facility = vm.facility;
           $stateParams.noReload = true;
@@ -273,6 +317,7 @@
           draft.$modified = true;
           vm.cacheDraft();
 
+          //Only reload current state and avoid reloading parent state
           $state.go($state.current.name, $stateParams, {
             reload: $state.current.name,
           });
