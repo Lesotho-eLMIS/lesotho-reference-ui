@@ -9,5 +9,5 @@
             </label>
         </div>
     </header>
-    <div class="content">{{vm.messageContent}}</div>
+    <div class="content" ng-bind-html="vm.messageContent | linkify"></div>
 </article>
