@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Auto-Refresh Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+    </style>
+</head>
+<body ng-app="testApp" ng-controller="TestController as vm">
+    <h1>🧪 Stock Auto-Refresh Test</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Test Information</h3>
+        <p><strong>Task:</strong> Auto-refresh stock on hand when supply requests are processed</p>
+        <p><strong>Status:</strong> <span ng-bind="vm.testStatus"></span></p>
+    </div>
+
+    <div class="test-section">
+        <h3>🎯 Test Controls</h3>
+        <button ng-click="vm.simulateSupplyRequest()" ng-disabled="vm.isProcessing">
+            🚚 Simulate Supply Request Processing
+        </button>
+        <button ng-click="vm.simulateStockUpdate()" ng-disabled="vm.isProcessing">
+            📦 Simulate Stock Update
+        </button>
+        <button ng-click="vm.clearLogs()">
+            🗑️ Clear Logs
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 Stock Data</h3>
+        <p><strong>Stock Items:</strong> {{vm.stockData.length}}</p>
+        <p><strong>Last Refresh:</strong> {{vm.lastRefresh | date:'medium'}}</p>
+        <div ng-show="vm.isRefreshing" style="color: #007bff;">
+            <i>⏳ Refreshing stock data...</i>
+        </div>
+    </div>
+
+    <div class="log">
+        <h3>📝 Event Logs</h3>
+        <div ng-repeat="log in vm.logs track by $index" style="margin: 5px 0; padding: 5px; background: white;">
+            <small>{{log.timestamp | date:'short'}}</small> - {{log.message}}
+        </div>
+    </div>
+
+    <script>
+        angular.module('testApp', [])
+        .controller('TestController', function($scope, $timeout, $rootScope) {
+            var vm = this;
+            vm.testStatus = 'Ready to test';
+            vm.isProcessing = false;
+            vm.isRefreshing = false;
+            vm.stockData = [
+                { id: 1, name: 'Product A', quantity: 100 },
+                { id: 2, name: 'Product B', quantity: 50 },
+                { id: 3, name: 'Product C', quantity: 75 }
+            ];
+            vm.lastRefresh = new Date();
+            vm.logs = [];
+
+            // Simulate the StockCardSummaryListController event listeners
+            $rootScope.$on('supplyRequest.processed', function(event, data) {
+                vm.addLog('🔄 Supply request processed: ' + JSON.stringify(data));
+                vm.refreshStockData();
+            });
+
+            $rootScope.$on('stock.updated', function(event, data) {
+                vm.addLog('📦 Stock updated: ' + JSON.stringify(data));
+                vm.refreshStockData();
+            });
+
+            vm.simulateSupplyRequest = function() {
+                vm.isProcessing = true;
+                vm.addLog('🚚 Simulating supply request processing...');
+                
+                // Simulate supply request data
+                var supplyRequestData = {
+                    facilityId: 'facility-123',
+                    programId: 'program-456',
+                    requestId: 'SR-' + Date.now(),
+                    products: vm.stockData.map(function(p) { return p.id; })
+                };
+
+                $timeout(function() {
+                    // Broadcast the event (this is what your implementation does)
+                    $rootScope.$broadcast('supplyRequest.processed', supplyRequestData);
+                    vm.isProcessing = false;
+                    vm.addLog('✅ Supply request processed successfully');
+                    $scope.$digest();
+                }, 1500);
+            };
+
+            vm.simulateStockUpdate = function() {
+                vm.isProcessing = true;
+                vm.addLog('📦 Simulating stock update...');
+                
+                $timeout(function() {
+                    var stockUpdateData = {
+                        facilityId: 'facility-123',
+                        programId: 'program-456',
+                        type: 'stock.adjustment',
+                        timestamp: Date.now()
+                    };
+                    
+                    $rootScope.$broadcast('stock.updated', stockUpdateData);
+                    vm.isProcessing = false;
+                    vm.addLog('✅ Stock update completed');
+                    $scope.$digest();
+                }, 1000);
+            };
+
+            vm.refreshStockData = function() {
+                vm.isRefreshing = true;
+                vm.addLog('🔄 Refreshing stock data...');
+                
+                $timeout(function() {
+                    // Simulate data refresh (in real app, this would call the API)
+                    vm.stockData = vm.stockData.map(function(item) {
+                        return {
+                            ...item,
+                            quantity: item.quantity + Math.floor(Math.random() * 10) - 5
+                        };
+                    });
+                    vm.lastRefresh = new Date();
+                    vm.isRefreshing = false;
+                    vm.addLog('✅ Stock data refreshed successfully');
+                    $scope.$digest();
+                }, 1000);
+            };
+
+            vm.addLog = function(message) {
+                vm.logs.unshift({
+                    timestamp: new Date(),
+                    message: message
+                });
+                if (vm.logs.length > 10) {
+                    vm.logs = vm.logs.slice(0, 10);
+                }
+                $scope.$digest();
+            };
+
+            vm.clearLogs = function() {
+                vm.logs = [];
+                vm.addLog('🗑️ Logs cleared');
+            };
+
+            // Initial log
+            vm.addLog('🚀 Test environment ready');
+        });
+    </script>
+</body>
+</html>

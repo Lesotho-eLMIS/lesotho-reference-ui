@@ -67,7 +67,6 @@
         // Methods
         vm.loadStockCardSummaries = loadStockCardSummaries;
         vm.refreshStockOnHand = refreshStockOnHand;
-        vm.forceRefresh = forceRefresh;
         vm.print = print;
         vm.viewSingleCard = viewSingleCard;
         vm.filter = filter;
@@ -137,16 +136,6 @@
                 });
         }
 
-        function forceRefresh() {
-            console.log('🔄 Force refreshing stock on hand data...');
-
-            if (vm.pagedList && vm.pagedList.clearCache) {
-                vm.pagedList.clearCache();
-            }
-
-            vm.refreshStockOnHand();
-        }
-
         function setupEventListeners() {
             // Listen for stock updates
             vm.$rootScope.$on('stock.updated', function(event, data) {
@@ -201,7 +190,7 @@
         function setupCrossTabCommunication() {
             // Listen for storage events (cross-tab communication)
             window.addEventListener('storage', function(event) {
-                if (event.key === 'stockUpdateTrigger') {
+                if (event.key === 'stockUpdateTrigger' || event.key === 'supplyRequestTrigger') {
                     console.log('🔄 Cross-tab stock update detected');
                     vm.$timeout(function() {
                         vm.refreshStockOnHand();
