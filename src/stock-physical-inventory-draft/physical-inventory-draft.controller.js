@@ -175,7 +175,7 @@
       if (vm.itemsSelectedForCyclic.some(function(g) {
         return g[0].orderable.id === orderableId;
       })) {
-        alertService.error('This product is already added to the count');
+        alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
         return;
       }
 
@@ -194,7 +194,7 @@
         return p.orderable.id !== orderableId;
       });
 
-      notificationService.success('Product added to cyclic count');
+      notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
 
       vm.productSelectionMode = null;
       vm.selectedProductForCyclic = null;
@@ -398,95 +398,56 @@
     };
 
     /**
-     * Opens the standard "Add Products to Physical Inventory" modal.
-     * Works for both Major and Cyclic — after the modal resolves the state
-     * reloads and onInit re-partitions all items including newly added ones.
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name addProducts
+     *
+     * @description
+     * Pops up a modal for users to add products for physical inventory.
+     */
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name addProducts
+     *
+     * @description
+     * Pops up a modal for users to add products for physical inventory.
+     *
+     * For Major: shows all draft line items not yet added to the table.
+     * For Cyclic: shows draft line items where stockOnHand is null — these are
+     *             programme products that have never been stocked at this facility.
+     *             Items where stockOnHand is not null are already at the facility
+     *             and belong to "Select Existing Product" instead.
      */
     vm.addProducts = function () {
+      var notYetAddedItems;
+
       if ($stateParams.physicalInventoryType === 'Cyclic') {
-        // For Cyclic: fetch all products approved for this program+facility
-        // (includeApprovedProducts=true gives the full programme catalogue),
-        // then exclude anything already in the facility's draft.lineItems so
-        // "Add from Catalogue" only shows programme products not yet at this facility.
-        loadingModalService.open();
+        // For Cyclic "Add from Catalogue": show programme products that have never
+        // been stocked at this facility. A product is "at the facility" if ANY of
+        // its lot entries in draft.lineItems has a non-null stockOnHand. We build
+        // a set of such orderable IDs first, then exclude them entirely.
+        var orderableIdsAtFacility = {};
+        draft.lineItems.forEach(function(item) {
+          if (item.stockOnHand !== null && item.stockOnHand !== undefined) {
+            orderableIdsAtFacility[item.orderable.id] = true;
+          }
+        });
 
-        orderableGroupService
-          .findAvailableProductsAndCreateOrderableGroups(program.id, facility.id, true)
-          .then(function(orderableGroups) {
-            loadingModalService.close();
-
-            // Build a set of orderable IDs already in the facility inventory.
-            var facilityProductIds = {};
-            draft.lineItems.forEach(function(item) {
-              facilityProductIds[item.orderable.id] = true;
-            });
-
-            // Flatten orderable groups into individual line-item shaped objects,
-            // keeping only those not already at the facility.
-            var notYetAddedItems = [];
-            orderableGroups.forEach(function(group) {
-              group.forEach(function(item) {
-                if (!facilityProductIds[item.orderable.id]) {
-                  notYetAddedItems.push({
-                    lot: item.lot || null,
-                    orderable: item.orderable,
-                    quantity: null,
-                    stockAdjustments: [],
-                    stockOnHand: null,
-                    vvmStatus: null,
-                    $allLotsAdded: false,
-                    isNewProduct: true,
-                    isAdded: true,
-                  });
-                }
-              });
-            });
-
-            addProductsModalService
-              .show(notYetAddedItems, draft, vm.showInDoses())
-              .then(function() {
-                // The modal's confirm() only pushes items into draft.lineItems
-                // when item.$isNewItem is true (new lots only). For "No batch
-                // defined" items we push manually — detecting them by quantity
-                // being set (the modal sets it by reference on confirm).
-                notYetAddedItems.forEach(function(item) {
-                  if (item.quantity !== null && item.quantity !== undefined) {
-                    var alreadyInDraft = draft.lineItems.some(function(d) {
-                      return d.orderable.id === item.orderable.id &&
-                             d.lot === item.lot;
-                    });
-                    if (!alreadyInDraft) {
-                      item.isAdded = true;
-                      item.stockOnHand = null;
-                      draft.lineItems.push(item);
-                    }
-                  }
-                });
-
-                $stateParams.program = vm.program;
-                $stateParams.facility = vm.facility;
-                $stateParams.noReload = true;
-
-                draft.$modified = true;
-                vm.cacheDraft();
-
-                //Only reload current state and avoid reloading parent state
-                $state.go($state.current.name, $stateParams, {
-                  reload: $state.current.name,
-                });
-              });
-          })
-          .catch(function() {
-            loadingModalService.close();
-            alertService.error('stockPhysicalInventoryDraft.loadCatalogueFailed');
-          });
-
+        notYetAddedItems = draft.lineItems.filter(function(item) {
+          return !orderableIdsAtFacility[item.orderable.id];
+        });
       } else {
         // Original Major logic — unchanged.
-        var notYetAddedItems = _.chain(draft.lineItems)
+        notYetAddedItems = _.chain(draft.lineItems)
           .difference(_.flatten(vm.displayLineItemsGroup))
           .value();
+      }
 
+      // For Major only: also include products where all lots are already added,
+      // represented as a shell entry so the user can add new lots.
+      // For Cyclic this is not needed — the modal is for new-to-facility products only.
+      if ($stateParams.physicalInventoryType !== 'Cyclic') {
         var orderablesWithoutAvailableLots = draft.lineItems
           .map(function (item) {
             return item.orderable;
@@ -514,24 +475,24 @@
         orderablesWithoutAvailableLots.forEach(function (item) {
           notYetAddedItems.push(item);
         });
-
-        addProductsModalService
-          .show(notYetAddedItems, draft, vm.showInDoses())
-          .then(function () {
-            //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
-            $stateParams.program = vm.program;
-            $stateParams.facility = vm.facility;
-            $stateParams.noReload = true;
-
-            draft.$modified = true;
-            vm.cacheDraft();
-
-            //Only reload current state and avoid reloading parent state
-            $state.go($state.current.name, $stateParams, {
-              reload: $state.current.name,
-            });
-          });
       }
+
+      addProductsModalService
+        .show(notYetAddedItems, draft, vm.showInDoses())
+        .then(function () {
+          //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
+          $stateParams.program = vm.program;
+          $stateParams.facility = vm.facility;
+          $stateParams.noReload = true;
+
+          draft.$modified = true;
+          vm.cacheDraft();
+
+          //Only reload current state and avoid reloading parent state
+          $state.go($state.current.name, $stateParams, {
+            reload: $state.current.name,
+          });
+        });
     };
 
     /**
@@ -1049,8 +1010,6 @@
       );
       vm.reasons = reasons;
       vm.stateParams = $stateParams;
-      $stateParams.program = undefined;
-      $stateParams.facility = undefined;
 
       if (vm.stateParams.physicalInventoryType === 'Cyclic') {
         // Items already counted or explicitly added go straight into the table.
@@ -1294,7 +1253,7 @@
         messageService.get("stockPhysicalInventoryDraft.confirmRemove", {
           productName: productName
         }),
-        'Confirm Removal'
+        'stockPhysicalInventoryDraft.delete'
       ).then(function() {
         group.forEach(function(batch) {
           batch.quantity = null;
