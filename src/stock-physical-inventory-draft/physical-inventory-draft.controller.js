@@ -10,7 +10,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function () {
@@ -62,7 +62,6 @@
     "dateUtils",
     "QUANTITY_UNIT",
     "quantityUnitCalculateService",
-    "allSystemProducts",
   ];
 
   function controller(
@@ -100,7 +99,6 @@
     dateUtils,
     QUANTITY_UNIT,
     quantityUnitCalculateService,
-    allSystemProducts,
   ) {
     var vm = this;
     vm.$onInit = onInit;
@@ -112,20 +110,37 @@
     vm.recalculateQuantity = recalculateQuantity;
     vm.removeGroup = removeGroup;
 
+    /**
+     * @ngdoc property
+     * @propertyOf stock-card.controller:StockCardController
+     * @name quantityUnit
+     * @type {Object}
+     *
+     * @description
+     * Holds quantity unit.
+     */
     vm.quantityUnit = undefined;
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-card.controller:StockCardController
+     * @name showInDoses
+     *
+     * @description
+     * Returns whether the screen is showing quantities in doses.
+     *
+     * @return {boolean} true if the quantities are in doses, false otherwise
+     */
     function showInDoses() {
       return vm.quantityUnit === QUANTITY_UNIT.DOSES;
     }
+    vm.selectProductForCyclic = selectProductForCyclic;
 
     // ---- Cyclic product selector state ----
     vm.productSelectionMode = null;
     vm.searchText = '';
     vm.searchResults = [];
     vm.isSearching = false;
-
-    // Keep original method for backward compatibility
-    vm.selectProductForCyclic = selectProductForCyclic;
 
     /**
      * Searches for existing products in real-time (facility's existing inventory).
@@ -150,8 +165,7 @@
 
     /**
      * Adds an existing (facility-level) product to the cyclic count table.
-     * Looks up ALL lots for the product from draft.lineItems — NOT displayLineItemsGroup,
-     * which is empty for a fresh cyclic draft (by design, so the table starts blank).
+     * Looks up ALL lots for the product from draft.lineItems.
      */
     vm.selectExistingProductForCyclic = function(productItem) {
       if (!productItem) return;
@@ -165,20 +179,17 @@
         return;
       }
 
-      // Collect all lot-rows for this orderable from the draft
       var fullGroup = draft.lineItems.filter(function(item) {
         return item.orderable.id === orderableId;
       });
       if (!fullGroup || fullGroup.length === 0) return;
 
-      // Mark isAdded so the routes resolver keeps them in displayLineItemsGroup on reload
       fullGroup.forEach(function(item) {
         item.isAdded = true;
       });
 
       vm.itemsSelectedForCyclic.push(fullGroup);
 
-      // Remove from search pool
       vm.productsForCyclic = vm.productsForCyclic.filter(function(p) {
         return p.orderable.id !== orderableId;
       });
@@ -193,7 +204,26 @@
       regroupCyclicItems();
     };
 
-    // ---- Main display binding ----
+    vm.toggleProductSelectionMode = function(mode) {
+      if (vm.productSelectionMode === mode) {
+        vm.productSelectionMode = null;
+      } else {
+        vm.productSelectionMode = mode;
+        vm.selectedProductForCyclic = null;
+        vm.searchResults = [];
+        vm.searchText = '';
+      }
+    };
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name displayLineItemsGroup
+     * @type {Array}
+     *
+     * @description
+     * Holds current display physical inventory draft line items grouped by orderable id.
+     */
     vm.displayLineItemsGroup = displayLineItemsGroup;
 
     vm.updateProgress = function () {
@@ -207,73 +237,253 @@
       );
     };
 
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name program
+     * @type {Object}
+     *
+     * @description
+     * Holds current program info.
+     */
     vm.program = program;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name facility
+     * @type {Object}
+     *
+     * @description
+     * Holds home facility info.
+     */
     vm.facility = facility;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name keyword
+     * @type {String}
+     *
+     * @description
+     * Holds keywords for searching.
+     */
     vm.keyword = $stateParams.keyword;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name includeInactive
+     * @type {Boolean}
+     *
+     * @description
+     * When true shows inactive items
+     */
     vm.includeInactive = $stateParams.includeInactive;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name vvmStatuses
+     * @type {Object}
+     *
+     * @description
+     * Holds list of VVM statuses.
+     */
     vm.vvmStatuses = VVM_STATUS;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name groupedCategories
+     * @type {Object}
+     *
+     * @description
+     * Holds line items grouped by category.
+     */
     vm.groupedCategories = false;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name isSubmitted
+     * @type {boolean}
+     *
+     * @description
+     * If submitted once, set this to true and allow to do validation.
+     */
+
     vm.isSubmitted = $stateParams.isSubmitted;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name showVVMStatusColumn
+     * @type {boolean}
+     *
+     * @description
+     * Indicates if VVM Status column should be visible.
+     */
     vm.showVVMStatusColumn = false;
-    vm.productsForCyclic = [];
-    vm.selectedProductForCyclic = undefined;
+    vm.productsForCyclic = []; // list of products to be selected for cyclic stock count
+    vm.selectedProductForCyclic = undefined; // product selected for cyclic stock count
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name showVVMStatusColumn
+     * @type {boolean}
+     *
+     * @description
+     * Indicates if Hide buttons column should be visible.
+     */
     vm.showHideButtonColumn = false;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name offline
+     * @type {boolean}
+     *
+     * @description
+     * Holds information about internet connection
+     */
     vm.offline = offlineService.isOffline;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name draft
+     * @type {Object}
+     *
+     * @description
+     * Holds physical inventory draft.
+     */
     vm.draft = draft;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name dataChanged
+     * @type {boolean}
+     *
+     * @description
+     * A flag that changes its value when the data in the form is changed. Used by saving-indicator
+     */
     vm.dataChanged = false;
+
+    /**
+     * @ngdoc property
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name itemsSelectedForCyclic
+     * @type {Array}
+     *
+     * @description
+     * Array that holds items selected for cyclic inventory*/
     vm.itemsSelectedForCyclic = [];
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name getStatusDisplay
+     *
+     * @description
+     * Returns VVM status display.
+     *
+     * @param  {String} status VVM status
+     * @return {String}        VVM status display name
+     */
     vm.getStatusDisplay = function (status) {
       return messageService.get(VVM_STATUS.$getDisplayName(status));
     };
 
     /**
-     * @ngdoc method
-     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
-     * @name addProducts
-     *
-     * @description
-     * Pops up a modal for users to add products for physical inventory.
-     *
-     * For Cyclic counts, the table starts blank by design (the routes resolver only
-     * includes items the user has explicitly added). displayLineItemsGroup is therefore
-     * empty and cannot be used as the exclusion list. Instead we exclude products that
-     * are already in vm.itemsSelectedForCyclic — the array that tracks everything the
-     * user has chosen so far — so the modal only offers products not yet in the count.
+     * Opens the standard "Add Products to Physical Inventory" modal.
+     * Works for both Major and Cyclic — after the modal resolves the state
+     * reloads and onInit re-partitions all items including newly added ones.
      */
     vm.addProducts = function () {
-      var notYetAddedItems;
-
       if ($stateParams.physicalInventoryType === 'Cyclic') {
-        // For Cyclic: source from the full system catalogue and exclude any product
-        // that already exists in this facility's inventory (draft.lineItems).
-        // This means "Add from Catalogue" is strictly for products not yet at the
-        // facility at all — distinct from "Select Existing Product" which handles
-        // products already in the facility's inventory but not yet counted.
-        var facilityProductIds = {};
-        draft.lineItems.forEach(function(item) {
-          facilityProductIds[item.orderable.id] = true;
-        });
+        // For Cyclic: fetch all products approved for this program+facility
+        // (includeApprovedProducts=true gives the full programme catalogue),
+        // then exclude anything already in the facility's draft.lineItems so
+        // "Add from Catalogue" only shows programme products not yet at this facility.
+        loadingModalService.open();
 
-        notYetAddedItems = allSystemProducts
-          .filter(function(orderable) {
-            return !facilityProductIds[orderable.id];
+        orderableGroupService
+          .findAvailableProductsAndCreateOrderableGroups(program.id, facility.id, true)
+          .then(function(orderableGroups) {
+            loadingModalService.close();
+
+            // Build a set of orderable IDs already in the facility inventory.
+            var facilityProductIds = {};
+            draft.lineItems.forEach(function(item) {
+              facilityProductIds[item.orderable.id] = true;
+            });
+
+            // Flatten orderable groups into individual line-item shaped objects,
+            // keeping only those not already at the facility.
+            var notYetAddedItems = [];
+            orderableGroups.forEach(function(group) {
+              group.forEach(function(item) {
+                if (!facilityProductIds[item.orderable.id]) {
+                  notYetAddedItems.push({
+                    lot: item.lot || null,
+                    orderable: item.orderable,
+                    quantity: null,
+                    stockAdjustments: [],
+                    stockOnHand: null,
+                    vvmStatus: null,
+                    $allLotsAdded: false,
+                    isNewProduct: true,
+                    isAdded: true,
+                  });
+                }
+              });
+            });
+
+            addProductsModalService
+              .show(notYetAddedItems, draft, vm.showInDoses())
+              .then(function() {
+                // The modal's confirm() only pushes items into draft.lineItems
+                // when item.$isNewItem is true (new lots only). For "No batch
+                // defined" items we push manually — detecting them by quantity
+                // being set (the modal sets it by reference on confirm).
+                notYetAddedItems.forEach(function(item) {
+                  if (item.quantity !== null && item.quantity !== undefined) {
+                    var alreadyInDraft = draft.lineItems.some(function(d) {
+                      return d.orderable.id === item.orderable.id &&
+                             d.lot === item.lot;
+                    });
+                    if (!alreadyInDraft) {
+                      item.isAdded = true;
+                      item.stockOnHand = null;
+                      draft.lineItems.push(item);
+                    }
+                  }
+                });
+
+                $stateParams.program = vm.program;
+                $stateParams.facility = vm.facility;
+                $stateParams.noReload = true;
+
+                draft.$modified = true;
+                vm.cacheDraft();
+
+                //Only reload current state and avoid reloading parent state
+                $state.go($state.current.name, $stateParams, {
+                  reload: $state.current.name,
+                });
+              });
           })
-          .map(function(orderable) {
-            return {
-              lot: null,
-              orderable: orderable,
-              quantity: null,
-              stockAdjustments: [],
-              stockOnHand: null,
-              vvmStatus: null,
-              $allLotsAdded: false,
-              isNewProduct: true,
-            };
+          .catch(function() {
+            loadingModalService.close();
+            alertService.error('stockPhysicalInventoryDraft.loadCatalogueFailed');
           });
+
       } else {
         // Original Major logic — unchanged.
-        notYetAddedItems = _.chain(draft.lineItems)
+        var notYetAddedItems = _.chain(draft.lineItems)
           .difference(_.flatten(vm.displayLineItemsGroup))
           .value();
 
@@ -304,26 +514,36 @@
         orderablesWithoutAvailableLots.forEach(function (item) {
           notYetAddedItems.push(item);
         });
-      }
 
-      addProductsModalService
-        .show(notYetAddedItems, draft, vm.showInDoses())
-        .then(function () {
-          //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
-          $stateParams.program = vm.program;
-          $stateParams.facility = vm.facility;
-          $stateParams.noReload = true;
+        addProductsModalService
+          .show(notYetAddedItems, draft, vm.showInDoses())
+          .then(function () {
+            //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
+            $stateParams.program = vm.program;
+            $stateParams.facility = vm.facility;
+            $stateParams.noReload = true;
 
-          draft.$modified = true;
-          vm.cacheDraft();
+            draft.$modified = true;
+            vm.cacheDraft();
 
-          //Only reload current state and avoid reloading parent state
-          $state.go($state.current.name, $stateParams, {
-            reload: $state.current.name,
+            //Only reload current state and avoid reloading parent state
+            $state.go($state.current.name, $stateParams, {
+              reload: $state.current.name,
+            });
           });
-        });
+      }
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name editLot
+     *
+     * @description
+     * Pops up a modal for users to edit lot for selected line item.
+     *
+     * @param {Object} lineItem line items to be edited.
+     */
     vm.editLot = function (lineItem) {
       var addedLineItems = _.flatten(draft.lineItems);
       editLotModalService.show(lineItem, addedLineItems).then(function () {
@@ -331,6 +551,17 @@
       });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name calculate
+     *
+     * @description
+     * Aggregate values of provided field for a group of line items.
+     *
+     * @param {Object} lineItems line items to be calculate.
+     * @param {String} field     property name of line items to be aggregate.
+     */
     vm.calculate = function (lineItems, field) {
       var allEmpty = _.every(lineItems, function (lineItem) {
         return isEmpty(lineItem[field]);
@@ -338,6 +569,7 @@
       if (allEmpty) {
         return undefined;
       }
+
       var quantityInDoses = _.chain(lineItems)
         .map(function (lineItem) {
           return lineItem[field];
@@ -347,12 +579,23 @@
           return parseInt(num) + memo;
         }, 0)
         .value();
+
       return recalculateQuantity(
         quantityInDoses,
         lineItems[0].orderable.netContent,
       );
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name getStatusDisplay
+     *
+     * @description
+     * Pops up a modal for users to hide product for physical inventory.
+     *
+     * @param  {Object} lineItem line items to be hidded.
+     */
     vm.hideLineItem = function (lineItem) {
       var itemToHide = lineItem;
       confirmService
@@ -373,6 +616,7 @@
                   return item;
                 }
               }).active = false;
+
               vm.cacheDraft();
               $state.go($state.current.name, $stateParams, {
                 reload: $state.current.name,
@@ -387,6 +631,15 @@
         });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name search
+     *
+     * @description
+     * It searches from the total line items with given keyword and/or includeInactive.
+     * If keyword and includeInactive are empty then all line items will be shown.
+     */
     vm.search = function () {
       $stateParams.page = 0;
       $stateParams.keyword = vm.keyword;
@@ -394,11 +647,21 @@
       $stateParams.program = vm.program;
       $stateParams.facility = vm.facility;
       $stateParams.noReload = true;
+
+      //Only reload current state and avoid reloading parent state
       $state.go($state.current.name, $stateParams, {
         reload: $state.current.name,
       });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name saveDraft
+     *
+     * @description
+     * Save physical inventory draft.
+     */
     vm.saveDraft = function () {
       confirmService
         .confirmDestroy(
@@ -407,28 +670,16 @@
         )
         .then(function () {
           loadingModalService.open();
-
-          var originalLineItems = draft.lineItems;
-          if (vm.stateParams.physicalInventoryType === 'Cyclic') {
-            draft.lineItems = draft.lineItems.filter(function(item) {
-              return !item.isNewProduct;
-            });
-          }
-
           return saveLots(draft, function () {
             return physicalInventoryFactory.saveDraft(draft).then(
               function () {
                 notificationService.success(
                   "stockPhysicalInventoryDraft.saved",
                 );
+
                 draft.$modified = undefined;
-                draft.lineItems = originalLineItems;
-                var hasNewProducts = vm.itemsSelectedForCyclic.some(function(g) {
-                  return g[0].isNewProduct;
-                });
-                if (!hasNewProducts) {
-                  vm.cacheDraft();
-                }
+                vm.cacheDraft();
+
                 $stateParams.isAddProduct = false;
                 $stateParams.program = vm.program;
                 $stateParams.facility = vm.facility;
@@ -438,12 +689,12 @@
                   }
                 });
                 $stateParams.noReload = true;
+
                 $state.go($state.current.name, $stateParams, {
                   reload: $state.current.name,
                 });
               },
               function (errorResponse) {
-                draft.lineItems = originalLineItems;
                 loadingModalService.close();
                 alertService.error(errorResponse.data.message);
               },
@@ -452,17 +703,44 @@
         });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name canEditLot
+     *
+     * @description
+     * Checks if user can edit lot if it was created during inventory
+     *
+     * @param {Object} lineItem line item to edit
+     */
     vm.canEditLot = function (lineItem) {
       return lineItem.lot && lineItem.$isNewItem;
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name saveOnPageChange
+     *
+     * @description
+     * Save physical inventory draft on page change.
+     */
     vm.saveOnPageChange = function () {
       var params = {};
       params.noReload = true;
       params.isSubmitted = vm.isSubmitted;
+
       return $q.resolve(params);
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name validateOnPageChange
+     *
+     * @description
+     * Validate physical inventory draft if form was submitted once.
+     */
     vm.validateOnPageChange = function () {
       if ($stateParams.isSubmitted === true) {
         validate();
@@ -470,6 +748,14 @@
       }
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name delete
+     *
+     * @description
+     * Delete physical inventory draft.
+     */
     vm.delete = function () {
       confirmService
         .confirmDestroy(
@@ -484,7 +770,9 @@
               $state.go(
                 "openlmis.stockmanagement.physicalInventory",
                 $stateParams,
-                { reload: true },
+                {
+                  reload: true,
+                },
               );
             })
             .catch(function () {
@@ -493,9 +781,17 @@
         });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name submit
+     *
+     * @description
+     * Submit physical inventory.
+     */
     vm.submit = function () {
       vm.isSubmitted = true;
-      var error;
+      var error = undefined; //(vm.physicalInventoryType === "Major") ? validate() : validateCyclic();
       if (vm.stateParams.physicalInventoryType === "Cyclic") {
         error = validateCyclic();
       } else if (vm.stateParams.physicalInventoryType === "Major") {
@@ -508,15 +804,9 @@
       } else {
         chooseDateModalService.show().then(function (resolvedData) {
           loadingModalService.open();
+
           draft.occurredDate = resolvedData.occurredDate;
           draft.signature = resolvedData.signature;
-
-          var originalLineItems = draft.lineItems;
-          if (vm.stateParams.physicalInventoryType === 'Cyclic') {
-            draft.lineItems = draft.lineItems.filter(function(item) {
-              return !item.isNewProduct;
-            });
-          }
 
           return saveLots(draft, function () {
             physicalInventoryService
@@ -537,21 +827,22 @@
                     )
                     .then(function () {
                       $window.open(
-                        accessTokenFactory.addAccessToken(getPrintUrl(draft.id)),
+                        accessTokenFactory.addAccessToken(
+                          getPrintUrl(draft.id),
+                        ),
                         "_blank",
                       );
                     })
                     .finally(function () {
                       $state.go("openlmis.stockmanagement.stockCardSummaries", {
                         program: program.id,
-                        facility: draft.facilityId,
+                        facility: draft.facilityId, //go to facility of the submitted draft in stock card summaries
                         includeInactive: false,
                         supervised: $stateParams.supervised
                       });
                     });
                 },
                 function (errorResponse) {
-                  draft.lineItems = originalLineItems;
                   loadingModalService.close();
                   alertService.error(errorResponse.data.message);
                   physicalInventoryDraftCacheService.removeById(draft.id);
@@ -620,7 +911,10 @@
         .catch(function (errorResponse) {
           loadingModalService.close();
           if (errorLots) {
-            var errorLotsReduced = errorLots.reduce(function (result, currentValue) {
+            var errorLotsReduced = errorLots.reduce(function (
+              result,
+              currentValue,
+            ) {
               if (currentValue.error in result) {
                 result[currentValue.error].push(currentValue.lotCode);
               } else {
@@ -637,6 +931,16 @@
         });
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateQuantity
+     *
+     * @description
+     * Validate line item quantity and returns self.
+     *
+     * @param {Object} lineItem line item to be validated.
+     */
     vm.validateQuantity = function (lineItem) {
       if (lineItem.quantity > MAX_INTEGER_VALUE) {
         lineItem.quantityInvalid = messageService.get(
@@ -652,6 +956,16 @@
       return lineItem.quantityInvalid;
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateUnaccountedQuantity
+     *
+     * @description
+     * Validate line item quantity and returns self.
+     *
+     * @param {Object} lineItem line item to be validated.
+     */
     vm.validateUnaccountedQuantity = function (lineItem) {
       if (lineItem.unaccountedQuantity === 0) {
         lineItem.unaccountedQuantityInvalid = false;
@@ -670,6 +984,7 @@
     function validate() {
       var qtyError = false;
       var activeError = false;
+
       _.chain(displayLineItemsGroup)
         .flatten()
         .each(function (item) {
@@ -686,32 +1001,34 @@
     }
 
     function validateCyclic() {
-      var errorMessage = false;
+      let errorMessage = false;
+
       displayLineItemsGroup.forEach(function (group) {
         vm.itemsSelectedForCyclic.forEach(function (selectedItem) {
           if (
             selectedItem[0].orderable.fullProductName ===
             group[0].orderable.fullProductName
           ) {
-            for (var i = 0; i < group.length; i++) {
-              var item = group[i];
+            for (let item of group) {
               if (!item.active) {
-                errorMessage = "stockPhysicalInventoryDraft.submitInvalidActive";
-                break;
+                errorMessage =
+                  "stockPhysicalInventoryDraft.submitInvalidActive";
+                break; // Exit the loop early if an active error is found
               } else if (
                 vm.validateQuantity(item) ||
                 vm.validateUnaccountedQuantity(item)
               ) {
                 errorMessage = "stockPhysicalInventoryDraft.submitInvalid";
-                break;
+                break; // Exit the loop early if a quantity error is found
               }
             }
           }
         });
       });
-      return errorMessage;
-    }
 
+      return errorMessage; // Returns the first error found or null if none
+    }
+    // Helper function to check if an object has a valid quantity property
     function hasValidQuantity(obj) {
       return (
         obj &&
@@ -804,12 +1121,23 @@
           },
           true,
         );
+
         if (!$stateParams.noReload) {
           vm.cacheDraft();
         }
       }
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name checkUnaccountedStockAdjustments
+     *
+     * @description
+     * Calculates unaccounted and set value to line item.
+     *
+     * @param   {Object}    lineItem    the lineItem containing stock adjustments
+     */
     function checkUnaccountedStockAdjustments(lineItem) {
       lineItem.unaccountedQuantity =
         stockReasonsCalculations.calculateUnaccounted(
@@ -822,6 +1150,16 @@
       }
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name quantityChanged
+     *
+     * @description
+     * Callback method for quantity change. It will update progress and fire up validations.
+     *
+     * @param   {Object}    lineItem    the lineItem containing quantity
+     */
     function quantityChanged(lineItem) {
       vm.updateProgress();
       vm.validateQuantity(lineItem);
@@ -829,16 +1167,42 @@
       vm.dataChanged = !vm.dataChanged;
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name getPrintUrl
+     *
+     * @description
+     * Prepares a print URL for the given physical inventory.
+     *
+     * @return {String} the prepared URL
+     */
     function getPrintUrl(id) {
       return stockmanagementUrlFactory(
         "/api/physicalInventories/" + id + "?format=pdf",
       );
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name cacheDraft
+     *
+     * @description
+     * Cache draft of physical inventory.
+     */
     function cacheDraft() {
       physicalInventoryDraftCacheService.cacheDraft(draft);
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name shouldDisplayHideButtonColumn
+     *
+     * @description
+     * Check if column with hide buttons should be displayed.
+     */
     function shouldDisplayHideButtonColumn(lineItems) {
       lineItems.forEach(function (item) {
         if (item.active && item.stockOnHand === 0 && !item.$isNewItem) {
@@ -847,10 +1211,31 @@
       });
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name formatDate
+     *
+     * @description
+     * Format date
+     */
     function formatDate(date) {
       return dateUtils.toStringDateWithDefaultFormat(date);
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-card.controller:StockCardController
+     * @name recalculateQuantity
+     *
+     * @description
+     * Recalculates the given quantity to packs or doses
+     *
+     * @param  {number}  quantity    the quantity in doses to be recalculated
+     * @param  {number}  netContent  the quantity of doses in one pack
+     *
+     * @return {String}            the given quantity in Doses or Packs
+     */
     function recalculateQuantity(quantity, netContent) {
       return quantityUnitCalculateService.recalculateSOHQuantity(
         quantity,
@@ -859,6 +1244,14 @@
       );
     }
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name selectProductForCyclic
+     *
+     * @description
+     * Populates array of line items for cyclic inventory, and groups them by category
+     */
     function selectProductForCyclic() {
       const productId = vm.selectedProductForCyclic.orderable.id;
       const productName = vm.selectedProductForCyclic.orderable.fullProductName;
@@ -926,18 +1319,6 @@
       });
     }
 
-    vm.toggleProductSelectionMode = function(mode) {
-      if (vm.productSelectionMode === mode) {
-        vm.productSelectionMode = null;
-      } else {
-        vm.productSelectionMode = mode;
-        vm.selectedProductForCyclic = null;
-        vm.searchResults = [];
-        vm.searchText = '';
-      }
-    };
-
     vm.validateOnPageChange();
   }
-
 })();
