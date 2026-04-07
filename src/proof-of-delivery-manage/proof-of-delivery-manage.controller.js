@@ -30,18 +30,25 @@
 
     controller.$inject = [
         'proofOfDeliveryManageService', '$state', 'loadingModalService', 'notificationService', 'pods',
-        '$stateParams', 'programs', 'requestingFacilities', 'supplyingFacilities', 'ProofOfDeliveryPrinter', 'facility'
+        '$stateParams', 'programs', 'requestingFacilities', 'supplyingFacilities', 'ProofOfDeliveryPrinter', 'facility',
+        'QUANTITY_UNIT', 'quantityUnitCalculateService'
     ];
 
     function controller(proofOfDeliveryManageService, $state, loadingModalService, notificationService,
                         pods, $stateParams, programs, requestingFacilities, supplyingFacilities,
-                        ProofOfDeliveryPrinter, facility) {
+                        ProofOfDeliveryPrinter, facility, QUANTITY_UNIT, quantityUnitCalculateService) {
         var vm = this;
+        vm.quantityUnitCalculateService = quantityUnitCalculateService;
+        vm.QUANTITY_UNIT = QUANTITY_UNIT;
+        vm.quantityUnit = QUANTITY_UNIT.PACKS; // Default to packs
 
         vm.$onInit = onInit;
         vm.openPod = openPod;
         vm.loadOrders = loadOrders;
         vm.printProofOfDelivery = printProofOfDelivery;
+        vm.showInDoses = showInDoses;
+        vm.recalculateQuantity = recalculateQuantity;
+        vm.toggleUnits = toggleUnits;
 
         /**
          * @ngdoc property
@@ -263,6 +270,50 @@
         var filteredList = list.filter(function(object) {
             return object.id === id;
         });
-        return filteredList.length > 0 ? filteredList[0] : null;
+        return filteredList.length ? filteredList[0] : null;
+    }
+
+    /**
+     * @ngdoc method
+     * @methodOf proof-of-delivery-manage.controller:ProofOfDeliveryManageController
+     * @name showInDoses
+     *
+     * @description
+     * Determines if quantities should be shown in doses based on the current unit setting.
+     *
+     * @return {boolean} true if quantities should be shown in doses
+     */
+    function showInDoses() {
+        return vm.quantityUnit === vm.QUANTITY_UNIT.DOSES;
+    }
+
+    /**
+     * @ngdoc method
+     * @methodOf proof-of-delivery-manage.controller:ProofOfDeliveryManageController
+     * @name recalculateQuantity
+     *
+     * @description
+     * Recalculates quantity based on unit conversion (packs to doses or vice versa).
+     *
+     * @param {Number} quantity the quantity to convert
+     * @param {Number} netContent the net content (doses per pack)
+     * @return {Number} the converted quantity
+     */
+    function recalculateQuantity(quantity, netContent) {
+        return vm.quantityUnitCalculateService
+            .recalculateSOHQuantity(quantity, netContent, vm.showInDoses());
+    }
+
+    /**
+     * @ngdoc method
+     * @methodOf proof-of-delivery-manage.controller:ProofOfDeliveryManageController
+     * @name toggleUnits
+     *
+     * @description
+     * Toggles between packs and doses display units.
+     */
+    function toggleUnits() {
+        vm.quantityUnit = vm.showInDoses() ? vm.QUANTITY_UNIT.PACKS : vm.QUANTITY_UNIT.DOSES;
+        console.log('Units toggled:', vm.showInDoses() ? 'Doses' : 'Packs');
     }
 })();

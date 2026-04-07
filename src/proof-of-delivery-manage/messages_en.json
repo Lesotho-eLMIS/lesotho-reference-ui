@@ -2,5 +2,6 @@
     "proofOfDeliveryManage.noOrderFound": "No Request found",
     "proofOfDeliveryManage.orderDate": "Request date",
     "proofOfDeliveryManage.orderNumber": "Request no.",
-    "proofOfDeliveryManage.orderStatus": "Request status"
+    "proofOfDeliveryManage.orderStatus": "Request status",
+    "proofOfDeliveryManage.showInDoses": "Show quantities in doses"
 }

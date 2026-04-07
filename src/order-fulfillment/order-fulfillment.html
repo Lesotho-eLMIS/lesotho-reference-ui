@@ -17,6 +17,12 @@
             ng-options="orderStatus for orderStatus in vm.orderStatuses"></select>
     <input type="submit" class="btn btn-primary" value="{{'orderFulfillment.search' | message}}"/>
   </form>
+  <section class="unit-toggle" ng-if="vm.orders && vm.orders.length > 0">
+    <label>
+        <input type="checkbox" ng-model="vm.showInDoses" ng-change="vm.toggleUnits()">
+        {{'orderFulfillment.showInDoses' | message}}
+    </label>
+  </section>
   <table>
     <caption ng-if="!vm.orders.length">{{'orderFulfillment.noOrdersFound' | message}}</caption>
     <thead>

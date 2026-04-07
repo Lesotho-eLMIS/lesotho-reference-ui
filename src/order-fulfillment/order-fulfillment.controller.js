@@ -30,16 +30,22 @@
 
     controller.$inject = [
         'orderingFacilities', 'programs', 'loadingModalService', 'orders',
-        '$stateParams', '$state', 'ORDER_STATUS', 'facility'
+        '$stateParams', '$state', 'ORDER_STATUS', 'facility', 'QUANTITY_UNIT', 'quantityUnitCalculateService'
     ];
 
     function controller(orderingFacilities, programs, loadingModalService, orders,
-                        $stateParams, $state, ORDER_STATUS, facility) {
+                        $stateParams, $state, ORDER_STATUS, facility, QUANTITY_UNIT, quantityUnitCalculateService) {
 
         var vm = this;
+        vm.quantityUnitCalculateService = quantityUnitCalculateService;
+        vm.QUANTITY_UNIT = QUANTITY_UNIT;
+        vm.quantityUnit = QUANTITY_UNIT.PACKS; // Default to packs
 
         vm.$onInit = onInit;
         vm.loadOrders = loadOrders;
+        vm.showInDoses = showInDoses;
+        vm.recalculateQuantity = recalculateQuantity;
+        vm.toggleUnits = toggleUnits;
 
         /**
          * @ngdoc property
@@ -167,6 +173,50 @@
             $state.go('openlmis.orders.fulfillment', stateParams, {
                 reload: true
             });
+        }
+
+        /**
+         * @ngdoc method
+         * @methodOf order-fulfillment.controller:OrderFulfillmentController
+         * @name showInDoses
+         *
+         * @description
+         * Determines if quantities should be shown in doses based on the current unit setting.
+         *
+         * @return {boolean} true if quantities should be shown in doses
+         */
+        function showInDoses() {
+            return vm.quantityUnit === vm.QUANTITY_UNIT.DOSES;
+        }
+
+        /**
+         * @ngdoc method
+         * @methodOf order-fulfillment.controller:OrderFulfillmentController
+         * @name recalculateQuantity
+         *
+         * @description
+         * Recalculates quantity based on unit conversion (packs to doses or vice versa).
+         *
+         * @param {Number} quantity the quantity to convert
+         * @param {Number} netContent the net content (doses per pack)
+         * @return {Number} the converted quantity
+         */
+        function recalculateQuantity(quantity, netContent) {
+            return vm.quantityUnitCalculateService
+                .recalculateSOHQuantity(quantity, netContent, vm.showInDoses());
+        }
+
+        /**
+         * @ngdoc method
+         * @methodOf order-fulfillment.controller:OrderFulfillmentController
+         * @name toggleUnits
+         *
+         * @description
+         * Toggles between packs and doses display units.
+         */
+        function toggleUnits() {
+            vm.quantityUnit = vm.showInDoses() ? vm.QUANTITY_UNIT.PACKS : vm.QUANTITY_UNIT.DOSES;
+            console.log('Units toggled:', vm.showInDoses() ? 'Doses' : 'Packs');
         }
 
     }

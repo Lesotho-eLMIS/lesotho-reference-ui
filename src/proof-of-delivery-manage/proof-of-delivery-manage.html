@@ -26,6 +26,12 @@
     </fieldset>
     <input type="submit" value="{{'proofOfDeliveryManage.search' | message}}"/>
 </form>
+<section class="unit-toggle" ng-if="vm.pods && vm.pods.length > 0">
+    <label>
+        <input type="checkbox" ng-model="vm.showInDoses" ng-change="vm.toggleUnits()">
+        {{'proofOfDeliveryManage.showInDoses' | message}}
+    </label>
+</section>
 <section class="openlmis-table-container">
     <table>
         <caption ng-if="vm.pods && !vm.pods.length">

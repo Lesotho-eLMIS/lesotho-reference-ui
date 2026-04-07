@@ -16,5 +16,6 @@
     "orderFulfillment.search": "Search",
     "orderFulfillment.status": "Status",
     "orderFulfillment.startFulfillment": "Start Fulfillment",
-    "orderFulfillment.continueFulfillment": "Continue Fulfillment"
+    "orderFulfillment.continueFulfillment": "Continue Fulfillment",
+    "orderFulfillment.showInDoses": "Show quantities in doses"
 }
