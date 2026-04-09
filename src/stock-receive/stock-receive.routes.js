@@ -51,9 +51,17 @@
                 requisitionsToReceive: function(requisitionService, facility) {
                     return requisitionService.search(false, {
                         facility: facility.id,
-                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0] //Pull requisitions initiated in the last 90 days
+                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
+                        requisitionStatus: 'APPROVED'
                     }).then(function(response) {
-                        return response.content;
+                        var approved = response.content;
+                        return requisitionService.search(false, {
+                            facility: facility.id,
+                            initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
+                            requisitionStatus: 'RELEASED'  
+                        }).then(function(response) {
+                            return approved.concat(response.content);
+                        });
                     });
                 },
                 adjustmentType: function(facility, requisitionsToReceive) {
