@@ -52,13 +52,15 @@
                     return requisitionService.search(false, {
                         facility: facility.id,
                         initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
-                        requisitionStatus: 'APPROVED'
+                        requisitionStatus: 'APPROVED',
+                        emergency: false
                     }).then(function(response) {
                         var approved = response.content;
                         return requisitionService.search(false, {
                             facility: facility.id,
                             initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
-                            requisitionStatus: 'RELEASED'  
+                            requisitionStatus: 'RELEASED',
+                            emergency: false  
                         }).then(function(response) {
                             return approved.concat(response.content);
                         });
