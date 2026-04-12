@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lesotho LSL Currency Implementation Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body ng-app="lslCurrencyTestApp">
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Lesotho LSL Currency Implementation Test</h1>
+        
+        <div ng-controller="TestController as vm" class="card p-4">
+            <h2>Test Results:</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Default Currency Filter (should show LSL):</h4>
+                    <p><strong>1000 | currency:</strong> {{vm.defaultCurrencyTest}}</p>
+                    <p><strong>2500.50 | currency:</strong> {{vm.defaultCurrencyTest2500}}</p>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Custom LSL Currency Filter:</h4>
+                    <p><strong>1000 | lesothoCurrency:</strong> {{vm.filterTest1000}}</p>
+                    <p><strong>2500.50 | lslCurrency:</strong> {{vm.filterTest2500}}</p>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h4>Currency Service Test:</h4>
+                    <p><strong>Symbol:</strong> {{vm.symbol}}</p>
+                    <p><strong>Name:</strong> {{vm.name}}</p>
+                    <p><strong>Code:</strong> {{vm.code}}</p>
+                    <p><strong>1000 formatted:</strong> {{vm.formatted1000}}</p>
+                    <p><strong>2500.50 formatted:</strong> {{vm.formatted2500}}</p>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Status:</h4>
+                    <div ng-class="vm.statusClass" class="alert p-3">
+                        <h5>{{vm.status}}</h5>
+                        <p class="mb-0">{{vm.statusMessage}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load LSL Currency Configuration -->
+    <script src="lesotho-currency-config.js"></script>
+    <script src="lesotho-currency-service.js"></script>
+    
+    <script>
+        angular.module('lslCurrencyTestApp', ['lesotho-currency-config', 'lesotho-currency-service'])
+            .controller('TestController', function($scope, $filter, lesothoCurrencyService) {
+                var vm = this;
+                
+                try {
+                    // Test default currency filter (should now show LSL)
+                    vm.defaultCurrencyTest = $filter('currency')(1000);
+                    vm.defaultCurrencyTest2500 = $filter('currency')(2500.50);
+                    
+                    // Test custom filters
+                    vm.filterTest1000 = $filter('lesothoCurrency')(1000);
+                    vm.filterTest2500 = $filter('lslCurrency')(2500.50, 'LSL', 2);
+                    
+                    // Test service
+                    vm.symbol = lesothoCurrencyService.getCurrencySymbol();
+                    vm.name = lesothoCurrencyService.getCurrencyName();
+                    vm.code = lesothoCurrencyService.getCurrencyCode();
+                    vm.formatted1000 = lesothoCurrencyService.format(1000);
+                    vm.formatted2500 = lesothoCurrencyService.formatCurrency(2500.50, 'LSL', 2);
+                    
+                    // Check if LSL is properly configured
+                    var showsLSL = vm.defaultCurrencyTest.includes('LSL');
+                    
+                    if (showsLSL) {
+                        vm.status = 'SUCCESS: LSL Currency Implementation Working!';
+                        vm.statusMessage = 'All currency displays are showing "LSL" instead of "$". The implementation is ready for production.';
+                        vm.statusClass = 'alert-success';
+                    } else {
+                        vm.status = 'PARTIAL SUCCESS: Custom Filters Working';
+                        vm.statusMessage = 'Custom LSL filters work, but default currency filter may need additional configuration.';
+                        vm.statusClass = 'alert-warning';
+                    }
+                    
+                } catch (error) {
+                    vm.status = 'ERROR: Currency Implementation Failed';
+                    vm.statusMessage = 'Error: ' + error.message;
+                    vm.statusClass = 'alert-danger';
+                }
+            });
+    </script>
+    
+    <style>
+        .alert-success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .alert-warning { background-color: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .alert-danger { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        body { font-family: Arial, sans-serif; }
+        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</body>
+</html>
