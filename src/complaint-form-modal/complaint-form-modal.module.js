@@ -33,6 +33,7 @@
         'stock-edit-lot-modal',
         //'receiving-add-discrepancy-modal',
         'complaint-form-modal',
-        'openlmis-currency'
+        'openlmis-currency',
+        'lesotho-currency'
     ]);
 })();

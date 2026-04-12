@@ -35,6 +35,8 @@
                         ADJUSTMENT_TYPE) {
         var vm = this;
 
+        vm.isSupervised = false;
+
 
         /**
          * @ngdoc property
