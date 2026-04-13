@@ -267,7 +267,14 @@
 
 
         vm.addedLineItems.unshift(_.extend({
-          $errors: {},
+          $errors: {
+            quantityInvalid: false,
+            assignmentInvalid: false,
+            reasonInvalid: false,
+            occurredDateInvalid: false,
+            cartonsInvalid: false,
+            unitPriceInvalid: false
+          },
           $previewSOH: selectedItem.stockOnHand
         },
           selectedItem, copyDefaultValue()));
@@ -389,6 +396,33 @@
           let cartonNumber = lineItem.individualCartonNumber + " to " + lineItem.individualCartonNumberRange + " of " + lineItem.totalCartonNumber;
           lineItem.cartonNumber = cartonNumber;
         }
+      }
+      return lineItem;
+    };
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateUnitPrice
+     *
+     * @description
+     * Validate line item unit price and returns self.
+     *
+     * @param {Object} lineItem line item to be validated.
+     */
+    vm.validateUnitPrice = function (lineItem) {
+      if (lineItem.unitPrice !== undefined && lineItem.unitPrice !== null && lineItem.unitPrice !== '') {
+        var price = parseFloat(lineItem.unitPrice);
+        if (isNaN(price)) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceInvalid');
+        } else if (price < 0) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceNegative');
+        } else {
+          lineItem.$errors.unitPriceInvalid = false;
+          lineItem.unitPrice = price; // Convert to number
+        }
+      } else {
+        lineItem.$errors.unitPriceInvalid = false;
       }
       return lineItem;
     };
@@ -615,6 +649,7 @@
         vm.validateDate(item);
         vm.validateAssignment(item);
         vm.validateReason(item);
+        vm.validateUnitPrice(item);
         if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
@@ -956,6 +991,24 @@
 
       // vm.addedLineItems = $stateParams.addedLineItems || [];
       vm.addedLineItems = [];
+      // Initialize error properties for any existing line items
+      if ($stateParams.addedLineItems && $stateParams.addedLineItems.length > 0) {
+        vm.addedLineItems = $stateParams.addedLineItems.map(function(item) {
+          if (!item.$errors) {
+            item.$errors = {
+              quantityInvalid: false,
+              assignmentInvalid: false,
+              reasonInvalid: false,
+              occurredDateInvalid: false,
+              cartonsInvalid: false,
+              unitPriceInvalid: false
+            };
+          } else if (item.$errors.unitPriceInvalid === undefined) {
+            item.$errors.unitPriceInvalid = false;
+          }
+          return item;
+        });
+      }
       $stateParams.displayItems = displayItems;
       // vm.displayItems = $stateParams.displayItems || [];
       vm.displayItems = [];
