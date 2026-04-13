@@ -177,10 +177,14 @@
                     <td ng-if="vm.showDeliveryNoteAttributes"><input class="form-control"
                             type="text" style="width: 100px;"></td> 
 
-                    <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input class="form-control"
-                            value="{{ 0 | openlmisCurrency}}" type="text" style="width: 50px;"
+                    <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier" openlmis-invalid="{{lineItem.$errors.unitPriceInvalid ? 'openlmisForm.required' : '' | message}}">
+                        <input class="form-control"
+                            type="number" style="width: 50px;" min="0" step="0.01"
                             ng-model="lineItem.unitPrice"
-                            ng-show="lineItem.assignment.name.includes('NDSO')"></td>
+                            ng-change="vm.validateUnitPrice(lineItem)"
+                            ng-show="lineItem.assignment.name.includes('NDSO')"
+                            oninput="validity.valid||(value='');">
+                    </td>
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input type="text" readonly
                             style="width: 85px;"
                             value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | openlmisCurrency}}"

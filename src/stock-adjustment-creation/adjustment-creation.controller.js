@@ -267,7 +267,14 @@
 
 
         vm.addedLineItems.unshift(_.extend({
-          $errors: {},
+          $errors: {
+            quantityInvalid: false,
+            assignmentInvalid: false,
+            reasonInvalid: false,
+            occurredDateInvalid: false,
+            cartonsInvalid: false,
+            unitPriceInvalid: false
+          },
           $previewSOH: selectedItem.stockOnHand
         },
           selectedItem, copyDefaultValue()));
@@ -389,6 +396,33 @@
           let cartonNumber = lineItem.individualCartonNumber + " to " + lineItem.individualCartonNumberRange + " of " + lineItem.totalCartonNumber;
           lineItem.cartonNumber = cartonNumber;
         }
+      }
+      return lineItem;
+    };
+
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateUnitPrice
+     *
+     * @description
+     * Validate line item unit price and returns self.
+     *
+     * @param {Object} lineItem line item to be validated.
+     */
+    vm.validateUnitPrice = function (lineItem) {
+      if (lineItem.unitPrice !== undefined && lineItem.unitPrice !== null && lineItem.unitPrice !== '') {
+        var price = parseFloat(lineItem.unitPrice);
+        if (isNaN(price)) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceInvalid');
+        } else if (price < 0) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceNegative');
+        } else {
+          lineItem.$errors.unitPriceInvalid = false;
+          lineItem.unitPrice = price; // Convert to number
+        }
+      } else {
+        lineItem.$errors.unitPriceInvalid = false;
       }
       return lineItem;
     };
@@ -526,7 +560,7 @@
      * @description
      * Submit all added items.
      */
-   vm.submit = function () {
+    vm.submit = function () {
 
       $scope.$broadcast('openlmis-form-submit');
       if (validateAllAddedItems()) {
@@ -544,7 +578,7 @@
       }
 
     };
-   
+
     /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
@@ -615,6 +649,7 @@
         vm.validateDate(item);
         vm.validateAssignment(item);
         vm.validateReason(item);
+        vm.validateUnitPrice(item);
         if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
@@ -942,8 +977,8 @@
       vm.reasons = reasons;
       vm.showReasonDropdown =
         adjustmentType.state !== ADJUSTMENT_TYPE.KIT_UNPACK.state;
- 
-        /* eLMIS Lesotho : start */
+
+      /* eLMIS Lesotho : start */
       // vm.showPrepackingAttributes =
       //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
       vm.showDeliveryNoteAttributes =
@@ -954,9 +989,29 @@
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
 
-      vm.addedLineItems = $stateParams.addedLineItems || [];
+      // vm.addedLineItems = $stateParams.addedLineItems || [];
+      vm.addedLineItems = [];
+      // Initialize error properties for any existing line items
+      if ($stateParams.addedLineItems && $stateParams.addedLineItems.length > 0) {
+        vm.addedLineItems = $stateParams.addedLineItems.map(function(item) {
+          if (!item.$errors) {
+            item.$errors = {
+              quantityInvalid: false,
+              assignmentInvalid: false,
+              reasonInvalid: false,
+              occurredDateInvalid: false,
+              cartonsInvalid: false,
+              unitPriceInvalid: false
+            };
+          } else if (item.$errors.unitPriceInvalid === undefined) {
+            item.$errors.unitPriceInvalid = false;
+          }
+          return item;
+        });
+      }
       $stateParams.displayItems = displayItems;
-      vm.displayItems = $stateParams.displayItems || [];
+      // vm.displayItems = $stateParams.displayItems || [];
+      vm.displayItems = [];
       vm.keyword = $stateParams.keyword;
       updateNeedToConfirmFlag();
 
@@ -974,9 +1029,6 @@
       );
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
       resetOrderableSelectionState();
-
-
-      
     }
 
     function initiateNewLotObject() {
