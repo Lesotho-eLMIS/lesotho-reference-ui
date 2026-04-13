@@ -48,12 +48,24 @@
                 programs: function(user, stockProgramUtilService) {
                     return stockProgramUtilService.getPrograms(user.user_id, STOCKMANAGEMENT_RIGHTS.STOCK_ADJUST);
                 },
+                //Make 2 API calls for the different statuses
                 requisitionsToReceive: function(requisitionService, facility) {
                     return requisitionService.search(false, {
                         facility: facility.id,
-                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0] //Pull requisitions initiated in the last 90 days
+                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
+                        requisitionStatus: 'APPROVED',
+                        emergency: false
                     }).then(function(response) {
-                        return response.content;
+                        var approved = response.content.filter(function(r) { return !r.emergency; });
+                        return requisitionService.search(false, {
+                            facility: facility.id,
+                            initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0],
+                            requisitionStatus: 'RELEASED',  //Released is shown as Acknowledged
+                            emergency: false
+                        }).then(function(response) {
+                            var released = response.content.filter(function(r) { return !r.emergency; });
+                            return approved.concat(released);
+                        });
                     });
                 },
                 adjustmentType: function(facility, requisitionsToReceive) {
