@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -28,18 +28,16 @@
         .module('stock-physical-inventory-list')
         .controller('physicalInventoryTypeToggleController', physicalInventoryTypeToggleController);
 
-    physicalInventoryTypeToggleController.$inject = [
-        'messageService','localStorageService'
-    ];
+    physicalInventoryTypeToggleController.$inject = ['messageService'];
 
-    function physicalInventoryTypeToggleController(messageService, localStorageService) {
+    function physicalInventoryTypeToggleController(messageService) {
 
         var vm = this;
 
         vm.$onInit = onInit;
         vm.getMessage = getMessage;
         vm.onChange = onChange;
-        
+
         /**
          * @ngdoc property
          * @propertyOf physical-inventory-type-toggle.controller:physicalInventoryTypeToggleController
@@ -74,12 +72,12 @@
          */
         function onInit() {
             vm.physicalInventoryTypes = [
-                "Cyclic",
-                "Major"
-            ]
-            
-            vm.physicalInventoryType = "Cyclic";
-            
+                'Cyclic',
+                'Major'
+            ];
+
+            vm.physicalInventoryType = 'Cyclic';
+
         }
 
         /**
@@ -91,7 +89,7 @@
          * Returns translated message for key.
          */
         function getMessage(unit) {
-            return messageService.get(QUANTITY_UNIT.$getDisplayName(unit));
+            return messageService.get(unit);
         }
 
         /**

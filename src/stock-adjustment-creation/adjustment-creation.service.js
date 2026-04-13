@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -81,35 +81,35 @@
         }
 
         //FROM RECEIVING ADD DISCREPANCY MODAL
-         var receivingDiscrepancies = [];
-        
-        function addReceivingDiscrepancies (discrepancies) {
- 
+        var receivingDiscrepancies = [];
+
+        function addReceivingDiscrepancies(discrepancies) {
+
             receivingDiscrepancies.push(discrepancies);
         }
-        
-        //get discrepancies for view 
-        function getReceivingDiscrepancies () {
+
+        //get discrepancies for view
+        function getReceivingDiscrepancies() {
 
             return receivingDiscrepancies;
         }
 
-        function getDiscrepancy(timestamp){
-           
+        function getDiscrepancy(timestamp) {
+
             // Search for objects in discrepanciesArray with a matching timeStamp
             var itemDiscrepancies = receivingDiscrepancies.filter(discrepancy => discrepancy.timestamp === timestamp);
             return itemDiscrepancies;
 
         }
 
-        function getItemDiscrepancies(timestamp){
-           
+        function getItemDiscrepancies(timestamp) {
+
             var itemDiscrepancies = [];
 
-             // Search for objects with a matching timeStamp in receivingDiscrepancies array
+            // Search for objects with a matching timeStamp in receivingDiscrepancies array
             receivingDiscrepancies.forEach((discrepancy) => {
-                
-                if(discrepancy.timestamp === timestamp){
+
+                if (discrepancy.timestamp === timestamp) {
                     itemDiscrepancies.push(discrepancy);
                 }
             });
@@ -121,22 +121,24 @@
                 programId: programId,
                 facilityId: facilityId
             };
-            if(adjustmentType.state == 'receive'){
+            if (adjustmentType.state === 'receive') {
                 //Set Reason as transfer in for all recieving transactions
                 event.lineItems = _.map(lineItems, function(item) {
                     return angular.merge({
                         orderableId: item.orderable.id,
                         lotId: item.lot ? item.lot.id : null,
                         deliveryNoteQuantity: item.deliveryNoteQuantity,
-                        shippedQuantity: item.rejectedQuantity? (item.quantity + item.rejectedQuantity): item.quantity,
+                        shippedQuantity: item.rejectedQuantity ?
+                            (item.quantity + item.rejectedQuantity) : item.quantity,
                         quantity: item.quantity,
                         rejectedQuantity: item.rejectedQuantity,
                         extraData: {
                             vvmStatus: item.vvmStatus,
-                            requisition: item.requisition // Include requisition extra data when receiving against a requisition
+                            // Include requisition extra data when receiving against a requisition.
+                            requisition: item.requisition
                         },
                         occurredDate: item.occurredDate,
-                        reasonId: item.reason ? item.reason.id : null, 
+                        reasonId: item.reason ? item.reason.id : null,
                         reasonFreeText: item.reasonFreeText,
                         invoiceNumber: item.invoiceNumber,
                         cartonNumber: item.cartonNumber,
@@ -146,21 +148,21 @@
                         discrepancies: getItemDiscrepancies(item.timestamp)
                     }, buildSourceDestinationInfo(item, adjustmentType));
                 });
-            }
-            else{
+            } else {
                 event.lineItems = _.map(lineItems, function(item) {
                     return angular.merge({
                         orderableId: item.orderable.id,
                         lotId: item.lot ? item.lot.id : null,
                         deliveryNoteQuantity: item.deliveryNoteQuantity,
-                        shippedQuantity: item.rejectedQuantity? (item.quantity + item.rejectedQuantity): item.quantity,
+                        shippedQuantity: item.rejectedQuantity ?
+                            (item.quantity + item.rejectedQuantity) : item.quantity,
                         quantity: item.quantity,
                         rejectedQuantity: item.rejectedQuantity,
                         extraData: {
                             vvmStatus: item.vvmStatus
                         },
                         occurredDate: item.occurredDate,
-                        reasonId: item.reason ? item.reason.id : null, 
+                        reasonId: item.reason ? item.reason.id : null,
                         reasonFreeText: item.reasonFreeText,
                         invoiceNumber: item.invoiceNumber,
                         referenceNumber: item.referenceNumber,

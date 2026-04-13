@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -44,7 +44,7 @@
                 orderableGroups: undefined,
                 srcDstAssignments: undefined,
                 supervised: undefined,
-                requisitionToReceiveAgainst: undefined,
+                requisitionToReceiveAgainst: undefined
             },
             resolve: {
                 program: function($stateParams, programService) {
@@ -59,7 +59,7 @@
                     }
                     return $stateParams.facility;
                 },
-                facilityWithType: function(facilityService,facility ) {
+                facilityWithType: function(facilityService, facility) {
                     return facilityService.get(facility.id);
                 },
                 user: function(authorizationService) {
@@ -83,7 +83,7 @@
                 },
                 adjustmentType: function() {
                     return ADJUSTMENT_TYPE.RECEIVE;
-                }, 
+                },
                 srcDstAssignments: function($stateParams, facility, sourceDestinationService) {
                     if (_.isUndefined($stateParams.srcDstAssignments)) {
                         $stateParams.srcDstAssignments = sourceDestinationService
@@ -91,18 +91,18 @@
                     }
                     return $stateParams.srcDstAssignments;
                 },
-                suppliers: function(facilityService){
+                suppliers: function(facilityService) {
                     var paginationParams = {};
                     var queryParams = {
-                        "type": "warehouse"                       
+                        type: 'warehouse'
                     };
                     return facilityService.query(paginationParams, queryParams)
-                        .then(function (result) {
+                        .then(function(result) {
                             return result.content;
                         })
-                        .catch(function (error) {
+                        .catch(function(error) {
                             // Handle any errors that may occur during the query
-                            console.error("Error:", error);
+                            console.error('Error:', error);
                             return [];
                         });
                 },
@@ -117,20 +117,20 @@
                             return false;
                         });
                 },
-                ReferenceNumbers: function (pointOfDeliveryService, facility) {
+                ReferenceNumbers: function(pointOfDeliveryService, facility) {
                     return pointOfDeliveryService.getPODs(facility.id)
-                        .then(function (result) {
+                        .then(function(result) {
                             let references = [];
                             let currentDate = new Date();
                             let activePeriod = new Date(currentDate.getTime() - (14 * 24 * 60 * 60 * 1000));
-                            Object.values(result).forEach(function (record) {
+                            Object.values(result).forEach(function(record) {
                                 let receivingDate = new Date(record.receivingDate);
                                 if (receivingDate >= activePeriod) {
 
                                     references.push(record);
                                 }
                             });
-                           return references;
+                            return references;
                         });
                 }
             }

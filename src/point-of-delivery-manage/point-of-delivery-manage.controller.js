@@ -1,3 +1,4 @@
+/* eslint parserOptions: {"ecmaVersion": 2020} */
 /*
  * This program is part of the OpenLMIS logistics management information system platform software.
  * Copyright © 2017 VillageReach

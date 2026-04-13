@@ -1,3 +1,4 @@
+/* eslint parserOptions: {"ecmaVersion": 2020} */
 /*
  * This program is part of the OpenLMIS logistics management information system platform software.
  * Copyright © 2017 VillageReach
@@ -97,7 +98,7 @@
      * @return {item}                  number of doses
      */
     function recalculateInputQuantity(item, netContent, inDoses, quantityKey) {
-      var usedQuantityKey = quantityKey || "quantity";
+      var usedQuantityKey = quantityKey || 'quantity';
       if (isNetContentUndefinedOrZero(item.orderable.netContent)) {
         return 0;
       } else if (inDoses) {
@@ -108,13 +109,13 @@
           item[usedQuantityKey] = getTotalQuantityInDoses(
             item.quantityInPacks,
             item.quantityRemainderInDoses,
-            item.orderable.netContent,
+            item.orderable.netContent
           );
         } else {
           item[usedQuantityKey] = getTotalQuantityInDoses(
             item.quantityInPacks,
             item.quantityRemainderInDoses,
-            netContent,
+            netContent
           );
         }
       }

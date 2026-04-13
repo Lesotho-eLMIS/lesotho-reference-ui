@@ -1,3 +1,4 @@
+/* eslint parserOptions: {"ecmaVersion": 2020} */
 /*
  * This program is part of the OpenLMIS logistics management information system platform software.
  * Copyright © 2017 VillageReach
@@ -28,10 +29,11 @@
         .module('complaint-form-modal')
         .controller('complaintFormModalController', controller);
 
-    controller.$inject = [ 'modalDeferred', '$scope', 'rejectionReasons', 'notificationService', 'orderableGroups', 'program', 'facility', 
-            'orderableGroupService', 'hasPermissionToAddNewLot', 'messageService','user', 'complaintService','confirmService'];
+    controller.$inject = ['modalDeferred', '$scope', 'rejectionReasons', 'notificationService', 'orderableGroups', 'program',
+        'facility', 'orderableGroupService', 'hasPermissionToAddNewLot', 'messageService', 'user', 'complaintService',
+        'confirmService'];
 
-    function controller( modalDeferred, $scope, rejectionReasons, notificationService, orderableGroups, program, facility, 
+    function controller(modalDeferred, $scope, rejectionReasons, notificationService, orderableGroups, program, facility,
         orderableGroupService, hasPermissionToAddNewLot, messageService, user, complaintService, confirmService) {
         var vm = this;
 
@@ -44,56 +46,60 @@
         vm.buildPayload = buildPayload;
         vm.productsForComplaint = [];
         vm.discrepancyOptions = [];
-        vm.discrepancies =[];
+        vm.discrepancies = [];
         vm.selectedDiscrepancy = undefined;
         vm.facility = facility;
         vm.facilities = undefined;
         vm.homeFacilities = [facility];
-        vm.complaint = {}
-         
-        vm.natureOfcomplaintOptions = [{ id: 1, name: "Wrong product" }, { id: 2, name: "Wrong pack size" }, { id: 3, name: "Over supply" },
-            {id:4, name: "Expired products"}, {id:5, name: "Due to expire"}, {id:6, name: "Delivery queries"}, {id:7, name: "Shortage"},
-            {id:8, name: "Quality"}, {id:9, name:  "Price hike"}, {id:10, name: "Other (specify)"}];   
-        
-        vm.complaintReasonOptions = [{id:1, reasons:["Issued", "Ordered"]}, {id:2, reasons:["Requested", "Issued"]}, 
-                              {id:3, reasons: ["Duplication", "Wrong calculations when converting pack size/strength", "Uncommunicated back order"]},
-                              {id:6, reasons: ["Invoiced but not delivered", "Delivered but not invoiced"]},
-                              {id:7, reasons: ["Miscalculations", "Pack size / strength conversion"]},
-                              {id:8, reasons: ["Damage", "Physical Inspection"]}];
-
-        vm.complaintDetailsOptions = [{name: "Damage", details: ["Container", "Product"]}, 
-                                      {name: "Physical Inspection", details: ["Moulding", "Decolourization", "Crystallization", "Cold chain was not maintained",
-                                            "Friability", "Unlabelled products", "Foreign language"]}];
-        $scope.showModal=false;
+        vm.complaint = {};
+        vm.natureOfcomplaintOptions = [
+            {id: 1, name: 'Wrong product'},
+            {id: 2, name: 'Wrong pack size'},
+            {id: 3, name: 'Over supply'},
+            {id: 4, name: 'Expired products'},
+            {id: 5, name: 'Due to expire'},
+            {id: 6, name: 'Delivery queries'},
+            {id: 7, name: 'Shortage'},
+            {id: 8, name: 'Quality'},
+            {id: 9, name: 'Price hike'},
+            {id: 10, name: 'Other (specify)'}
+        ];
+        vm.complaintReasonOptions = [
+            {id: 1, reasons: ['Issued', 'Ordered']},
+            {id: 2, reasons: ['Requested', 'Issued']},
+            {id: 3, reasons: ['Duplication', 'Wrong calculations when converting pack size/strength', 'Uncommunicated back order']},
+            {id: 6, reasons: ['Invoiced but not delivered', 'Delivered but not invoiced']},
+            {id: 7, reasons: ['Miscalculations', 'Pack size / strength conversion']},
+            {id: 8, reasons: ['Damage', 'Physical Inspection']}
+        ];
+        vm.complaintDetailsOptions = [
+            {name: 'Damage', details: ['Container', 'Product']},
+            {name: 'Physical Inspection', details: ['Moulding', 'Decolourization', 'Crystallization',
+                'Cold chain was not maintained', 'Friability', 'Unlabelled products', 'Foreign language']}
+        ];
+        $scope.showModal = false;
         
         function onInit() {
-            vm.receivingFacility = facility.name; 
+            vm.receivingFacility = facility.name;
             vm.complaint.programId = program.id;
             vm.complaint.userId = user.id;
             vm.complaint.userNames = user.username;
             vm.selectedDiscrepancy = [];
-           
-           vm.rejectionReasons = rejectionReasons.content;
-           vm.rejectionReasons.forEach(reason => {
-               // Load only those of type POD/Point of Delivery
-               if(reason.rejectionReasonCategory.code == "POD"){
-                   vm.discrepancyOptions.push(reason.name);
-               }
-               
-           });
+            vm.rejectionReasons = rejectionReasons.content;
+            vm.rejectionReasons.forEach(function(reason) {
+                if (reason.rejectionReasonCategory.code === 'POD') {
+                    vm.discrepancyOptions.push(reason.name);
+                }
+            });
 
 
-           vm.orderableGroups = orderableGroups;
-           vm.hasLot = false;
-           vm.orderableGroups.forEach(function (group) {
-             vm.hasLot =
-               vm.hasLot ||
-               orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length >
-                 0;
-           });
-           vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(
-             vm.orderableGroups
-           );
+            vm.orderableGroups = orderableGroups;
+            vm.hasLot = false;
+            vm.orderableGroups.forEach(function(group) {
+                vm.hasLot = vm.hasLot ||
+                    orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length > 0;
+            });
+            vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(vm.orderableGroups);
         }
 
         /**
@@ -104,7 +110,7 @@
          * @description
          * Reset form status and change content inside lots drop down list.
          */
-        vm.orderableSelectionChanged = function () {
+        vm.orderableSelectionChanged = function() {
             //reset selected lot, so that lot field has no default value
             vm.selectedLot = null;
     
@@ -124,17 +130,18 @@
             vm.selectedOrderableHasLots = vm.lots.length > 0;
         };
 
-        vm.setComplaintReason = function (product) {
-           
-            //set the nature of complaint
-            if (typeof product.natureOfComplaintName === "object") {
+        vm.setComplaintReason = function(product) {
+            var selectedNature;
+
+            if (typeof product.natureOfComplaintName === 'object') {
                 product.natureOfComplaint = product.natureOfComplaintName.name;
             }
 
-            // Set complaint reasons for the selected nature of complaint
-            product.complaintReasons = vm.complaintReasonOptions.find(
-                reason => reason.id === product.natureOfComplaintName?.id
-            )?.reasons || [];
+            selectedNature = vm.complaintReasonOptions.find(function(reason) {
+                return product.natureOfComplaintName &&
+                    reason.id === product.natureOfComplaintName.id;
+            });
+            product.complaintReasons = selectedNature ? selectedNature.reasons : [];
 
             // Reset dependent dropdowns when nature of complaint changes
             product.complaintReason = null;
@@ -142,12 +149,11 @@
             product.reasonDetailOptions = [];
         };
 
-        vm.setComplaintDetail = function (product) {
-         
-            // Set complaint details for the selected complaint reason
-            product.reasonDetailOptions = vm.complaintDetailsOptions.find(
-                detail => detail.name === product.complaintReason
-            )?.details || [];
+        vm.setComplaintDetail = function(product) {
+            var selectedDetail = vm.complaintDetailsOptions.find(function(detail) {
+                return detail.name === product.complaintReason;
+            });
+            product.reasonDetailOptions = selectedDetail ? selectedDetail.details : [];
 
             // Reset complaint detail when complaint reason changes
             product.reasonDetail = null;
@@ -175,22 +181,20 @@
 
         function initiateNewLotObject() {
             vm.newLot = {
-              active: true,
+                active: true
             };
         }
 
         function addProductToComplaintForm() {
             vm.productsForComplaint.unshift({
-                    'name': vm.selectedOrderableGroup[0].orderable.fullProductName,
-                    'batch': vm.selectedLot.lotCode,
-                    'expiary': vm.selectedLot.expirationDate,
-                    'orderable': vm.selectedOrderableGroup[0].orderable,
-                    'lot':vm.selectedLot,
-                    'lotId':vm.selectedLot.id,
-                    'orderableId': vm.selectedOrderableGroup[0].orderable.id
-
+                name: vm.selectedOrderableGroup[0].orderable.fullProductName,
+                batch: vm.selectedLot.lotCode,
+                expiary: vm.selectedLot.expirationDate,
+                orderable: vm.selectedOrderableGroup[0].orderable,
+                lot: vm.selectedLot,
+                lotId: vm.selectedLot.id,
+                orderableId: vm.selectedOrderableGroup[0].orderable.id
             });
-            
         }
 
         // removing discrepancies from table
@@ -206,8 +210,10 @@
          * @description
          * Checks that returned quantity does not exceed affected quantity.
          */
-        vm.validateQuantities = function (product) {
-            if (!product.$errors) product.$errors = {};          
+        vm.validateQuantities = function(product) {
+            if (!product.$errors) {
+                product.$errors = {};
+            }
             if (product.quantityReturned > product.quantityAffected) {
                 product.$errors.quantityInvalid = messageService.get('complaintFormModal.quantityInvalid');
             } else {
@@ -218,54 +224,54 @@
          
         function confirm() {
             var lineItems = vm.productsForComplaint;
-            confirmService.confirm("Are you sure you want to send complaint?", "Send")
-            .then(function () {
+            confirmService.confirm('Are you sure you want to send complaint?', 'Send')
+                .then(function() {
 
                 vm.complaint.lineItems = buildPayload(lineItems);
 
-                complaintService.saveComplaint(vm.complaint).$promise
-                .then(function (response) {
-                    //Success callback
-                    let complaintId = "";
-                    for (let i = 0; i < Object.keys(response).length - 2; i++) {
-                            complaintId += response[i];
-                    }
-                    notificationService.success('Complaint Saved Sucessfully.');
-                    complaintService.sendComplaint(complaintId, vm.complaint).$promise
-                    .then(function (sendReponse) {
-                        notificationService.success('Complaint Sent Sucessfully.');
-                    });
-                    modalDeferred.resolve(); 
+                    complaintService.saveComplaint(vm.complaint).$promise
+                        .then(function(response) {
+                            var complaintId = '';
+                            var i;
+
+                            for (i = 0; i < Object.keys(response).length - 2; i++) {
+                                complaintId += response[i];
+                            }
+                            notificationService.success('Complaint Saved Sucessfully.');
+                            complaintService.sendComplaint(complaintId, vm.complaint).$promise
+                                .then(function() {
+                                    notificationService.success('Complaint Sent Sucessfully.');
+                                });
+                            modalDeferred.resolve();
+                        })
+                        .catch(function() {
+                            notificationService.error('Failed to save complaint.');
+                            modalDeferred.reject();
+                        });
                 })
-                .catch(function (saveError) {
-                    // Handle error in saving complaint
-                    notificationService.error('Failed to save complaint.');
-                    modalDeferred.reject(); 
+                .catch(function() {
+                    console.log('Complaint submission was cancelled.');
                 });
-            })
-            .catch(function () {
-                // Handle user cancellation from the confirmation modal
-                console.log("Complaint submission was cancelled.");
-            });
         }
 
         function buildPayload(products) {
             //Check that the complaint line items are not empty
             if (!Array.isArray(products) || products.length === 0) {
-                console.error("Error: products is empty or undefined", products);
+                console.error('Error: products is empty or undefined', products);
                 return [];
             }
-            //Build the complaint form line items payload
-            var complaintLineItems = products.map(product => ({
-                orderableId: product.orderable?.id, 
-                lotId: product.lot?.id,  
+            var complaintLineItems = products.map(function(product) {
+                return {
+                    orderableId: product.orderable ? product.orderable.id : undefined,
+                    lotId: product.lot ? product.lot.id : undefined,
                 quantityAffected: product.quantityAffected,
                 quantityReturned: product.quantityReturned,
-                natureOfComplaint: product.natureOfComplaint,  
+                    natureOfComplaint: product.natureOfComplaint,
                 complaintReason: product.complaintReason || null,
                 reasonDetails: product.reasonDetails || null,
-                comments: product.comments || null  
-            }));
+                    comments: product.comments || null
+                };
+            });
             return complaintLineItems;
         }
     }

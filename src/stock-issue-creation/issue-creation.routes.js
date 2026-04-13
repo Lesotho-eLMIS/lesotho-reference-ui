@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -58,7 +58,7 @@
                     }
                     return $stateParams.facility;
                 },
-                facilityWithType: function(facilityService,facility ) {
+                facilityWithType: function(facilityService, facility) {
                     return facilityService.get(facility.id);
                 },
                 user: function(authorizationService) {
@@ -96,32 +96,32 @@
                 },
                 adjustmentType: function() {
                     return ADJUSTMENT_TYPE.ISSUE;
-                },         
-                srcDstAssignments:function($stateParams, facility, sourceDestinationService) {
+                },
+                srcDstAssignments: function($stateParams, facility, sourceDestinationService) {
                     if (_.isUndefined($stateParams.srcDstAssignments)) {
                         return sourceDestinationService.getDestinationAssignments(
                             $stateParams.programId, facility.id
                         );
                     }
-                    
+
                     return $stateParams.srcDstAssignments;
                 },
-                suppliers: function(facilityService){
+                suppliers: function(facilityService) {
                     var paginationParams = {};
                     var queryParams = {
-                        "type": "warehouse"                       
+                        type: 'warehouse'
                     };
                     return facilityService.query(paginationParams, queryParams)
-                        .then(function (result) {
+                        .then(function(result) {
                             return result.content;
                         })
-                        .catch(function (error) {
+                        .catch(function(error) {
                             // Handle any errors that may occur during the query
-                            console.error("Error:", error);
+                            console.error('Error:', error);
                             return [];
                         });
                 },
-                ReferenceNumbers:function() {
+                ReferenceNumbers: function() {
                     return undefined;
                 },
                 hasPermissionToAddNewLot: function() {

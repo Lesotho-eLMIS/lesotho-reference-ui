@@ -5,15 +5,15 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
-(function () {
+(function() {
 
     'use strict';
 
@@ -32,7 +32,7 @@
         'FunctionDecorator', 'offlineService', '$q', '$scope', '$stateParams', 'draftsForCyclic', 'alertService'];
 
     function controller(facility, programs, drafts, messageService, $state, physicalInventoryService,
-        FunctionDecorator, offlineService, $q, $scope, $stateParams, draftsForCyclic, alertService) {
+                        FunctionDecorator, offlineService, $q, $scope, $stateParams, draftsForCyclic, alertService) {
         var vm = this;
         vm.$onInit = onInit;
 
@@ -71,35 +71,38 @@
          */
         vm.programs = programs;
 
-        vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
+        vm.drafts = (vm.physicalInventoryType === 'Major') ? drafts : draftsForCyclic;
 
-        $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
+        $scope.$watch(function() {
+            return vm.program;
+        }, function(newVal, oldVal) {
 
-            if (newVal === oldVal) return;
+            if (newVal === oldVal) {
+                return;
+            }
             // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
 
-            if (newVal == null || newVal == undefined) {
+            if (newVal === null || newVal === undefined) {
 
                 return;
 
-            } else {
-
-                var draft = vm.getDraft();
-               
-                if (draft.id) {
-                    draft.isStarter = false;
-                    return draft;
-                }
             }
-        });
 
+            var draft = vm.getDraft();
+
+            if (draft.id) {
+                draft.isStarter = false;
+                return draft;
+            }
+
+        });
 
         vm.editDraft = new FunctionDecorator()
             .decorateFunction(editDraft)
             .withLoading(true)
             .getDecoratedFunction();
 
-        vm.getSelectedDraft = function () {
+        vm.getSelectedDraft = function() {
             if (!vm.program || !vm.facility) {
                 return null;
             }
@@ -107,19 +110,19 @@
             //     alertService.error('stockPhysicalInventory.noFacilitySelected');
             // }
             var programId = vm.program.id;
-            return _.find(vm.drafts, function (draft) {
+            return _.find(vm.drafts, function(draft) {
                 // console.log("Program: ", vm.program);
                 // console.log("Draft: ", draft);
                 return draft.programId === programId;
             });
         };
 
-        vm.getDraft = function () {
+        vm.getDraft = function() {
             var programId = vm.program.id;
-            return _.find(vm.drafts, function (draft) {
+            return _.find(vm.drafts, function(draft) {
                 return draft.programId === programId;
             });
-        }
+        };
 
         /**
          * @ngdoc method
@@ -131,8 +134,8 @@
          *
          * @param {String} id Program UUID
          */
-        vm.getProgramName = function (id) {
-            return _.find(vm.programs, function (program) {
+        vm.getProgramName = function(id) {
+            return _.find(vm.programs, function(program) {
                 return program.id === id;
             }).name;
         };
@@ -147,7 +150,7 @@
          *
          * @param {Boolean} isStarter Indicates starter or saved draft.
          */
-        vm.getDraftStatus = function (isStarter) {
+        vm.getDraftStatus = function(isStarter) {
             if (isStarter) {
                 return messageService.get('stockPhysicalInventory.notStarted');
             }
@@ -155,9 +158,9 @@
 
         };
 
-        vm.onChangePhysicalInventoryType = function () {
-            vm.drafts = (vm.physicalInventoryType === "Major") ? drafts[0] : drafts[1];
-        }
+        vm.onChangePhysicalInventoryType = function() {
+            vm.drafts = (vm.physicalInventoryType === 'Major') ? drafts[0] : drafts[1];
+        };
 
         /**
          * @ngdoc method
@@ -181,11 +184,11 @@
                 return;
             }
 
-            // Get the draft , prefer passed draft, 
+            // Get the draft , prefer passed draft,
             // then find existing, else create new
             var selectedDraft = draft || vm.getDraft();
 
-            vm.drafts.forEach(function (item) {
+            vm.drafts.forEach(function(item) {
                 if (item.programId === selectedDraft.programId && selectedDraft.isStarter === true) {
                     item.isStarter = false;
                 }
@@ -202,20 +205,20 @@
                 return $q.resolve();
             }
 
-            return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function (data) {
+            return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function(data) {
 
                 if (Array.isArray(data) && data.length > 0 && data[0].id) {
-                     selectedDraft.id = data[0].id;
-                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                            id: selectedDraft.id,
-                            program: vm.program,
-                            facility: vm.facility,
-                            supervised: vm.isSupervised,
-                            includeInactive: false,
-                            physicalInventoryType: vm.physicalInventoryType
-                        });
+                    selectedDraft.id = data[0].id;
+                    $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                        id: selectedDraft.id,
+                        program: vm.program,
+                        facility: vm.facility,
+                        supervised: vm.isSupervised,
+                        includeInactive: false,
+                        physicalInventoryType: vm.physicalInventoryType
+                    });
                 } else {
-                    return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
+                    return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function(data) {
                         //    console.log("Data: ", data);
                         selectedDraft.id = data.id;
                         $state.go('openlmis.stockmanagement.physicalInventory.draft', {
@@ -250,9 +253,9 @@
                 reloadPage();
             }
 
-            $scope.$watch(function () {
+            $scope.$watch(function() {
                 return offlineService.isOffline();
-            }, function (newValue, oldValue) {
+            }, function(newValue, oldValue) {
                 if (newValue !== oldValue) {
                     reloadPage();
                 }
@@ -275,4 +278,3 @@
         }
     }
 })();
-

@@ -1,6 +1,8 @@
 {
+    "shipmentView.title": "Fulfilling Order - ${orderCode}",
     "shipmentView.viewShipment": "View Shipment",
     "shipmentView.productCode": "Product Code",
+    "shipmentView.order": "Order",
     "shipmentView.status": "Status",
     "shipmentView.product": "Product",
     "shipmentView.emergency": "Emergency",
@@ -8,10 +10,12 @@
     "shipmentView.program": "Program",
     "shipmentView.type": "Type",
     "shipmentView.dateCreated": "Date Created",
+    "shipmentView.orderQuantity": "Order Quantity",
     "shipmentView.fillQuantity": "Fill Quantity",
     "shipmentView.lastUpdated": "Last Updated",
     "shipmentView.lastUpdatedBy": "Last Updated By",
     "shipmentView.facilityCceStatus": "Facility CCE Status",
+    "shipmentView.lotCode": "Lot Code",
     "shipmentView.vvmStatus": "VVM Status",
     "shipmentView.expiryDate": "Expiry Date",
     "shipmentView.availableSoh": "Available SOH",
@@ -32,10 +36,5 @@
     "shipmentView.quantitiesProvidedIn": "Quantities are provided in",
     "shipmentView.fillQuantityInPack": "Fill Quantity (in Packs)",
     "shipmentView.remainingSoh": "Remaining SOH",
-    "shipmentView.noStockAvailable": "No stock available",
-    "shipmentView.title": "Fulfilling Request - ${orderCode}",
-    "shipmentView.order": "Request",
-    "shipmentView.orderQuantity": "Request Quantity",
-    "shipmentView.lotCode": "Batch Number",
-    "shipmentView.doses": "Unit of Issue"
+    "shipmentView.noStockAvailable": "No stock available"
 }

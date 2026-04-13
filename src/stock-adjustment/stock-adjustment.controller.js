@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -35,7 +35,6 @@
                         ADJUSTMENT_TYPE) {
         var vm = this;
 
-
         /**
          * @ngdoc property
          * @propertyOf stock-adjustment.controller:StockAdjustmentController
@@ -56,7 +55,7 @@
          * @description
          * Holds user's home facility.
          */
-        vm.isServicePoint = facility.type.code == 'service_point';
+        vm.isServicePoint = facility.type.code === 'service_point';
 
         /**
          * @ngdoc property
@@ -127,46 +126,53 @@
         //             });
         // };
 
-        vm.proceed = function () {
-           
-            if (!vm.requisitionToReceiveAgainst) {
-                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
-                programId: vm.program.id,
-                program: vm.program,
-                facility: vm.facility,
-                supervised: vm.isSupervised
-             });
-            }else {
-                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
-                programId: vm.program.id,
-                program: vm.program,
-                facility: vm.facility,
-                supervised: vm.isSupervised,
-                requisitionToReceiveAgainst: vm.requisitionToReceiveAgainst
-             });
-            }
-            
-        };
+        vm.proceed = function() {
 
-        $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
-            
-            if (newVal === oldVal) return;
-            if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
-
-            if(newVal == null || newVal == undefined) {
-                vm.requisitionsToReceive = facility.requisitionsToReceive;
-                vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
-                return;
-            }else {
-                vm.requisitionToReceiveAgainst = null; // reset selected requisition when program changes
-                // filter requisitions to receive by selected program
-                vm.requisitionsToReceive = facility.requisitionsToReceive.filter(function (r) {
-                    return r.program.id === newVal.id;
+            if (vm.requisitionToReceiveAgainst) {
+                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
+                    programId: vm.program.id,
+                    program: vm.program,
+                    facility: vm.facility,
+                    supervised: vm.isSupervised,
+                    requisitionToReceiveAgainst: vm.requisitionToReceiveAgainst
+                });
+            } else {
+                $state.go('openlmis.stockmanagement.' + adjustmentType.state + '.creation', {
+                    programId: vm.program.id,
+                    program: vm.program,
+                    facility: vm.facility,
+                    supervised: vm.isSupervised
                 });
             }
+
+        };
+
+        $scope.$watch(function() {
+            return vm.program;
+        }, function(newVal, oldVal) {
+
+            if (newVal === oldVal) {
+                return;
+            }
+            // Only show options in receive flow.
+            if (vm.adjustmentType !== 'receive') {
+                return;
+            }
+
+            if (newVal === null || newVal === undefined) {
+                vm.requisitionsToReceive = facility.requisitionsToReceive;
+                // Reset selected requisition when program changes.
+                vm.requisitionToReceiveAgainst = null;
+                return;
+            }
+            // Reset selected requisition when program changes.
+            vm.requisitionToReceiveAgainst = null;
+            // Filter requisitions to receive by selected program.
+            vm.requisitionsToReceive = facility.requisitionsToReceive.filter(function(r) {
+                return r.program.id === newVal.id;
+            });
+
         });
-
-
 
         /**
          * @ngdoc property

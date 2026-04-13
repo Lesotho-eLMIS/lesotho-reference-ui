@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -41,7 +41,7 @@
                 reasons: undefined,
                 displayItems: [],
                 addedLineItems: [],
-                orderableGroups: undefined, 
+                orderableGroups: undefined,
                 supervised: undefined
             },
             resolve: {
@@ -57,7 +57,7 @@
                     }
                     return $stateParams.facility;
                 },
-                facilityWithType: function(facilityService,facility ) {
+                facilityWithType: function(facilityService, facility) {
                     return facilityService.get(facility.id);
                 },
                 user: function(authorizationService) {
@@ -70,15 +70,18 @@
                     }
                     return $stateParams.orderableGroups;
                 },
-                viewdislayitems:function($stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
+                viewdislayitems: function($stateParams, registerDisplayItemsService) {
+                    return registerDisplayItemsService($stateParams);
                 },
                 displayItems: function(viewdislayitems, $stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
+                    return registerDisplayItemsService($stateParams);
                 },
                 reasons: function($stateParams, stockReasonsFactory, facilityWithType) {
                     if (_.isUndefined($stateParams.reasons)) {
-                        return stockReasonsFactory.getAdjustmentReasons($stateParams.programId, facilityWithType.type.id);
+                        return stockReasonsFactory.getAdjustmentReasons(
+                            $stateParams.programId,
+                            facilityWithType.type.id
+                        );
                     }
                     return $stateParams.reasons;
                 },
@@ -88,13 +91,13 @@
                 srcDstAssignments: function() {
                     return undefined;
                 },
-                suppliers: function(){
+                suppliers: function() {
                     return undefined;
                 },
                 hasPermissionToAddNewLot: function() {
                     return false;
                 },
-                ReferenceNumbers:function() {
+                ReferenceNumbers: function() {
                     return undefined;
                 }
             }

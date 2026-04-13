@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -51,13 +51,17 @@
                 requisitionsToReceive: function(requisitionService, facility) {
                     return requisitionService.search(false, {
                         facility: facility.id,
-                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split('T')[0] //Pull requisitions initiated in the last 90 days
+                        // Pull requisitions initiated in the last 90 days.
+                        initiatedDateFrom: new Date(new Date().setDate(new Date().getDate() - 90))
+                            .toISOString()
+                            .split('T')[0]
                     }).then(function(response) {
                         return response.content;
                     });
                 },
                 adjustmentType: function(facility, requisitionsToReceive) {
-                    facility.requisitionsToReceive = requisitionsToReceive; // Attach to facility for easy access in controller
+                    // Attach to facility for easy access in controller.
+                    facility.requisitionsToReceive = requisitionsToReceive;
                     return ADJUSTMENT_TYPE.RECEIVE;
                 }
             }
