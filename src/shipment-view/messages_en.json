@@ -29,13 +29,19 @@
     "shipmentView.failedToConfirmShipment": "Failed to confirm shipment",
     "shipmentView.confirmShipment.question": "By confirming this shipment, the order will be fulfilled and the ordering facility will be notified of pending shipment with an electronic Proof of Delivery (POD).",
     "shipmentView.shipmentHasErrors": "Shipment has errors",
+    "shipmentView.packs": "Packs",
+    "shipmentView.units": "Units",
     "shipmentView.quantitiesProvidedIn": "Quantities are provided in",
     "shipmentView.fillQuantityInPack": "Fill Quantity (in Packs)",
+    "shipmentView.fillQuantityInPacks": "Fill Quantity (in Packs)",
+    "shipmentView.fillQuantityInUnits": "Fill Quantity (in Units)",
     "shipmentView.remainingSoh": "Remaining SOH",
     "shipmentView.noStockAvailable": "No stock available",
     "shipmentView.title": "Fulfilling Request - ${orderCode}",
     "shipmentView.order": "Request",
     "shipmentView.orderQuantity": "Request Quantity",
     "shipmentView.lotCode": "Batch Number",
-    "shipmentView.doses": "Unit of Issue"
+    "shipmentView.doses": "Unit of Issue",
+    "shipmentView.fulfillIn": "Fulfill In",
+    "shipmentView.unitsBracket": " units )"
 }
