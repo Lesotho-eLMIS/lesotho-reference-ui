@@ -34,7 +34,7 @@
     'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS', 'hasPermissionToAddNewLot',
     'LotResource', '$q', 'editLotModalService', 'moment', 'rejectionReasonService', 'receivingAddDiscrepancyModalService',
     'complaintFormModalService', 'suppliers', 'ReferenceNumbers', 'facilityWithType',
-    'QUANTITY_UNIT', 'quantityUnitCalculateService'];
+    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems'];
 
   function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program, facility,
     orderableGroups, reasons, confirmService, messageService, user, adjustmentType, srcDstAssignments,
@@ -42,7 +42,7 @@
     MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService, alertService, dateUtils, displayItems, ADJUSTMENT_TYPE,
     UNPACK_REASONS, REASON_TYPES, STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService,
     moment, rejectionReasonService, receivingAddDiscrepancyModalService, complaintFormModalService,
-    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService) {
+    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems) {
     var vm = this,
       previousAdded = {};
 
@@ -487,6 +487,31 @@
         messageService.get('orderableGroupService.addMissingLot');
       initiateNewLotObject();
     }
+
+    vm.lotSelectionChanged = function(lineItem) {
+        if (lineItem.lot && lineItem.lot.lotCode === 'Add new batch') {
+            // Create empty lot and open edit modal
+            lineItem.lot = {
+                lotCode: '',
+                expirationDate: null,
+                active: true,
+                tradeItemId: lineItem.orderable.identifiers.tradeItem
+            };
+            lineItem.$isNewItem = true;
+            vm.editLot(lineItem);
+            return;
+        }
+        var selectedItem = lineItem.$orderableGroup.find(function(groupItem) {
+            return groupItem.lot && lineItem.lot &&
+                groupItem.lot.lotCode === lineItem.lot.lotCode;
+        });
+        if (selectedItem) {
+            lineItem.$previewSOH = selectedItem.stockOnHand;
+            lineItem.stockOnHand = selectedItem.stockOnHand;
+            lineItem.lot.expirationDate = selectedItem.lot.expirationDate;
+        }
+    };
+
 
     /**
      * @ngdoc method
@@ -956,12 +981,55 @@
 
       vm.addedLineItems = $stateParams.addedLineItems || [];
       $stateParams.displayItems = displayItems;
+<<<<<<< HEAD
       vm.displayItems = $stateParams.displayItems || [];
+=======
+      // vm.displayItems = $stateParams.displayItems || [];
+      vm.displayItems = [];
+
+>>>>>>> 8d4296c (Fix: Auto-populate receive table from requisition line items)
       vm.keyword = $stateParams.keyword;
       updateNeedToConfirmFlag();
 
       vm.orderableGroups = orderableGroups;
       buildOrderableGroupLookups();
+
+      // Auto-populate from requisition line items if receiving against a requisition
+      if (adjustmentType.state === 'receive'
+          && !vm.servicePointUser
+          && requisitionLineItems
+          && requisitionLineItems.length > 0) {
+          var defaultAssignment = srcDstAssignments.find(function(a) {
+              return a.name === 'National Drug Service Organisation (NDSO)';
+          });
+          var defaultReason = vm.reasons.find(function(r) {
+              return r.name === 'Receipts';
+          });
+          requisitionLineItems.filter(function(lineItem) {
+              return !lineItem.skipped;
+          }).forEach(function(lineItem) {
+              var orderableGroup = vm.orderableGroupMap[lineItem.orderable.id];
+              if (orderableGroup && orderableGroup.length > 0) {
+                  var lots = orderableGroupService.lotsOf(
+                      orderableGroup,
+                      hasPermissionToAddNewLot
+                  );
+                  var item = orderableGroup[0];
+                  item.requisition = $stateParams.requisitionToReceiveAgainst.id;
+                  vm.addedLineItems.push(_.extend({
+                      $errors: {},
+                      $previewSOH: item.stockOnHand
+                  }, item, copyDefaultValue(), {
+                      assignment: defaultAssignment || null,
+                      reason: defaultReason || null,
+                      $lots: lots,
+                      $orderableGroup: orderableGroup
+                  }));
+              }
+          });
+          vm.displayItems = vm.addedLineItems;
+      }
+      //////////////////////////////////////////////////
       vm.hasLot = false;
       vm.orderableGroups.forEach(function (group) {
         vm.hasLot =
