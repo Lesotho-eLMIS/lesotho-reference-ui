@@ -178,12 +178,12 @@
                             type="text" style="width: 100px;"></td> 
 
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input class="form-control"
-                            value="{{ 0 | lesothoCurrency}}" type="text" style="width: 50px;"
+                            value="{{ 0 | openlmisCurrency}}" type="text" style="width: 50px;"
                             ng-model="lineItem.unitPrice"
                             ng-show="lineItem.assignment.name.includes('NDSO')"></td>
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input type="text" readonly
                             style="width: 85px;"
-                            value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | lesothoCurrency}}"
+                            value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | openlmisCurrency}}"
                             ng-show="lineItem.assignment.name.includes('NDSO')" /></td>
                     <td ng-if="vm.showVVMStatusColumn">
                         <select ng-if="lineItem.orderable.extraData.useVVM == 'true'" ng-model="lineItem.vvmStatus"
