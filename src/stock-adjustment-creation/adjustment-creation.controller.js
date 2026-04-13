@@ -532,7 +532,7 @@
      * @description
      * Submit all added items.
      */
-        vm.submit = function() {
+   vm.submit = function () {
 
             $scope.$broadcast('openlmis-form-submit');
             if (validateAllAddedItems()) {
@@ -549,9 +549,9 @@
                 alertService.error('stockAdjustmentCreation.submitInvalid');
             }
 
-        };
-
-        /**
+    };
+   
+    /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
      * @name orderableSelectionChanged
@@ -950,11 +950,11 @@
             vm.reasons = reasons;
             vm.showReasonDropdown =
         adjustmentType.state !== ADJUSTMENT_TYPE.KIT_UNPACK.state;
-
-            /* eLMIS Lesotho : start */
-            // vm.showPrepackingAttributes =
-            //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
-            vm.showDeliveryNoteAttributes =
+ 
+        /* eLMIS Lesotho : start */
+      // vm.showPrepackingAttributes =
+      //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
+      vm.showDeliveryNoteAttributes =
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state;
             vm.showReasonsInAdjustment =
         adjustmentType.state === ADJUSTMENT_TYPE.ADJUSTMENT.state;
@@ -964,13 +964,11 @@
                 (facilityWithType.type.code === 'service_point');
             /* eLMIS Lesotho : end */
 
-            // vm.addedLineItems = $stateParams.addedLineItems || [];
-            vm.addedLineItems = [];
-            $stateParams.displayItems = displayItems;
-            // vm.displayItems = $stateParams.displayItems || [];
-            vm.displayItems = [];
-            vm.keyword = $stateParams.keyword;
-            updateNeedToConfirmFlag();
+      vm.addedLineItems = $stateParams.addedLineItems || [];
+      $stateParams.displayItems = displayItems;
+      vm.displayItems = $stateParams.displayItems || [];
+      vm.keyword = $stateParams.keyword;
+      updateNeedToConfirmFlag();
 
             vm.orderableGroups = orderableGroups;
             buildOrderableGroupLookups();
@@ -980,13 +978,16 @@
           vm.hasLot ||
           orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length >
           0;
-            });
-            vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(
-                vm.orderableGroups
-            );
-            vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
-            resetOrderableSelectionState();
-        }
+      });
+      vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(
+        vm.orderableGroups
+      );
+      vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
+      resetOrderableSelectionState();
+
+
+      
+    }
 
         function initiateNewLotObject() {
             vm.newLot = {

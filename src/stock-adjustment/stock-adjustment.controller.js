@@ -35,6 +35,9 @@
                         ADJUSTMENT_TYPE) {
         var vm = this;
 
+        vm.isSupervised = false;
+
+
         /**
          * @ngdoc property
          * @propertyOf stock-adjustment.controller:StockAdjustmentController
