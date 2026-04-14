@@ -111,14 +111,25 @@
          * @return {Promise}          Physical inventory promise
          */
         function getDraftByProgramAndFacilityForCyclic(programId, facilityId) {
-            var draftToReturn = {
+            return physicalInventoryService.getDraft(programId, facilityId)
+                .then(function(response) {
+                    var draft = response,
+                        draftToReturn = {
                             programId: programId,
                             facilityId: facilityId,
-                            isStarter: true,
                             lineItems: []
                         };
-            return draftToReturn;
-                
+
+                    if (draft.length === 0 && offlineService.isOffline()) {
+                        return;
+                    } else if (draft.length === 0) {
+                        draftToReturn.isStarter = true;
+                    }
+                    if (draftExists(draft)) {
+                        draftToReturn = draft[0];
+                    }
+                    return draftToReturn;
+                });
         }
 
 

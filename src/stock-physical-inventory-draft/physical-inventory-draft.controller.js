@@ -167,54 +167,44 @@
      * Adds an existing (facility-level) product to the cyclic count table.
      * Looks up ALL lots for the product from draft.lineItems.
      */
-    // AFTER — reuses addProductsModalService, pre-filtered to selected product's lots only
     vm.selectExistingProductForCyclic = function(productItem) {
-      if (!productItem) return;
+    if (!productItem) return;
 
-      var orderableId = productItem.orderable.id;
+    var orderableId = productItem.orderable.id;
 
-      // Check not already added
-      if (vm.itemsSelectedForCyclic.some(function(g) {
+    if (vm.itemsSelectedForCyclic.some(function(g) {
         return g[0].orderable.id === orderableId;
-      })) {
+    })) {
         alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
         return;
-      }
+    }
 
-      // Build the lot list for this product only — same items the modal would show,
-      // but scoped to the one selected orderable. Reuses the same notYetAdded
-      // filtering logic already used in vm.addProducts().
-      var lotsForProduct = draft.lineItems.filter(function(item) {
-        return item.orderable.id === orderableId &&
-              item.stockOnHand !== null &&
-              item.stockOnHand !== undefined &&
-              !item.isAdded;
-      });
+    var fullGroup = draft.lineItems.filter(function(item) {
+        return item.orderable.id === orderableId;
+    });
 
-      if (!lotsForProduct || lotsForProduct.length === 0) {
-        alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
-        return;
-      }
+    if (!fullGroup || fullGroup.length === 0) return;
 
-      // Close the search panel immediately
-      vm.productSelectionMode = null;
-      vm.searchText = '';
-      vm.searchResults = [];
+    fullGroup.forEach(function(item) {
+        item.isAdded = true;
+        if (item.quantity === null || item.quantity === undefined) {
+        item.quantity = -1;
+      } 
+    });
 
-      // Hand off to the same modal vm.addProducts() uses — user picks lots normally
-      addProductsModalService.show(lotsForProduct, draft, vm.showInDoses())
-        .then(function() {
-          $stateParams.program = vm.program;
-          $stateParams.facility = vm.facility;
-          $stateParams.noReload = true;
-          draft.$modified = true;
-          vm.cacheDraft();
+    draft.$modified = true;
+    vm.cacheDraft();
 
-          $state.go($state.current.name, $stateParams, {
-            reload: $state.current.name
-          });
-        });
-    };
+    notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
+
+    // Reload so the routes resolver picks up isAdded = true and rebuilds the table
+    $stateParams.program = vm.program;
+    $stateParams.facility = vm.facility;
+    $stateParams.noReload = true;
+    $state.go($state.current.name, $stateParams, {
+        reload: $state.current.name
+    });
+};
 
     vm.toggleProductSelectionMode = function(mode) {
       if (vm.productSelectionMode === mode) {
@@ -1078,6 +1068,9 @@
             item,
             item.stockAdjustments,
           );
+          if (vm.stateParams.physicalInventoryType === 'Cyclic' && item.quantity === -1) {
+              item.quantity = null;
+          }
       });
 
       if (vm.stateParams.physicalInventoryType === "Major") {
