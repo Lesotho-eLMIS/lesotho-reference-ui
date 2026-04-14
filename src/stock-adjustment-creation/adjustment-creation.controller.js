@@ -993,13 +993,9 @@
 
       vm.addedLineItems = $stateParams.addedLineItems || [];
       $stateParams.displayItems = displayItems;
-<<<<<<< HEAD
-      vm.displayItems = $stateParams.displayItems || [];
-=======
+
       // vm.displayItems = $stateParams.displayItems || [];
       vm.displayItems = [];
-
->>>>>>> 8d4296c (Fix: Auto-populate receive table from requisition line items)
       vm.keyword = $stateParams.keyword;
       updateNeedToConfirmFlag();
 
