@@ -490,7 +490,6 @@
 
     vm.lotSelectionChanged = function(lineItem) {
         if (lineItem.lot && lineItem.lot.lotCode === 'Add new batch') {
-            // Create empty lot and open edit modal
             lineItem.lot = {
                 lotCode: '',
                 expirationDate: null,
@@ -498,7 +497,20 @@
                 tradeItemId: lineItem.orderable.identifiers.tradeItem
             };
             lineItem.$isNewItem = true;
-            vm.editLot(lineItem);
+            editLotModalService
+                .show(lineItem, vm.allItems, vm.addedLineItems)
+                .then(function() {
+                    // Reuse existing method with isNewLot=true which sets SOH to 0
+                    var newItem = orderableGroupService.findByLotInOrderableGroup(
+                        lineItem.$orderableGroup,
+                        lineItem.lot,
+                        true // isNewLot = true → SOH set to 0 automatically
+                    );
+                    if (newItem) {
+                        lineItem.$previewSOH = newItem.stockOnHand; // Will be 0
+                        lineItem.stockOnHand = newItem.stockOnHand; // Will be 0
+                    }
+                });
             return;
         }
         var selectedItem = lineItem.$orderableGroup.find(function(groupItem) {
@@ -1014,6 +1026,25 @@
                       orderableGroup,
                       hasPermissionToAddNewLot
                   );
+                  // Sort only real batches (those with lotCode that are not special options)
+                  var specialOptions = ['Add new batch', 'No batch defined'];
+                  var specialLots = lots.filter(function(lot) {
+                      return specialOptions.indexOf(lot.lotCode) !== -1;
+                  });
+                  var realLots = lots.filter(function(lot) {
+                      return specialOptions.indexOf(lot.lotCode) === -1;
+                  });
+                  realLots.sort(function(a, b) {
+                      if (!a.expirationDate) {
+                          return 1;
+                      }
+                      if (!b.expirationDate) {
+                          return -1;
+                      }
+                      return new Date(b.expirationDate) - new Date(a.expirationDate);
+                  });
+                  // Put special options first, then sorted real batches
+                  lots = specialLots.concat(realLots);
                   var item = orderableGroup[0];
                   item.requisition = $stateParams.requisitionToReceiveAgainst.id;
                   vm.addedLineItems.push(_.extend({
