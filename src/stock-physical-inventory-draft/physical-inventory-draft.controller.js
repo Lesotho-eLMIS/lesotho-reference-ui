@@ -167,11 +167,13 @@
      * Adds an existing (facility-level) product to the cyclic count table.
      * Looks up ALL lots for the product from draft.lineItems.
      */
+    // AFTER — reuses addProductsModalService, pre-filtered to selected product's lots only
     vm.selectExistingProductForCyclic = function(productItem) {
       if (!productItem) return;
 
       var orderableId = productItem.orderable.id;
 
+      // Check not already added
       if (vm.itemsSelectedForCyclic.some(function(g) {
         return g[0].orderable.id === orderableId;
       })) {
@@ -179,29 +181,39 @@
         return;
       }
 
-      var fullGroup = draft.lineItems.filter(function(item) {
-        return item.orderable.id === orderableId;
-      });
-      if (!fullGroup || fullGroup.length === 0) return;
-
-      fullGroup.forEach(function(item) {
-        item.isAdded = true;
-      });
-
-      vm.itemsSelectedForCyclic.push(fullGroup);
-
-      vm.productsForCyclic = vm.productsForCyclic.filter(function(p) {
-        return p.orderable.id !== orderableId;
+      // Build the lot list for this product only — same items the modal would show,
+      // but scoped to the one selected orderable. Reuses the same notYetAdded
+      // filtering logic already used in vm.addProducts().
+      var lotsForProduct = draft.lineItems.filter(function(item) {
+        return item.orderable.id === orderableId &&
+              item.stockOnHand !== null &&
+              item.stockOnHand !== undefined &&
+              !item.isAdded;
       });
 
-      notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
+      if (!lotsForProduct || lotsForProduct.length === 0) {
+        alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
+        return;
+      }
 
+      // Close the search panel immediately
       vm.productSelectionMode = null;
-      vm.selectedProductForCyclic = null;
       vm.searchText = '';
       vm.searchResults = [];
 
-      regroupCyclicItems();
+      // Hand off to the same modal vm.addProducts() uses — user picks lots normally
+      addProductsModalService.show(lotsForProduct, draft, vm.showInDoses())
+        .then(function() {
+          $stateParams.program = vm.program;
+          $stateParams.facility = vm.facility;
+          $stateParams.noReload = true;
+          draft.$modified = true;
+          vm.cacheDraft();
+
+          $state.go($state.current.name, $stateParams, {
+            reload: $state.current.name
+          });
+        });
     };
 
     vm.toggleProductSelectionMode = function(mode) {
@@ -1027,9 +1039,17 @@
         });
 
         var seenIds = {};
+        //Only add items the facility actually stocks (stockOnHand is not null)
+        var facilityStockedIds = {};
+        draft.lineItems.forEach(function(item) {
+          if (item.stockOnHand !== null && item.stockOnHand !== undefined) {
+            facilityStockedIds[item.orderable.id] = true;
+          }
+        });
+
         draft.lineItems.forEach(function(item) {
           var id = item.orderable.id;
-          if (!alreadySelectedIds[id] && !seenIds[id]) {
+          if (facilityStockedIds[id] && !alreadySelectedIds[id] && !seenIds[id]) {
             seenIds[id] = true;
             vm.productsForCyclic.push(item);
           }
@@ -1260,6 +1280,7 @@
           batch.quantityInPacks = NaN;
           batch.quantityRemainderInDoses = NaN;
           batch.stockAdjustments = [];
+          batch.isAdded = false;
         });
         var index = vm.itemsSelectedForCyclic.indexOf(group);
         if (index !== -1) {

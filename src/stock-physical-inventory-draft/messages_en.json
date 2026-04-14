@@ -47,6 +47,7 @@
   "stockPhysicalInventoryDraft.selectExistingProduct": "Select Existing Product",
   "stockPhysicalInventoryDraft.selectExistingProductDesc": "Choose from products already in your facility's inventory",
   "stockPhysicalInventoryDraft.addFromCatalogue": "Add from Catalogue",
+  "stockPhysicalInventoryDraft.addProgrammeProduct": "Add Programme Product",
   "stockPhysicalInventoryDraft.addFromCatalogueDesc": "Add products from the system catalogue to your facility's inventory",
   "stockPhysicalInventoryDraft.searchProducts": "Search Products",
   "stockPhysicalInventoryDraft.searchHint": "Type product code or name (min 2 characters)",
