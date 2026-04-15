@@ -38,6 +38,6 @@
   "stockAdjustmentCreation.fileComplaint": "File Complaint",
   "stockAdjustmentCreation.acceptedQuantityError": "accepted quantity cannot exceed delivery note quantity",
   "stockAdjustmentCreation.cartonsInvalidError": "Cartons cannot be zero or greater than total received",
-  "stockAdjustmentCreation.unitPrice": "Unit Price (M)",
-  "stockAdjustmentCreation.amount": "Amount (M)"
+  "stockAdjustmentCreation.unitPriceInvalid": "Unit price must be a valid number",
+  "stockAdjustmentCreation.unitPriceNegative": "Unit price cannot be negative"
 }
