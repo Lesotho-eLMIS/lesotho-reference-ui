@@ -100,8 +100,16 @@
                             {{lineItem.displayLotMessage}}
                         </button>
                     </td>
+
                     <td ng-show="vm.hasLot && !vm.canEditLot(lineItem)">
-                        {{lineItem.displayLotMessage}}
+                        <select ng-if="lineItem.$lots && lineItem.$lots.length > 0"
+                            ng-model="lineItem.lot"
+                            ng-options="lot.lotCode for lot in lineItem.$lots track by lot.lotCode"
+                            ng-change="vm.lotSelectionChanged(lineItem)">
+                        </select>
+                        <span ng-if="!lineItem.$lots || lineItem.$lots.length === 0">
+                            {{lineItem.displayLotMessage}}
+                        </span>
                     </td>
                     <td ng-show="vm.hasLot">{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
                     <td align="right">{{vm.recalculateSOHQuantity(lineItem.$previewSOH, lineItem.orderable.netContent)}}</td>
