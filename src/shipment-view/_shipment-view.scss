@@ -1,3 +1,7 @@
+.shipment-view-form {
+    padding-bottom: 5.5rem;
+}
+
 .shipment-fill-cell {
     min-width: 18rem;
 }
@@ -42,6 +46,10 @@
 }
 
 @media (max-width: 1100px) {
+    .shipment-view-form {
+        padding-bottom: 8rem;
+    }
+
     .shipment-fill-cell {
         min-width: 14rem;
     }
