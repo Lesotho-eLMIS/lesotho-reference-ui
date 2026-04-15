@@ -50,13 +50,18 @@
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
-                    var currentDraft =  undefined; // getDraftFromParent(drafts, $stateParams);
-                    if($stateParams.supervised){
-                        currentDraft = physicalInventoryFactory.getDraft($stateParams.program.id,$stateParams.facility.id);
-                    }else{
-                        currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    if ($stateParams.supervised) {
+                        // getDraft() is async — chain .then() so getPhysicalInventory
+                        // receives the resolved draft object, not the Promise itself.
+                        return physicalInventoryFactory
+                            .getDraft($stateParams.program.id, $stateParams.facility.id)
+                            .then(function(draft) {
+                                return physicalInventoryFactory.getPhysicalInventory(draft);
+                            });
                     }
-                    //var currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    var currentDraft = getDraftFromParent(drafts, $stateParams);
                     return physicalInventoryFactory.getPhysicalInventory(currentDraft);
                 },
                 program: function($stateParams, programService, draft) {
