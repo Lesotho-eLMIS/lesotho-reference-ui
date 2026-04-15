@@ -167,7 +167,7 @@
      * Adds an existing (facility-level) product to the cyclic count table.
      * Looks up ALL lots for the product from draft.lineItems.
      */
-    // AFTER — reuses addProductsModalService, pre-filtered to selected product's lots only
+    
     vm.selectExistingProductForCyclic = function(productItem) {
         if (!productItem) return;
 
@@ -181,7 +181,7 @@
         }
 
         var fullGroup = draft.lineItems.filter(function(item) {
-            return item.orderable.id === orderableId;
+            return item.orderable.id === orderableId && item.active === true;
         });
 
         if (!fullGroup || fullGroup.length === 0) return;
