@@ -26,6 +26,7 @@
         vm.getAvailableSohDisplay = getAvailableSohDisplay;
         vm.getRemainingSohDisplay = getRemainingSohDisplay;
         vm.getFillQuantityDisplay = getFillQuantityDisplay;
+        vm.getEditableQuantitySummary = getEditableQuantitySummary;
         vm.onQuantityTypeChanged = onQuantityTypeChanged;
         vm.onUnitQuantityChanged = onUnitQuantityChanged;
         vm.getQuantityTypeOptions = getQuantityTypeOptions;
@@ -71,6 +72,29 @@
 
             return (tableLineItem.shipmentLineItem.quantityShipped || 0) + ' ' +
                 messageService.get('shipmentView.packs');
+        }
+
+        function getEditableQuantitySummary(lineItem) {
+            var quantityInPacks;
+            var quantityRemainderInUnits;
+            var quantityShipped;
+
+            if (!lineItem) {
+                return '';
+            }
+
+            quantityShipped = lineItem.quantityShipped || 0;
+
+            if (lineItem.quantityType === 'DISPENSING_UNITS') {
+                quantityInPacks = lineItem.quantityInPacks || 0;
+                quantityRemainderInUnits = lineItem.quantityRemainderInUnits || 0;
+
+                return quantityInPacks + ' ' + messageService.get('shipmentView.packs') +
+                    ' + ' + quantityRemainderInUnits + ' ' + messageService.get('shipmentView.units') +
+                    ' = ' + quantityShipped + ' ' + messageService.get('shipmentView.units');
+            }
+
+            return quantityShipped + ' ' + messageService.get('shipmentView.packs');
         }
 
         function onQuantityTypeChanged(lineItem) {

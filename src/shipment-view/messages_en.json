@@ -43,5 +43,6 @@
     "shipmentView.lotCode": "Batch Number",
     "shipmentView.doses": "Unit of Issue",
     "shipmentView.fulfillIn": "Fulfill In",
-    "shipmentView.unitsBracket": " units )"
+    "shipmentView.unitsBracket": " units )",
+    "shipmentView.calculatedTotal": "Calculated total"
 }
