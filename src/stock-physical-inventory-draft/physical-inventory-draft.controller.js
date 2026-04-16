@@ -167,44 +167,44 @@
      * Adds an existing (facility-level) product to the cyclic count table.
      * Looks up ALL lots for the product from draft.lineItems.
      */
+    
     vm.selectExistingProductForCyclic = function(productItem) {
-    if (!productItem) return;
+        if (!productItem) return;
 
-    var orderableId = productItem.orderable.id;
+        var orderableId = productItem.orderable.id;
 
-    if (vm.itemsSelectedForCyclic.some(function(g) {
-        return g[0].orderable.id === orderableId;
-    })) {
-        alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
-        return;
-    }
+        if (vm.itemsSelectedForCyclic.some(function(g) {
+            return g[0].orderable.id === orderableId;
+        })) {
+            alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
+            return;
+        }
 
-    var fullGroup = draft.lineItems.filter(function(item) {
-        return item.orderable.id === orderableId;
-    });
+        var fullGroup = draft.lineItems.filter(function(item) {
+            return item.orderable.id === orderableId && item.active === true;
+        });
 
-    if (!fullGroup || fullGroup.length === 0) return;
+        if (!fullGroup || fullGroup.length === 0) return;
 
-    fullGroup.forEach(function(item) {
-        item.isAdded = true;
-        if (item.quantity === null || item.quantity === undefined) {
-        item.quantity = -1;
-      } 
-    });
+        fullGroup.forEach(function(item) {
+            item.isAdded = true;
+            if (item.quantity === null || item.quantity === undefined) {
+                item.quantity = -1;
+            }
+        });
 
-    draft.$modified = true;
-    vm.cacheDraft();
+        draft.$modified = true;
+        vm.cacheDraft();
 
-    notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
+        notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
 
-    // Reload so the routes resolver picks up isAdded = true and rebuilds the table
-    $stateParams.program = vm.program;
-    $stateParams.facility = vm.facility;
-    $stateParams.noReload = true;
-    $state.go($state.current.name, $stateParams, {
-        reload: $state.current.name
-    });
-};
+        $stateParams.program = vm.program;
+        $stateParams.facility = vm.facility;
+        $stateParams.noReload = true;
+        $state.go($state.current.name, $stateParams, {
+            reload: $state.current.name
+        });
+    };
 
     vm.toggleProductSelectionMode = function(mode) {
       if (vm.productSelectionMode === mode) {
