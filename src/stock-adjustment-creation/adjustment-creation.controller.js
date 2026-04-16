@@ -646,12 +646,28 @@
       return _.isUndefined(value) || _.isNull(value);
     }
 
+    vm.validateUnitPrice = function (lineItem) {
+      if (lineItem.unitPrice === undefined || lineItem.unitPrice === null || lineItem.unitPrice === '') {
+        lineItem.$errors.unitPriceInvalid = false;
+      } else {
+        var price = parseFloat(lineItem.unitPrice);
+        if (isNaN(price) || price < 0) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceInvalid');
+        } else {
+          lineItem.unitPrice = price;
+          lineItem.$errors.unitPriceInvalid = false;
+        }
+      }
+      return lineItem;
+    };
+
     function validateAllAddedItems() {
       _.each(vm.addedLineItems, function (item) {
         vm.validateQuantity(item);
         vm.validateDate(item);
         vm.validateAssignment(item);
         vm.validateReason(item);
+        vm.validateUnitPrice(item);
         if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
