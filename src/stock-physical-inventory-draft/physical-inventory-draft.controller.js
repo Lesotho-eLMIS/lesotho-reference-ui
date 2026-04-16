@@ -188,9 +188,6 @@
 
         fullGroup.forEach(function(item) {
             item.isAdded = true;
-            if (item.quantity === null || item.quantity === undefined) {
-                item.quantity = -1;
-            }
         });
 
         draft.$modified = true;
