@@ -106,7 +106,7 @@
                                 : (item.isAdded || hasQuantity || hasSoh);
                         })
                             .each(function(lineItem) {
-                                if (lineItem.quantity === -1) {
+                                if (lineItem.quantity === -1 && !isCyclic) {
                                     lineItem.quantity = null;
                                 }
                                 lineItem.isAdded = true;

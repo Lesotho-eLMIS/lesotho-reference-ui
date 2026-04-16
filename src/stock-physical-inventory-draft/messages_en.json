@@ -80,5 +80,6 @@
   "stockPhysicalInventoryDraft.noProductsCyclic": "No products selected for cyclic count",
   "stockPhysicalInventoryDraft.noProductsCyclicHint": "Click \"Select Existing Product\" or \"Add from Catalogue\" above to get started",
   "stockPhysicalInventoryDraft.noProductsMajor": "No products to count",
-  "stockPhysicalInventoryDraft.noProductsMajorHint": "Click \"Add Product\" above to start your inventory count"
+  "stockPhysicalInventoryDraft.noProductsMajorHint": "Click \"Add Product\" above to start your inventory count",
+  "stockPhysicalInventoryDraft.cyclicSaveReminder": "Save your progress"
 }

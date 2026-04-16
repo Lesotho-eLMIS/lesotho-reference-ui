@@ -1068,6 +1068,9 @@
             item,
             item.stockAdjustments,
           );
+          if (vm.stateParams.physicalInventoryType === 'Cyclic' && item.quantity === -1) {
+              item.quantity = null;
+          }
       });
 
       if (vm.stateParams.physicalInventoryType === "Major") {
