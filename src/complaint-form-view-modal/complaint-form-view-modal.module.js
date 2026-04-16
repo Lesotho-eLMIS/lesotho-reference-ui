@@ -34,6 +34,6 @@
         //'receiving-add-discrepancy-modal',
         'complaint-form-view-modal',
         'openlmis-currency',
-        'lesotho-currency'
+        
     ]);
 })();

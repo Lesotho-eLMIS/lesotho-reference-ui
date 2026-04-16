@@ -14,25 +14,24 @@
  */
 
 (function() {
+
     'use strict';
 
-    angular.module('stock-adjustment-creation', [
-        'openlmis-date',
-        'stock-adjustment',
-        'stock-confirm-discard',
-        'stock-orderable-group',
-        'stock-product-name',
-        'stock-constants',
-        'stock-valid-reason',
-        'referencedata-program',
-        'referencedata-facility',
-        'referencedata-lot',
-        'stock-unpack-kit',
-        'stock-reasons-modal',
-        'stock-edit-lot-modal',
-        'receiving-add-discrepancy-modal',
-        'complaint-form-modal',
-        'openlmis-currency',
-        
+    /**
+     * @module openlmis-locale
+     *
+     * @description
+     * The openlmis-locale module is responsible for locales.
+     */
+    angular.module('openlmis-locale', [
+        'openlmis-i18n',
+        'openlmis-modal',
+        'openlmis-templates',
+        'openlmis-config',
+        'openlmis-local-storage',
+        'openlmis-urls',
+        'ngResource',
+        'ui.router'
     ]);
+
 })();
