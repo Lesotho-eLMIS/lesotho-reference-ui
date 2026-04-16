@@ -39,7 +39,7 @@
             <button ng-click="vm.selectProductForCyclic()">Add</button>
     </div>
 
-    <saving-indicator class="draft-indicator" object="vm.dataChanged"/>
+    
 
     <table>
         <caption ng-if="!vm.displayLineItemsGroup.length && !vm.stateParams.keyword">
@@ -141,4 +141,20 @@
 
 </section>
 
-<ng-include src="'stock-physical-inventory-draft/physical-inventory-draft-toolbar.html'"></ng-include>
+<!-- Toolbar — replaces ng-include of physical-inventory-draft-toolbar.html -->
+<div class="openlmis-toolbar">
+    <div class="button-group">
+        <button class="danger" ng-click="vm.delete()">
+            {{'stockPhysicalInventoryDraft.delete' | message}}
+        </button>
+    </div>
+    <div class="button-group primary">
+        <button ng-if="vm.stateParams.physicalInventoryType !== 'Cyclic'"
+                ng-click="vm.saveDraft()">
+            {{'stockPhysicalInventoryDraft.save' | message}}
+        </button>
+        <button class="primary" ng-click="vm.submit()">
+            {{'stockPhysicalInventoryDraft.submit' | message}}
+        </button>
+    </div>
+</div>

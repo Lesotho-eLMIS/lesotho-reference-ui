@@ -31,6 +31,7 @@
     "$scope",
     "$state",
     "$stateParams",
+    'confirmDiscardService',
     "addProductsModalService",
     "messageService",
     "physicalInventoryFactory",
@@ -68,6 +69,7 @@
     $scope,
     $state,
     $stateParams,
+    confirmDiscardService,
     addProductsModalService,
     messageService,
     physicalInventoryFactory,
@@ -367,8 +369,10 @@
           $stateParams.facility = vm.facility;
           $stateParams.noReload = true;
 
-          draft.$modified = true;
-          vm.cacheDraft();
+          if ($stateParams.physicalInventoryType !== 'Cyclic') {
+              draft.$modified = true;
+              vm.cacheDraft();
+          }
 
           //Only reload current state and avoid reloading parent state
           $state.go($state.current.name, $stateParams, {
@@ -636,7 +640,13 @@
       vm.isSubmitted = true;
       var error = undefined; //(vm.physicalInventoryType === "Major") ? validate() : validateCyclic();
       if (vm.stateParams.physicalInventoryType === "Cyclic") {
-        error = validateCyclic();
+        // Reuse confirmDiscardService from the receive page — shows a
+        // confirmation modal when the user navigates away without submitting.
+        $scope.needToConfirm = true;
+        confirmDiscardService.register(
+            $scope,
+            'openlmis.stockmanagement.stockCardSummaries'
+        );
       } else if (vm.stateParams.physicalInventoryType === "Major") {
         error = validate();
       }
@@ -659,6 +669,7 @@
               )
               .then(
                 function () {
+                  $scope.needToConfirm = false;
                   notificationService.success(
                     "stockPhysicalInventoryDraft.submitted",
                   );
@@ -677,6 +688,7 @@
                       );
                     })
                     .finally(function () {
+                      $scope.needToConfirm = false;
                       $state.go("openlmis.stockmanagement.stockCardSummaries", {
                         program: program.id,
                         facility: draft.facilityId, //go to facility of the submitted draft in stock card summaries
@@ -953,6 +965,14 @@
       } else {
         // Block for Initiating Cyclic stock count.
       }
+
+      if (vm.stateParams.physicalInventoryType === 'Cyclic') {
+          $scope.needToConfirm = vm.itemsSelectedForCyclic.length > 0;
+          confirmDiscardService.register(
+              $scope,
+              'openlmis.stockmanagement.physicalInventory'
+          );
+      }
     }
 
     /**
@@ -971,8 +991,10 @@
           lineItem,
           lineItem.stockAdjustments,
         );
-      draft.$modified = true;
-      vm.cacheDraft();
+        if (!lineItem.isNewProduct && vm.stateParams.physicalInventoryType !== 'Cyclic') {
+            draft.$modified = true;
+            vm.cacheDraft();
+        }
     }
 
     /**
