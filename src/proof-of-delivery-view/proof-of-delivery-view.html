@@ -95,16 +95,21 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>{{fulfillingLineItem.quantityShipped}}</td>
+                    <td>
+                        <div>{{fulfillingLineItem.quantityShipped}}</div>
+                        <small>{{vm.getQuantityTypeLabel(fulfillingLineItem)}}</small>
+                    </td>
                     <td>{{fulfillingLineItem.lot | lotCode}}</td>
                     <td ng-if="vm.canEdit">
                         <input positive-integer
                             ng-model="fulfillingLineItem.quantityAccepted"
                             ng-change="fulfillingLineItem.updateQuantityRejected()"
                             openlmis-invalid="{{fulfillingLineItem.validate().quantityAccepted | message}}"/>
+                        <small>{{vm.getQuantityTypeLabel(fulfillingLineItem)}}</small>
                     </td>
                     <td ng-if="!vm.canEdit">
-                        {{fulfillingLineItem.quantityAccepted}}
+                        <div>{{fulfillingLineItem.quantityAccepted}}</div>
+                        <small>{{vm.getQuantityTypeLabel(fulfillingLineItem)}}</small>
                     </td>
                     <td ng-if="vm.showVvmColumn">
                         <div ng-if="fulfillingLineItem.useVvm && vm.canEdit">
@@ -136,7 +141,7 @@
                         {{fulfillingLineItem.notes}}
                     </td>
                 </tr>
-            </tbody>            
+            </tbody>
         </table>
     </div>
     <aside class="pod-footer">
