@@ -1,29 +1,7 @@
-/*
- * This program is part of the OpenLMIS logistics management information system platform software.
- * Copyright © 2017 VillageReach
- *
- * This program is free software: you can redistribute it and/or modify it under the terms
- * of the GNU Affero General Public License as published by the Free Software Foundation, either
- * version 3 of the License, or (at your option) any later version.
- *  
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
- * See the GNU Affero General Public License for more details. You should have received a copy of
- * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
- */
-
 (function() {
 
     'use strict';
 
-    /**
-     * @ngdoc controller
-     * @name shipment-view.controller:ShipmentViewController
-     *
-     * @description
-     * Responsible for managing shipment view screen.
-     */
     angular
         .module('shipment-view')
         .controller('ShipmentViewController', ShipmentViewController);
@@ -41,106 +19,105 @@
         var vm = this;
 
         vm.$onInit = onInit;
-        vm.showInDoses = showInDoses;
-        vm.getSelectedQuantityUnitKey = getSelectedQuantityUnitKey;
         vm.getVvmStatusLabel = VVM_STATUS.$getDisplayName;
         vm.printShipment = printShipment;
+        vm.getOrderQuantityDisplay = getOrderQuantityDisplay;
+        vm.getOrderQuantityHint = getOrderQuantityHint;
+        vm.getAvailableSohDisplay = getAvailableSohDisplay;
+        vm.getRemainingSohDisplay = getRemainingSohDisplay;
+        vm.getFillQuantityDisplay = getFillQuantityDisplay;
+        vm.getEditableQuantitySummary = getEditableQuantitySummary;
+        vm.onQuantityTypeChanged = onQuantityTypeChanged;
+        vm.onUnitQuantityChanged = onUnitQuantityChanged;
+        vm.getQuantityTypeOptions = getQuantityTypeOptions;
+        vm.getQuantityTypeLabel = getQuantityTypeLabel;
 
-        /**
-         * @ngdoc property
-         * @propertyOf shipment-view.controller:ShipmentViewController
-         * @name order
-         * @type {Object}
-         *
-         * @description
-         * Holds order that will be displayed on the screen.
-         */
-        vm.order = undefined;
-
-        /**
-         * @ngdoc property
-         * @propertyOf shipment-view.controller:ShipmentViewController
-         * @name shipment
-         * @type {Object}
-         *
-         * @description
-         * Holds shipment that will be displayed on the screen.
-         */
-        vm.shipment = undefined;
-
-        /**
-         * @ngdoc property
-         * @propertyOf shipment-view.controller:ShipmentViewController
-         * @name tableLineItems
-         * @type {Array}
-         *
-         * @description
-         * Holds line items to be displayed on the grid.
-         */
-        vm.tableLineItems = undefined;
-
-        /**
-         * @ngdoc property
-         * @propertyOf shipment-view.controller:ShipmentViewController
-         * @name quantityUnit
-         * @type {Object}
-         *
-         * @description
-         * Holds quantity unit.
-         */
-        vm.quantityUnit = undefined;
-
-        /**
-         * @ngdoc method
-         * @methodOf shipment-view.controller:ShipmentViewController
-         * @name onInit
-         *
-         * @description
-         * Initialization method called after the controller has been created. Responsible for
-         * setting data to be available on the view.
-         */
         function onInit() {
             vm.order = updatedOrder;
             vm.shipment = shipment;
             vm.tableLineItems = tableLineItems;
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf shipment-view.controller:ShipmentViewController
-         * @name showInDoses
-         *
-         * @description
-         * Returns whether the screen is showing quantities in doses.
-         *
-         * @return {boolean} true if the quantities are in doses, false otherwise
-         */
-        function showInDoses() {
-            return vm.quantityUnit === QUANTITY_UNIT.DOSES;
+        function getOrderQuantityDisplay(tableLineItem) {
+            return tableLineItem.getOrderQuantity(false);
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf shipment-view.controller:ShipmentViewController
-         * @name getSelectedQuantityUnitKey
-         *
-         * @description
-         * Returns message key for selected quantity unit.
-         */
-        function getSelectedQuantityUnitKey() {
-            return QUANTITY_UNIT.$getDisplayName(vm.quantityUnit);
+        function getOrderQuantityHint(tableLineItem) {
+            var quantityInUnits = tableLineItem.getOrderQuantityInUnits();
+
+            if (!quantityInUnits || tableLineItem.netContent === 1) {
+                return '';
+            }
+
+            return '(' + quantityInUnits + ' ' + messageService.get('shipmentView.units') + ')';
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf shipment-view.controller:ShipmentViewController
-         * @name printShipment
-         * 
-         * @description
-         * Prints the shipment.
-         * 
-         * @return {Promise} the promise resolved when print is successful, rejected otherwise
-         */
+        function getAvailableSohDisplay(tableLineItem) {
+            return formatQuantity(getAvailableSohInUnits(tableLineItem), tableLineItem.netContent);
+        }
+
+        function getRemainingSohDisplay(tableLineItem) {
+            return formatQuantity(getRemainingSohInUnits(tableLineItem), tableLineItem.netContent);
+        }
+
+        function getFillQuantityDisplay(tableLineItem) {
+            if (!tableLineItem.shipmentLineItem) {
+                return formatQuantity(getFillQuantityInUnits(tableLineItem), tableLineItem.netContent);
+            }
+
+            if (tableLineItem.shipmentLineItem.quantityType === 'DISPENSING_UNITS') {
+                return (tableLineItem.shipmentLineItem.quantityShipped || 0) + ' ' +
+                    messageService.get('shipmentView.units');
+            }
+
+            return (tableLineItem.shipmentLineItem.quantityShipped || 0) + ' ' +
+                messageService.get('shipmentView.packs');
+        }
+
+        function getEditableQuantitySummary(lineItem) {
+            var quantityInPacks;
+            var quantityRemainderInUnits;
+            var quantityShipped;
+
+            if (!lineItem) {
+                return '';
+            }
+
+            quantityShipped = lineItem.quantityShipped || 0;
+
+            if (lineItem.quantityType === 'DISPENSING_UNITS') {
+                quantityInPacks = lineItem.quantityInPacks || 0;
+                quantityRemainderInUnits = lineItem.quantityRemainderInUnits || 0;
+
+                return quantityInPacks + ' ' + messageService.get('shipmentView.packs') +
+                    ' + ' + quantityRemainderInUnits + ' ' + messageService.get('shipmentView.units') +
+                    ' = ' + quantityShipped + ' ' + messageService.get('shipmentView.units');
+            }
+
+            return quantityShipped + ' ' + messageService.get('shipmentView.packs');
+        }
+
+        function onQuantityTypeChanged(lineItem) {
+            lineItem.setQuantityType(lineItem.quantityType);
+        }
+
+        function onUnitQuantityChanged(lineItem) {
+            lineItem.updateQuantityShippedFromSplit();
+        }
+
+        function getQuantityTypeOptions() {
+            return [
+                QUANTITY_UNIT.PACKS,
+                QUANTITY_UNIT.UNITS
+            ];
+        }
+
+        function getQuantityTypeLabel(quantityType) {
+            return quantityType === 'DISPENSING_UNITS' ?
+                messageService.get('shipmentView.units') :
+                messageService.get('shipmentView.packs');
+        }
+
         function printShipment() {
             var popup = $window.open('', '_blank');
             popup.document.write(messageService.get('shipmentView.saveDraftPending'));
@@ -155,6 +132,62 @@
             return fulfillmentUrlFactory(
                 '/api/reports/templates/common/583ccc35-88b7-48a8-9193-6c4857d3ff60/pdf?shipmentDraftId=' + shipmentId
             );
+        }
+
+        function formatQuantity(quantityInUnits, netContent) {
+            var packs;
+            var remainder;
+
+            packs = Math.floor(quantityInUnits / netContent);
+            remainder = quantityInUnits % netContent;
+
+            if (!remainder) {
+                return packs + ' ' + messageService.get('shipmentView.packs');
+            }
+
+            return packs + ' + ' + remainder + ' ' + messageService.get('shipmentView.units');
+        }
+
+        function getAvailableSohInUnits(tableLineItem) {
+            if (tableLineItem.shipmentLineItem) {
+                return tableLineItem.getAvailableSohInUnits();
+            }
+
+            if (tableLineItem.lineItems) {
+                return tableLineItem.lineItems.reduce(function(total, lineItem) {
+                    return total + getAvailableSohInUnits(lineItem);
+                }, 0);
+            }
+
+            return 0;
+        }
+
+        function getRemainingSohInUnits(tableLineItem) {
+            if (tableLineItem.shipmentLineItem) {
+                return tableLineItem.getRemainingSohInUnits();
+            }
+
+            if (tableLineItem.lineItems) {
+                return tableLineItem.lineItems.reduce(function(total, lineItem) {
+                    return total + getRemainingSohInUnits(lineItem);
+                }, 0);
+            }
+
+            return 0;
+        }
+
+        function getFillQuantityInUnits(tableLineItem) {
+            if (tableLineItem.shipmentLineItem) {
+                return tableLineItem.shipmentLineItem.getQuantityShippedInUnits();
+            }
+
+            if (tableLineItem.lineItems) {
+                return tableLineItem.lineItems.reduce(function(total, lineItem) {
+                    return total + getFillQuantityInUnits(lineItem);
+                }, 0);
+            }
+
+            return 0;
         }
     }
 })();

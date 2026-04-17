@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -42,6 +42,7 @@
         vm.getStatusDisplayName = getStatusDisplayName;
         vm.getReasonName = getReasonName;
         vm.printProofOfDelivery = printProofOfDelivery;
+        vm.getQuantityTypeLabel = getQuantityTypeLabel;
 
         /**
          * @ngdoc property
@@ -160,6 +161,12 @@
             })[0].name;
         }
 
+        function getQuantityTypeLabel(lineItem) {
+            return lineItem.quantityType === 'DISPENSING_UNITS' ?
+                messageService.get('proofOfDeliveryView.units') :
+                messageService.get('proofOfDeliveryView.packs');
+        }
+
         /**
          *
          * @ngdoc method
@@ -175,8 +182,8 @@
             printer.openTab();
 
             (vm.proofOfDelivery.isInitiated() ? vm.proofOfDelivery.save() : $q.resolve(vm.proofOfDelivery))
-                .then(function(proofOfDelivery) {
-                    printer.setId(proofOfDelivery.id);
+                .then(function(savedProofOfDelivery) {
+                    printer.setId(savedProofOfDelivery.id);
                     printer.print();
                 })
                 .catch(function() {
