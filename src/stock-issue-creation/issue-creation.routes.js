@@ -126,6 +126,10 @@
                 },
                 hasPermissionToAddNewLot: function() {
                     return false;
+                },
+                //Add a new resolve called requisitionLineItems that fetches the full requisition and returns its line items
+                requisitionLineItems: function($stateParams, requisitionService) {
+                    return undefined;
                 }
             }
         });
