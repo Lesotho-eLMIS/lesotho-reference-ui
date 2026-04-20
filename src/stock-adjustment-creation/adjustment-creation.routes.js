@@ -96,6 +96,19 @@
                 },
                 ReferenceNumbers:function() {
                     return undefined;
+                },
+                //Add a new resolve called requisitionLineItems that fetches the full requisition and returns its line items
+                requisitionLineItems: function($stateParams, requisitionService) {
+                    if ($stateParams.requisitionToReceiveAgainst) {
+                        return requisitionService.get(
+                            $stateParams.requisitionToReceiveAgainst.id
+                        ).then(function(requisition) {
+                            return requisition.requisitionLineItems || [];
+                        }).catch(function() {
+                            return [];
+                        });
+                    }
+                    return undefined;
                 }
             }
         });
