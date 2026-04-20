@@ -87,10 +87,9 @@
         </div>
 
     </div>
-
-    <saving-indicator class="draft-indicator" object="vm.dataChanged"/>
-    
-
+    <saving-indicator ng-if="vm.stateParams.physicalInventoryType === 'Major'" 
+                  class="draft-indicator" 
+                  object="vm.dataChanged"/>
     <table>
         <caption ng-if="!vm.displayLineItemsGroup.length && !vm.stateParams.keyword && vm.stateParams.physicalInventoryType !== 'Cyclic'">
             {{'stockPhysicalInventoryDraft.noLineItems' | message}}
@@ -161,7 +160,7 @@
                         ng-model="lineItem.vvmStatus"
                         ng-options="status as vm.getStatusDisplay(status) for status in vm.vvmStatuses"
                         placeholder="{{'stockPhysicalInventoryDraft.selectStatus' | message}}"
-                        ng-change="vm.cacheDraft()">
+                        ng-change="vm.stateParams.physicalInventoryType !== 'Cyclic' && vm.cacheDraft()">
                     </select>
                 </td>
                 <td class="reasons-cell">
@@ -170,7 +169,7 @@
                         line-item="lineItem"
                         reasons="vm.reasons"
                         ng-class="{'has-popover is-invalid': vm.validateOnPageChange()}"
-                        ng-change="vm.checkUnaccountedStockAdjustments(lineItem); vm.validateUnaccountedQuantity(lineItem)"
+                        ng-change="vm.debugLineItem(lineItem); vm.checkUnaccountedStockAdjustments(lineItem); vm.validateUnaccountedQuantity(lineItem)"
                         />
                 </td>
                 <td align="right"
@@ -193,4 +192,22 @@
 
 </section>
 
-<ng-include src="'stock-physical-inventory-draft/physical-inventory-draft-toolbar.html'"></ng-include>
+<!-- Toolbar — inlined to allow per-type button visibility control.
+     Save button is hidden for Cyclic: the only way to preserve a cyclic
+     count is to submit it. Major retains the full save/submit flow. -->
+<div class="openlmis-toolbar">
+    <div class="button-group">
+        <button class="danger" ng-click="vm.delete()">
+            {{'stockPhysicalInventoryDraft.delete' | message}}
+        </button>
+    </div>
+    <div class="button-group primary">
+        <button ng-if="vm.stateParams.physicalInventoryType === 'Major'"
+                ng-click="vm.saveDraft()">
+            {{'stockPhysicalInventoryDraft.save' | message}}
+        </button>
+        <button class="primary" ng-click="vm.submit()">
+            {{'stockPhysicalInventoryDraft.submit' | message}}
+        </button>
+    </div>
+</div>

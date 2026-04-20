@@ -41,7 +41,7 @@
             getDraftsForCyclic: getDraftsForCyclic,
             getDraft: getDraft,
             getDraftByProgramAndFacility: getDraftByProgramAndFacility,
-            getDraftByProgramAndFacility: getDraftByProgramAndFacilityForCyclic,
+            getDraftByProgramAndFacilityForCyclic: getDraftByProgramAndFacilityForCyclic,
             getPhysicalInventory: getPhysicalInventory,
             saveDraft: saveDraft
         };
@@ -113,20 +113,14 @@
         function getDraftByProgramAndFacilityForCyclic(programId, facilityId) {
             return physicalInventoryService.getDraft(programId, facilityId)
                 .then(function(response) {
-                    var draft = response,
-                        draftToReturn = {
-                            programId: programId,
-                            facilityId: facilityId,
-                            lineItems: []
-                        };
-
-                    if (draft.length === 0 && offlineService.isOffline()) {
-                        return;
-                    } else if (draft.length === 0) {
-                        draftToReturn.isStarter = true;
-                    }
-                    if (draftExists(draft)) {
-                        draftToReturn = draft[0];
+                    var draftToReturn = {
+                        programId: programId,
+                        facilityId: facilityId,
+                        isStarter: true,
+                        lineItems: []
+                    };
+                    if (draftExists(response)) {
+                        draftToReturn.id = response[0].id;
                     }
                     return draftToReturn;
                 });

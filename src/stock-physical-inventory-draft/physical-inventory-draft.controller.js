@@ -10,7 +10,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org.
  */
 
 (function () {
@@ -31,6 +31,7 @@
     "$scope",
     "$state",
     "$stateParams",
+    "confirmDiscardService",
     "addProductsModalService",
     "messageService",
     "physicalInventoryFactory",
@@ -61,13 +62,14 @@
     "editLotModalService",
     "dateUtils",
     "QUANTITY_UNIT",
-    "quantityUnitCalculateService",
+    "quantityUnitCalculateService"
   ];
 
   function controller(
     $scope,
     $state,
     $stateParams,
+    confirmDiscardService,
     addProductsModalService,
     messageService,
     physicalInventoryFactory,
@@ -98,7 +100,7 @@
     editLotModalService,
     dateUtils,
     QUANTITY_UNIT,
-    quantityUnitCalculateService,
+    quantityUnitCalculateService
   ) {
     var vm = this;
     vm.$onInit = onInit;
@@ -143,6 +145,11 @@
     vm.isSearching = false;
 
     /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name searchProducts
+     *
+     * @description
      * Searches for existing products in real-time (facility's existing inventory).
      * Pool is vm.productsForCyclic, which is built from draft.lineItems in onInit.
      */
@@ -164,45 +171,66 @@
     };
 
     /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name selectExistingProductForCyclic
+     *
+     * @description
      * Adds an existing (facility-level) product to the cyclic count table.
-     * Looks up ALL lots for the product from draft.lineItems.
+     * Only active lots are included — reuses the active flag from stock card
+     * summaries, same as physicalInventoryService.search() does for Major.
+     * quantity is left null for display — physicalInventoryFactory.getQuantity()
+     * sends -1 to the server when isAdded=true and quantity=null, which is the
+     * OpenLMIS convention for added-but-not-yet-counted.
      */
-    
     vm.selectExistingProductForCyclic = function(productItem) {
-        if (!productItem) return;
+      if (!productItem) return;
 
-        var orderableId = productItem.orderable.id;
+      var orderableId = productItem.orderable.id;
 
-        if (vm.itemsSelectedForCyclic.some(function(g) {
-            return g[0].orderable.id === orderableId;
-        })) {
-            alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
-            return;
-        }
+      if (vm.itemsSelectedForCyclic.some(function(g) {
+        return g[0].orderable.id === orderableId;
+      })) {
+        alertService.error(messageService.get('stockPhysicalInventoryDraft.productAlreadyAdded'));
+        return;
+      }
 
-        var fullGroup = draft.lineItems.filter(function(item) {
-            return item.orderable.id === orderableId && item.active === true;
-        });
+      // Only include active lots — reuses the same active===true check that
+      // physicalInventoryService.search() applies internally for Major counts.
+      var fullGroup = draft.lineItems.filter(function(item) {
+        return item.orderable.id === orderableId && item.active === true;
+      });
 
-        if (!fullGroup || fullGroup.length === 0) return;
+      if (!fullGroup || fullGroup.length === 0) return;
 
-        fullGroup.forEach(function(item) {
-            item.isAdded = true;
-        });
+      fullGroup.forEach(function(item) {
+        item.isAdded = true;
+        // Do not set quantity here — leave it null for display.
+        // physicalInventoryFactory.getQuantity() will send -1 to the server
+        // when quantity is null and isAdded is true.
+      });
 
-        draft.$modified = true;
-        vm.cacheDraft();
+      draft.$modified = true;
+      vm.cacheDraft();
 
-        notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
+      notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
 
-        $stateParams.program = vm.program;
-        $stateParams.facility = vm.facility;
-        $stateParams.noReload = true;
-        $state.go($state.current.name, $stateParams, {
-            reload: $state.current.name
-        });
+      $stateParams.program = vm.program;
+      $stateParams.facility = vm.facility;
+      $stateParams.noReload = true;
+      $state.go($state.current.name, $stateParams, {
+        reload: $state.current.name
+      });
     };
 
+    /**
+     * @ngdoc method
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name toggleProductSelectionMode
+     *
+     * @description
+     * Toggles the cyclic product selection panel between select and hidden states.
+     */
     vm.toggleProductSelectionMode = function(mode) {
       if (vm.productSelectionMode === mode) {
         vm.productSelectionMode = null;
@@ -232,7 +260,7 @@
           return _.every(lineItems, function (lineItem) {
             return !isEmpty(lineItem.quantity);
           });
-        },
+        }
       );
     };
 
@@ -311,7 +339,6 @@
      * @description
      * If submitted once, set this to true and allow to do validation.
      */
-
     vm.isSubmitted = $stateParams.isSubmitted;
 
     /**
@@ -324,13 +351,13 @@
      * Indicates if VVM Status column should be visible.
      */
     vm.showVVMStatusColumn = false;
-    vm.productsForCyclic = []; // list of products to be selected for cyclic stock count
-    vm.selectedProductForCyclic = undefined; // product selected for cyclic stock count
+    vm.productsForCyclic = [];
+    vm.selectedProductForCyclic = undefined;
 
     /**
      * @ngdoc property
      * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
-     * @name showVVMStatusColumn
+     * @name showHideButtonColumn
      * @type {boolean}
      *
      * @description
@@ -378,7 +405,8 @@
      * @type {Array}
      *
      * @description
-     * Array that holds items selected for cyclic inventory*/
+     * Array that holds items selected for cyclic inventory.
+     */
     vm.itemsSelectedForCyclic = [];
 
     /**
@@ -403,14 +431,6 @@
      *
      * @description
      * Pops up a modal for users to add products for physical inventory.
-     */
-    /**
-     * @ngdoc method
-     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
-     * @name addProducts
-     *
-     * @description
-     * Pops up a modal for users to add products for physical inventory.
      *
      * For Major: shows all draft line items not yet added to the table.
      * For Cyclic: shows draft line items where stockOnHand is null — these are
@@ -424,8 +444,7 @@
       if ($stateParams.physicalInventoryType === 'Cyclic') {
         // For Cyclic "Add from Catalogue": show programme products that have never
         // been stocked at this facility. A product is "at the facility" if ANY of
-        // its lot entries in draft.lineItems has a non-null stockOnHand. We build
-        // a set of such orderable IDs first, then exclude them entirely.
+        // its lot entries in draft.lineItems has a non-null stockOnHand.
         var orderableIdsAtFacility = {};
         draft.lineItems.forEach(function(item) {
           if (item.stockOnHand !== null && item.stockOnHand !== undefined) {
@@ -445,7 +464,6 @@
 
       // For Major only: also include products where all lots are already added,
       // represented as a shell entry so the user can add new lots.
-      // For Cyclic this is not needed — the modal is for new-to-facility products only.
       if ($stateParams.physicalInventoryType !== 'Cyclic') {
         var orderablesWithoutAvailableLots = draft.lineItems
           .map(function (item) {
@@ -467,7 +485,7 @@
               stockAdjustments: [],
               stockOnHand: null,
               vvmStatus: null,
-              $allLotsAdded: true,
+              $allLotsAdded: true
             };
           });
 
@@ -479,17 +497,18 @@
       addProductsModalService
         .show(notYetAddedItems, draft, vm.showInDoses())
         .then(function () {
-          //addProductsModalService.show(notYetAddedItems, draft.lineItems).then(function () {
           $stateParams.program = vm.program;
           $stateParams.facility = vm.facility;
           $stateParams.noReload = true;
 
-          draft.$modified = true;
-          vm.cacheDraft();
+          // Only cache for Major — Cyclic has no draft persistence
+          if ($stateParams.physicalInventoryType !== 'Cyclic') {
+            draft.$modified = true;
+            vm.cacheDraft();
+          }
 
-          //Only reload current state and avoid reloading parent state
           $state.go($state.current.name, $stateParams, {
-            reload: $state.current.name,
+            reload: $state.current.name
           });
         });
     };
@@ -542,19 +561,19 @@
 
       return recalculateQuantity(
         quantityInDoses,
-        lineItems[0].orderable.netContent,
+        lineItems[0].orderable.netContent
       );
     };
 
     /**
      * @ngdoc method
      * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
-     * @name getStatusDisplay
+     * @name hideLineItem
      *
      * @description
      * Pops up a modal for users to hide product for physical inventory.
      *
-     * @param  {Object} lineItem line items to be hidded.
+     * @param  {Object} lineItem line items to be hidden.
      */
     vm.hideLineItem = function (lineItem) {
       var itemToHide = lineItem;
@@ -562,9 +581,9 @@
         .confirm(
           messageService.get("stockPhysicalInventoryDraft.deactivateItem", {
             product: lineItem.orderable.fullProductName,
-            lot: lineItem.displayLotMessage,
+            lot: lineItem.displayLotMessage
           }),
-          "stockPhysicalInventoryDraft.deactivate",
+          "stockPhysicalInventoryDraft.deactivate"
         )
         .then(function () {
           loadingModalService.open();
@@ -579,10 +598,10 @@
 
               vm.cacheDraft();
               $state.go($state.current.name, $stateParams, {
-                reload: $state.current.name,
+                reload: $state.current.name
               });
               notificationService.success(
-                "stockPhysicalInventoryDraft.deactivated",
+                "stockPhysicalInventoryDraft.deactivated"
               );
             })
             .catch(function () {
@@ -608,9 +627,8 @@
       $stateParams.facility = vm.facility;
       $stateParams.noReload = true;
 
-      //Only reload current state and avoid reloading parent state
       $state.go($state.current.name, $stateParams, {
-        reload: $state.current.name,
+        reload: $state.current.name
       });
     };
 
@@ -620,13 +638,13 @@
      * @name saveDraft
      *
      * @description
-     * Save physical inventory draft.
+     * Save physical inventory draft. Used for Major count only.
      */
     vm.saveDraft = function () {
       confirmService
         .confirmDestroy(
           "stockPhysicalInventoryDraft.saveDraft",
-          "stockPhysicalInventoryDraft.save",
+          "stockPhysicalInventoryDraft.save"
         )
         .then(function () {
           loadingModalService.open();
@@ -634,7 +652,7 @@
             return physicalInventoryFactory.saveDraft(draft).then(
               function () {
                 notificationService.success(
-                  "stockPhysicalInventoryDraft.saved",
+                  "stockPhysicalInventoryDraft.saved"
                 );
 
                 draft.$modified = undefined;
@@ -651,13 +669,13 @@
                 $stateParams.noReload = true;
 
                 $state.go($state.current.name, $stateParams, {
-                  reload: $state.current.name,
+                  reload: $state.current.name
                 });
               },
               function (errorResponse) {
                 loadingModalService.close();
                 alertService.error(errorResponse.data.message);
-              },
+              }
             );
           });
         });
@@ -720,7 +738,7 @@
       confirmService
         .confirmDestroy(
           "stockPhysicalInventoryDraft.deleteDraft",
-          "stockPhysicalInventoryDraft.delete",
+          "stockPhysicalInventoryDraft.delete"
         )
         .then(function () {
           loadingModalService.open();
@@ -731,8 +749,8 @@
                 "openlmis.stockmanagement.physicalInventory",
                 $stateParams,
                 {
-                  reload: true,
-                },
+                  reload: true
+                }
               );
             })
             .catch(function () {
@@ -751,7 +769,7 @@
      */
     vm.submit = function () {
       vm.isSubmitted = true;
-      var error = undefined; //(vm.physicalInventoryType === "Major") ? validate() : validateCyclic();
+      var error;
       if (vm.stateParams.physicalInventoryType === "Cyclic") {
         error = validateCyclic();
       } else if (vm.stateParams.physicalInventoryType === "Major") {
@@ -772,31 +790,34 @@
             physicalInventoryService
               .submitPhysicalInventory(
                 draft,
-                vm.stateParams.physicalInventoryType,
+                vm.stateParams.physicalInventoryType
               )
               .then(
                 function () {
                   notificationService.success(
-                    "stockPhysicalInventoryDraft.submitted",
+                    "stockPhysicalInventoryDraft.submitted"
                   );
                   confirmService
                     .confirm(
                       "stockPhysicalInventoryDraft.printModal.label",
                       "stockPhysicalInventoryDraft.printModal.yes",
-                      "stockPhysicalInventoryDraft.printModal.no",
+                      "stockPhysicalInventoryDraft.printModal.no"
                     )
                     .then(function () {
                       $window.open(
                         accessTokenFactory.addAccessToken(
-                          getPrintUrl(draft.id),
+                          getPrintUrl(draft.id)
                         ),
-                        "_blank",
+                        "_blank"
                       );
                     })
                     .finally(function () {
+                      // Clear the discard confirmation flag so navigating
+                      // away after a successful submit does not show the modal.
+                      $scope.needToConfirm = false;
                       $state.go("openlmis.stockmanagement.stockCardSummaries", {
                         program: program.id,
-                        facility: draft.facilityId, //go to facility of the submitted draft in stock card summaries
+                        facility: draft.facilityId,
                         includeInactive: false,
                         supervised: $stateParams.supervised
                       });
@@ -806,7 +827,7 @@
                   loadingModalService.close();
                   alertService.error(errorResponse.data.message);
                   physicalInventoryDraftCacheService.removeById(draft.id);
-                },
+                }
               );
           });
         });
@@ -840,10 +861,10 @@
                       response.data.messageKey ===
                       "referenceData.error.lot.lotCode.mustBeUnique"
                         ? "stockPhysicalInventoryDraft.lotCodeMustBeUnique"
-                        : "stockPhysicalInventoryDraft.tradeItemRequuiredToAddLotCode",
+                        : "stockPhysicalInventoryDraft.tradeItemRequuiredToAddLotCode"
                   });
                 }
-              }),
+              })
           );
         }
       });
@@ -870,10 +891,10 @@
         })
         .catch(function (errorResponse) {
           loadingModalService.close();
-          if (errorLots) {
+          if (errorLots && errorLots.length > 0) {
             var errorLotsReduced = errorLots.reduce(function (
               result,
-              currentValue,
+              currentValue
             ) {
               if (currentValue.error in result) {
                 result[currentValue.error].push(currentValue.lotCode);
@@ -885,15 +906,20 @@
             for (var error in errorLotsReduced) {
               alertService.error(error, errorLotsReduced[error].join(", "));
             }
-            return $q.reject(errorResponse.data.message);
+            if (errorResponse && errorResponse.data) {
+              return $q.reject(errorResponse.data.message);
+            }
+            return $q.reject();
           }
-          alertService.error(errorResponse.data.message);
+          if (errorResponse && errorResponse.data) {
+            alertService.error(errorResponse.data.message);
+          }
         });
     }
 
     /**
      * @ngdoc method
-     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
      * @name validateQuantity
      *
      * @description
@@ -904,11 +930,11 @@
     vm.validateQuantity = function (lineItem) {
       if (lineItem.quantity > MAX_INTEGER_VALUE) {
         lineItem.quantityInvalid = messageService.get(
-          "stockmanagement.numberTooLarge",
+          "stockmanagement.numberTooLarge"
         );
       } else if (isEmpty(lineItem.quantity)) {
         lineItem.quantityInvalid = messageService.get(
-          "stockPhysicalInventoryDraft.required",
+          "stockPhysicalInventoryDraft.required"
         );
       } else {
         lineItem.quantityInvalid = false;
@@ -918,11 +944,11 @@
 
     /**
      * @ngdoc method
-     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @methodOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
      * @name validateUnaccountedQuantity
      *
      * @description
-     * Validate line item quantity and returns self.
+     * Validate line item unaccounted quantity and returns self.
      *
      * @param {Object} lineItem line item to be validated.
      */
@@ -931,7 +957,7 @@
         lineItem.unaccountedQuantityInvalid = false;
       } else {
         lineItem.unaccountedQuantityInvalid = messageService.get(
-          "stockPhysicalInventoryDraft.unaccountedQuantityError",
+          "stockPhysicalInventoryDraft.unaccountedQuantityError"
         );
       }
       return lineItem.unaccountedQuantityInvalid;
@@ -961,7 +987,7 @@
     }
 
     function validateCyclic() {
-      let errorMessage = false;
+      var errorMessage = false;
 
       displayLineItemsGroup.forEach(function (group) {
         vm.itemsSelectedForCyclic.forEach(function (selectedItem) {
@@ -969,26 +995,26 @@
             selectedItem[0].orderable.fullProductName ===
             group[0].orderable.fullProductName
           ) {
-            for (let item of group) {
+            for (var i = 0; i < group.length; i++) {
+              var item = group[i];
               if (!item.active) {
-                errorMessage =
-                  "stockPhysicalInventoryDraft.submitInvalidActive";
-                break; // Exit the loop early if an active error is found
+                errorMessage = "stockPhysicalInventoryDraft.submitInvalidActive";
+                break;
               } else if (
                 vm.validateQuantity(item) ||
                 vm.validateUnaccountedQuantity(item)
               ) {
                 errorMessage = "stockPhysicalInventoryDraft.submitInvalid";
-                break; // Exit the loop early if a quantity error is found
+                break;
               }
             }
           }
         });
       });
 
-      return errorMessage; // Returns the first error found or null if none
+      return errorMessage;
     }
-    // Helper function to check if an object has a valid quantity property
+
     function hasValidQuantity(obj) {
       return (
         obj &&
@@ -1004,8 +1030,8 @@
         {
           facilityCode: facility.code,
           facilityName: facility.name,
-          program: program.name,
-        },
+          program: program.name
+        }
       );
       vm.reasons = reasons;
       vm.stateParams = $stateParams;
@@ -1026,7 +1052,7 @@
         });
 
         var seenIds = {};
-        //Only add items the facility actually stocks (stockOnHand is not null)
+        // Only add items the facility actually stocks (stockOnHand is not null)
         var facilityStockedIds = {};
         draft.lineItems.forEach(function(item) {
           if (item.stockOnHand !== null && item.stockOnHand !== undefined) {
@@ -1048,6 +1074,17 @@
         if (vm.itemsSelectedForCyclic.length > 0) {
           regroupCyclicItems();
         }
+
+        // Reuse confirmDiscardService from the receive page — intercepts any
+        // navigation away and shows a confirmation modal warning the user that
+        // their count will be lost if they leave without submitting.
+        // needToConfirm is always true for Cyclic since there is no save —
+        // the only way to preserve the count is to submit.
+        $scope.needToConfirm = true;
+        confirmDiscardService.register(
+          $scope,
+          'openlmis.stockmanagement.stockCardSummaries'
+        );
       }
 
       vm.hasLot = _.any(draft.lineItems, function (item) {
@@ -1058,22 +1095,24 @@
         item = quantityUnitCalculateService.recalculateInputQuantity(
           item,
           item.orderable.netContent,
-          true,
+          true
         );
         item.unaccountedQuantity =
           stockReasonsCalculations.calculateUnaccounted(
             item,
-            item.stockAdjustments,
+            item.stockAdjustments
           );
-          if (vm.stateParams.physicalInventoryType === 'Cyclic' && item.quantity === -1) {
-              item.quantity = null;
-          }
+        // Convert -1 back to null for display — -1 is only used as the
+        // server-persisted marker for "added but not yet counted" in Cyclic.
+        if (vm.stateParams.physicalInventoryType === 'Cyclic' && item.quantity === -1) {
+          item.quantity = null;
+        }
       });
 
       if (vm.stateParams.physicalInventoryType === "Major") {
         vm.updateProgress();
         var orderableGroups = orderableGroupService.groupByOrderableId(
-          draft.lineItems,
+          draft.lineItems
         );
         vm.showVVMStatusColumn =
           orderableGroupService.areOrderablesUseVvm(orderableGroups);
@@ -1085,10 +1124,10 @@
           function (newList) {
             vm.groupedCategories = $filter("groupByProgramProductCategory")(
               newList,
-              vm.program.id,
+              vm.program.id
             );
           },
-          true,
+          true
         );
 
         if (!$stateParams.noReload) {
@@ -1111,13 +1150,20 @@
       lineItem.unaccountedQuantity =
         stockReasonsCalculations.calculateUnaccounted(
           lineItem,
-          lineItem.stockAdjustments,
+          lineItem.stockAdjustments
         );
-      if (!lineItem.isNewProduct) {
-        draft.$modified = true;
-        vm.cacheDraft();
-      }
+      
+       if ($stateParams.physicalInventoryType !== 'Cyclic') {
+            draft.$modified = true;
+            vm.cacheDraft();
+        }
     }
+
+    vm.debugLineItem = function(lineItem) {
+    console.log('[REASONS DEBUG] lineItem:', lineItem);
+    console.log('[REASONS DEBUG] orderable:', lineItem ? lineItem.orderable : 'undefined');
+    console.log('[REASONS DEBUG] netContent:', lineItem && lineItem.orderable ? lineItem.orderable.netContent : 'undefined');
+};
 
     /**
      * @ngdoc method
@@ -1148,7 +1194,7 @@
      */
     function getPrintUrl(id) {
       return stockmanagementUrlFactory(
-        "/api/physicalInventories/" + id + "?format=pdf",
+        "/api/physicalInventories/" + id + "?format=pdf"
       );
     }
 
@@ -1209,7 +1255,7 @@
       return quantityUnitCalculateService.recalculateSOHQuantity(
         quantity,
         netContent,
-        vm.showInDoses(),
+        vm.showInDoses()
       );
     }
 
@@ -1222,14 +1268,15 @@
      * Populates array of line items for cyclic inventory, and groups them by category
      */
     function selectProductForCyclic() {
-      const productId = vm.selectedProductForCyclic.orderable.id;
-      const productName = vm.selectedProductForCyclic.orderable.fullProductName;
-      displayLineItemsGroup.forEach((group) => {
+      var productId = vm.selectedProductForCyclic.orderable.id;
+      var productName = vm.selectedProductForCyclic.orderable.fullProductName;
+
+      displayLineItemsGroup.forEach(function(group) {
         if (group[0].orderable.fullProductName === productName) {
           if (
-            !vm.itemsSelectedForCyclic.some(
-              (value) => value[0].orderable.id === productId,
-            )
+            !vm.itemsSelectedForCyclic.some(function(value) {
+              return value[0].orderable.id === productId;
+            })
           ) {
             vm.itemsSelectedForCyclic.push(group);
           }
@@ -1237,7 +1284,7 @@
       });
       vm.groupedCategories = $filter("groupByProgramProductCategory")(
         vm.itemsSelectedForCyclic,
-        vm.program.id,
+        vm.program.id
       );
     }
 
