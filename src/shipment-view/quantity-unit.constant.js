@@ -4,7 +4,7 @@
 
     angular
         .module('shipment-view')
-        .constant('QUANTITY_UNIT', units());
+        .constant('SHIPMENT_QUANTITY_TYPE', units());
 
     function units() {
         var values = {

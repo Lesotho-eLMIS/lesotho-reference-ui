@@ -4,15 +4,15 @@
 
     angular
         .module('shipment-view')
-        .controller('QuantityUnitToggleController', QuantityUnitToggleController);
+        .controller('ShipmentQuantityTypeToggleController', ShipmentQuantityTypeToggleController);
 
-    QuantityUnitToggleController.$inject = [
-        'messageService', 'QUANTITY_UNIT', 'localStorageService'
+    ShipmentQuantityTypeToggleController.$inject = [
+        'messageService', 'SHIPMENT_QUANTITY_TYPE', 'localStorageService'
     ];
 
     var QUANTITY_UNIT_KEY = 'shipmentFillQuantityUnit';
 
-    function QuantityUnitToggleController(messageService, QUANTITY_UNIT, localStorageService) {
+    function ShipmentQuantityTypeToggleController(messageService, SHIPMENT_QUANTITY_TYPE, localStorageService) {
 
         var vm = this;
 
@@ -22,15 +22,18 @@
 
         function onInit() {
             vm.quantityUnits = [
-                QUANTITY_UNIT.PACKS,
-                QUANTITY_UNIT.UNITS
+                SHIPMENT_QUANTITY_TYPE.PACKS,
+                SHIPMENT_QUANTITY_TYPE.UNITS
             ];
 
-            vm.quantityUnit = getCachedQuantityUnit(localStorageService.get(QUANTITY_UNIT_KEY), QUANTITY_UNIT);
+            vm.quantityUnit = getCachedQuantityUnit(
+                localStorageService.get(QUANTITY_UNIT_KEY),
+                SHIPMENT_QUANTITY_TYPE
+            );
         }
 
         function getMessage(unit) {
-            return messageService.get(QUANTITY_UNIT.$getDisplayName(unit));
+            return messageService.get(SHIPMENT_QUANTITY_TYPE.$getDisplayName(unit));
         }
 
         function onChange() {
@@ -38,11 +41,12 @@
         }
     }
 
-    function getCachedQuantityUnit(cachedQuantityUnit, QUANTITY_UNIT) {
-        if (cachedQuantityUnit === QUANTITY_UNIT.PACKS || cachedQuantityUnit === QUANTITY_UNIT.UNITS) {
+    function getCachedQuantityUnit(cachedQuantityUnit, SHIPMENT_QUANTITY_TYPE) {
+        if (cachedQuantityUnit === SHIPMENT_QUANTITY_TYPE.PACKS ||
+            cachedQuantityUnit === SHIPMENT_QUANTITY_TYPE.UNITS) {
             return cachedQuantityUnit;
         }
 
-        return QUANTITY_UNIT.PACKS;
+        return SHIPMENT_QUANTITY_TYPE.PACKS;
     }
 })();

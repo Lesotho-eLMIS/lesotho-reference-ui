@@ -8,13 +8,13 @@
 
     ShipmentViewController.$inject = [
         'shipment', 'loadingModalService', '$state', '$window', 'fulfillmentUrlFactory',
-        'messageService', 'accessTokenFactory', 'updatedOrder', 'QUANTITY_UNIT', 'tableLineItems',
+        'messageService', 'accessTokenFactory', 'updatedOrder', 'SHIPMENT_QUANTITY_TYPE', 'tableLineItems',
         'VVM_STATUS'
     ];
 
     function ShipmentViewController(shipment, loadingModalService, $state, $window,
                                     fulfillmentUrlFactory, messageService, accessTokenFactory,
-                                    updatedOrder, QUANTITY_UNIT, tableLineItems, VVM_STATUS) {
+                                    updatedOrder, SHIPMENT_QUANTITY_TYPE, tableLineItems, VVM_STATUS) {
 
         var vm = this;
 
@@ -107,8 +107,8 @@
 
         function getQuantityTypeOptions() {
             return [
-                QUANTITY_UNIT.PACKS,
-                QUANTITY_UNIT.UNITS
+                SHIPMENT_QUANTITY_TYPE.PACKS,
+                SHIPMENT_QUANTITY_TYPE.UNITS
             ];
         }
 
