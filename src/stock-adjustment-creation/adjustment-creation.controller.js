@@ -524,6 +524,17 @@
         }
     };
 
+    vm.referenceNumberChanged = function() {
+        for (var i = 0; i < ReferenceNumbers.length; i++) {
+            if (ReferenceNumbers[i].referenceNumber === vm.referenceNumber) {
+                vm.addedLineItems.forEach(function(lineItem) {
+                    lineItem.totalCartonNumber =
+                        ReferenceNumbers[i].cartonsQuantityAccepted;
+                });
+            }
+        }
+    };
+
 
     /**
      * @ngdoc method
@@ -1058,7 +1069,8 @@
                   // Put special options first, then sorted real batches
                   lots = specialLots.concat(realLots);
                   var item = orderableGroup[0];
-                  item.requisition = $stateParams.requisitionToReceiveAgainst.id;
+                  item.requisition = $stateParams.requisitionToReceiveAgainst.id
+                      || $stateParams.requisitionToReceiveAgainst;
                   vm.addedLineItems.push(_.extend({
                       $errors: {},
                       $previewSOH: item.stockOnHand

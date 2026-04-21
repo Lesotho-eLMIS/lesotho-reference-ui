@@ -144,7 +144,7 @@
                 program: vm.program,
                 facility: vm.facility,
                 supervised: vm.isSupervised,
-                requisitionToReceiveAgainst: vm.requisitionToReceiveAgainst
+                requisitionToReceiveAgainst: vm.requisitionToReceiveAgainst.id
              });
             }
             
