@@ -58,7 +58,7 @@
                 programs: function(programService) {
                     return programService.getAll();
                 },
-                orders: function(paginationService, orderRepository, $stateParams, ORDER_STATUS) {
+                orders: function(paginationService, orderRepository, $stateParams, ORDER_STATUS, facility) {
                     return paginationService.registerUrl($stateParams, function(stateParams) {
                         var availableStatuses = [ORDER_STATUS.FULFILLING, ORDER_STATUS.ORDERED],
                             copy = angular.copy(stateParams);
@@ -70,6 +70,8 @@
                         } else if (!stateParams.status || availableStatuses.indexOf(stateParams.status) < 0) {
                             copy.status = availableStatuses;
                         }
+                        // Supplying Facility Filter (BACKEND LEVEL)
+                        copy.supplyingFacilityId = facility.id;
                         return orderRepository.search(copy);
                     });
                 }

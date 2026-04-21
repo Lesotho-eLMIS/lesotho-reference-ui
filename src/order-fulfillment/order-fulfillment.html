@@ -36,7 +36,8 @@
       <td class="col-emergency">
         <i ng-class="{'icon-ok': order.emergency}"></i>
       </td>
-      <td>{{order.orderCode}}</td>
+      <!-- <td>{{order.orderCode}}</td> -->
+      <td>{{order.orderCode && (order.orderCode.indexOf('ORDER-') === 0 ? ('REQUEST-' + order.orderCode.substring(6)) : order.orderCode)}}</td>
       <!-- <td>{{order.status}}</td> -->
 
       <td ng-show="order.status=='ORDERED'">REQUESTED</td>

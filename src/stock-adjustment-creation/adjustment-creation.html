@@ -100,8 +100,16 @@
                             {{lineItem.displayLotMessage}}
                         </button>
                     </td>
+
                     <td ng-show="vm.hasLot && !vm.canEditLot(lineItem)">
-                        {{lineItem.displayLotMessage}}
+                        <select ng-if="lineItem.$lots && lineItem.$lots.length > 0"
+                            ng-model="lineItem.lot"
+                            ng-options="lot.lotCode for lot in lineItem.$lots track by lot.lotCode"
+                            ng-change="vm.lotSelectionChanged(lineItem)">
+                        </select>
+                        <span ng-if="!lineItem.$lots || lineItem.$lots.length === 0">
+                            {{lineItem.displayLotMessage}}
+                        </span>
                     </td>
                     <td ng-show="vm.hasLot">{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
                     <td align="right">{{vm.recalculateSOHQuantity(lineItem.$previewSOH, lineItem.orderable.netContent)}}</td>
@@ -178,9 +186,12 @@
                             type="text" style="width: 100px;"></td> 
 
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input class="form-control"
-                            value="{{ 0 | openlmisCurrency}}" type="text" style="width: 50px;"
+                            type="number" min="0" step="0.01" style="width: 50px;"
                             ng-model="lineItem.unitPrice"
-                            ng-show="lineItem.assignment.name.includes('NDSO')"></td>
+                            ng-change="vm.validateUnitPrice(lineItem)"
+                            ng-show="lineItem.assignment.name.includes('NDSO')"
+                            oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')"
+                            openlmis-invalid="{{lineItem.$errors.unitPriceInvalid ? lineItem.$errors.unitPriceInvalid : ''}}"></td>
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input type="text" readonly
                             style="width: 85px;"
                             value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | openlmisCurrency}}"

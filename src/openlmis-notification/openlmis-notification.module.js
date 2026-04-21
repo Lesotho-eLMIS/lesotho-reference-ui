@@ -26,7 +26,8 @@
      */
     angular.module('openlmis-notification', [
         'openlmis-templates',
-        'ui.router'
+        'ui.router',
+        'ngSanitize'
     ]);
 
 })();

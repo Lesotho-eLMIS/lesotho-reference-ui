@@ -1,11 +1,18 @@
 {
   "service": {
     "Name": "reference-ui",
+    "Id": "reference-ui-service",
     "Port": 80,
-    "Tags": ["openlmis-service"]
+    "Tags": ["openlmis-service"],
+    "check": {
+      "interval": "30s",
+      "http": "http://HOST:PORT/",
+      "timeout": "5s",
+      "deregisterCriticalServiceAfter": "10m"
+    }
   },
   "path": [
-    "",
+    "/",
     "<all>"
   ]
 }

@@ -1,14 +1,15 @@
 <h2 ng-show="vm.facility">{{'stockPhysicalInventory.title' | message: {'facility': vm.facility.name} }}</h2>
 
-<div>
-  <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()" physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
-</div>
+
 
 <form class="sidebar">
-  <openlmis-facility-program-select
-    is-supervised="vm.isSupervised"
-    facility="vm.facility"
-    program="vm.program"
+
+  <div>
+    <physical-inventory-type-toggle class="is-primary" ng-click="vm.onChangePhysicalInventoryType()"
+      physical-inventory-type="vm.physicalInventoryType"></physical-inventory-type-toggle>
+  </div>
+
+  <openlmis-facility-program-select is-supervised="vm.isSupervised" facility="vm.facility" program="vm.program"
     module="'stock-card-summary-list'">
   </openlmis-facility-program-select>
 

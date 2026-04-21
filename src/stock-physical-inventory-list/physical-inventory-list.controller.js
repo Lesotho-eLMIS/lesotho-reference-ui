@@ -183,7 +183,10 @@
                 alertService.error('No draft found');
                 return;
             }
-            var selectedDraft = draft;
+
+            // Get the draft , prefer passed draft, 
+            // then find existing, else create new
+            var selectedDraft = draft || vm.getDraft();
 
             vm.drafts.forEach(function (item) {
                 if (item.programId === selectedDraft.programId && selectedDraft.isStarter === true) {

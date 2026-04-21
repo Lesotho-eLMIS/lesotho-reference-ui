@@ -34,7 +34,7 @@
     'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS', 'hasPermissionToAddNewLot',
     'LotResource', '$q', 'editLotModalService', 'moment', 'rejectionReasonService', 'receivingAddDiscrepancyModalService',
     'complaintFormModalService', 'suppliers', 'ReferenceNumbers', 'facilityWithType',
-    'QUANTITY_UNIT', 'quantityUnitCalculateService'];
+    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems'];
 
   function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program, facility,
     orderableGroups, reasons, confirmService, messageService, user, adjustmentType, srcDstAssignments,
@@ -42,7 +42,7 @@
     MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService, alertService, dateUtils, displayItems, ADJUSTMENT_TYPE,
     UNPACK_REASONS, REASON_TYPES, STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService,
     moment, rejectionReasonService, receivingAddDiscrepancyModalService, complaintFormModalService,
-    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService) {
+    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems) {
     var vm = this,
       previousAdded = {};
 
@@ -488,6 +488,43 @@
       initiateNewLotObject();
     }
 
+    vm.lotSelectionChanged = function(lineItem) {
+        if (lineItem.lot && lineItem.lot.lotCode === 'Add new batch') {
+            lineItem.lot = {
+                lotCode: '',
+                expirationDate: null,
+                active: true,
+                tradeItemId: lineItem.orderable.identifiers.tradeItem
+            };
+            lineItem.$isNewItem = true;
+            editLotModalService
+                .show(lineItem, vm.allItems, vm.addedLineItems)
+                .then(function() {
+                    // Reuse existing method with isNewLot=true which sets SOH to 0
+                    var newItem = orderableGroupService.findByLotInOrderableGroup(
+                        lineItem.$orderableGroup,
+                        lineItem.lot,
+                        true // isNewLot = true → SOH set to 0 automatically
+                    );
+                    if (newItem) {
+                        lineItem.$previewSOH = newItem.stockOnHand; // Will be 0
+                        lineItem.stockOnHand = newItem.stockOnHand; // Will be 0
+                    }
+                });
+            return;
+        }
+        var selectedItem = lineItem.$orderableGroup.find(function(groupItem) {
+            return groupItem.lot && lineItem.lot &&
+                groupItem.lot.lotCode === lineItem.lot.lotCode;
+        });
+        if (selectedItem) {
+            lineItem.$previewSOH = selectedItem.stockOnHand;
+            lineItem.stockOnHand = selectedItem.stockOnHand;
+            lineItem.lot.expirationDate = selectedItem.lot.expirationDate;
+        }
+    };
+
+
     /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
@@ -526,7 +563,7 @@
      * @description
      * Submit all added items.
      */
-    vm.submit = function () {
+   vm.submit = function () {
 
       $scope.$broadcast('openlmis-form-submit');
       if (validateAllAddedItems()) {
@@ -544,7 +581,7 @@
       }
 
     };
-
+   
     /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
@@ -609,12 +646,28 @@
       return _.isUndefined(value) || _.isNull(value);
     }
 
+    vm.validateUnitPrice = function (lineItem) {
+      if (lineItem.unitPrice === undefined || lineItem.unitPrice === null || lineItem.unitPrice === '') {
+        lineItem.$errors.unitPriceInvalid = false;
+      } else {
+        var price = parseFloat(lineItem.unitPrice);
+        if (isNaN(price) || price < 0) {
+          lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceInvalid');
+        } else {
+          lineItem.unitPrice = price;
+          lineItem.$errors.unitPriceInvalid = false;
+        }
+      }
+      return lineItem;
+    };
+
     function validateAllAddedItems() {
       _.each(vm.addedLineItems, function (item) {
         vm.validateQuantity(item);
         vm.validateDate(item);
         vm.validateAssignment(item);
         vm.validateReason(item);
+        vm.validateUnitPrice(item);
         if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
@@ -942,8 +995,8 @@
       vm.reasons = reasons;
       vm.showReasonDropdown =
         adjustmentType.state !== ADJUSTMENT_TYPE.KIT_UNPACK.state;
-
-      /* eLMIS Lesotho : start */
+ 
+        /* eLMIS Lesotho : start */
       // vm.showPrepackingAttributes =
       //   adjustmentType.state === ADJUSTMENT_TYPE.PREPACK.state;
       vm.showDeliveryNoteAttributes =
@@ -954,9 +1007,9 @@
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
 
-      // vm.addedLineItems = $stateParams.addedLineItems || [];
-      vm.addedLineItems = [];
+      vm.addedLineItems = $stateParams.addedLineItems || [];
       $stateParams.displayItems = displayItems;
+
       // vm.displayItems = $stateParams.displayItems || [];
       vm.displayItems = [];
       vm.keyword = $stateParams.keyword;
@@ -964,6 +1017,62 @@
 
       vm.orderableGroups = orderableGroups;
       buildOrderableGroupLookups();
+
+      // Auto-populate from requisition line items if receiving against a requisition
+      if (adjustmentType.state === 'receive'
+          && !vm.servicePointUser
+          && requisitionLineItems
+          && requisitionLineItems.length > 0) {
+          var defaultAssignment = srcDstAssignments.find(function(a) {
+              return a.name === 'National Drug Service Organisation (NDSO)';
+          });
+          var defaultReason = vm.reasons.find(function(r) {
+              return r.name === 'Receipts';
+          });
+          requisitionLineItems.filter(function(lineItem) {
+              return !lineItem.skipped;
+          }).forEach(function(lineItem) {
+              var orderableGroup = vm.orderableGroupMap[lineItem.orderable.id];
+              if (orderableGroup && orderableGroup.length > 0) {
+                  var lots = orderableGroupService.lotsOf(
+                      orderableGroup,
+                      hasPermissionToAddNewLot
+                  );
+                  // Sort only real batches (those with lotCode that are not special options)
+                  var specialOptions = ['Add new batch', 'No batch defined'];
+                  var specialLots = lots.filter(function(lot) {
+                      return specialOptions.indexOf(lot.lotCode) !== -1;
+                  });
+                  var realLots = lots.filter(function(lot) {
+                      return specialOptions.indexOf(lot.lotCode) === -1;
+                  });
+                  realLots.sort(function(a, b) {
+                      if (!a.expirationDate) {
+                          return 1;
+                      }
+                      if (!b.expirationDate) {
+                          return -1;
+                      }
+                      return new Date(b.expirationDate) - new Date(a.expirationDate);
+                  });
+                  // Put special options first, then sorted real batches
+                  lots = specialLots.concat(realLots);
+                  var item = orderableGroup[0];
+                  item.requisition = $stateParams.requisitionToReceiveAgainst.id;
+                  vm.addedLineItems.push(_.extend({
+                      $errors: {},
+                      $previewSOH: item.stockOnHand
+                  }, item, copyDefaultValue(), {
+                      assignment: defaultAssignment || null,
+                      reason: defaultReason || null,
+                      $lots: lots,
+                      $orderableGroup: orderableGroup
+                  }));
+              }
+          });
+          vm.displayItems = vm.addedLineItems;
+      }
+      //////////////////////////////////////////////////
       vm.hasLot = false;
       vm.orderableGroups.forEach(function (group) {
         vm.hasLot =
@@ -976,6 +1085,9 @@
       );
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
       resetOrderableSelectionState();
+
+
+      
     }
 
     function initiateNewLotObject() {
