@@ -71,7 +71,10 @@
          */
         vm.programs = programs;
 
-        vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
+        //vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
+
+        //Default to Major drafts
+        vm.drafts = drafts[0];
 
         $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
 
@@ -86,7 +89,7 @@
 
                 var draft = vm.getDraft();
                
-                if (draft.id) {
+                if (draft && draft.id) {
                     draft.isStarter = false;
                     return draft;
                 }

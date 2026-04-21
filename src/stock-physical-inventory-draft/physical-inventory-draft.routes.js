@@ -50,13 +50,18 @@
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
-                    var currentDraft =  undefined; // getDraftFromParent(drafts, $stateParams);
-                    if($stateParams.supervised){
-                        currentDraft = physicalInventoryFactory.getDraft($stateParams.program.id,$stateParams.facility.id);
-                    }else{
-                        currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    if ($stateParams.supervised) {
+                        // getDraft() is async — chain .then() so getPhysicalInventory
+                        // receives the resolved draft object, not the Promise itself.
+                        return physicalInventoryFactory
+                            .getDraft($stateParams.program.id, $stateParams.facility.id)
+                            .then(function(draft) {
+                                return physicalInventoryFactory.getPhysicalInventory(draft);
+                            });
                     }
-                    //var currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    var currentDraft = getDraftFromParent(drafts, $stateParams);
                     return physicalInventoryFactory.getPhysicalInventory(currentDraft);
                 },
                 program: function($stateParams, programService, draft) {
@@ -88,13 +93,20 @@
                             draft.lineItems, $stateParams.includeInactive === 'true');
                         var lineItems = $filter('orderBy')(searchResult, 'orderable.productCode');
 
+                        var isCyclic = $stateParams.physicalInventoryType === 'Cyclic';
+
                         var groups = _.chain(lineItems).filter(function(item) {
                             var hasQuantity = !(_.isNull(item.quantity) || _.isUndefined(item.quantity));
                             var hasSoh = !_.isNull(item.stockOnHand);
-                            return item.isAdded || hasQuantity || hasSoh;
+                            // For Cyclic counts the table must start blank — only show items
+                            // the user has explicitly added (isAdded) or already counted (hasQuantity).
+                            // hasSoh alone would pre-load every product at the facility.
+                            return isCyclic
+                                ? (item.isAdded || hasQuantity)
+                                : (item.isAdded || hasQuantity || hasSoh);
                         })
                             .each(function(lineItem) {
-                                if (lineItem.quantity === -1) {
+                                if (lineItem.quantity === -1 && !isCyclic) {
                                     lineItem.quantity = null;
                                 }
                                 lineItem.isAdded = true;

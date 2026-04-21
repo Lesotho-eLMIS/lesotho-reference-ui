@@ -41,7 +41,7 @@
             getDraftsForCyclic: getDraftsForCyclic,
             getDraft: getDraft,
             getDraftByProgramAndFacility: getDraftByProgramAndFacility,
-            getDraftByProgramAndFacility: getDraftByProgramAndFacilityForCyclic,
+            getDraftByProgramAndFacilityForCyclic: getDraftByProgramAndFacilityForCyclic,
             getPhysicalInventory: getPhysicalInventory,
             saveDraft: saveDraft
         };
@@ -111,14 +111,19 @@
          * @return {Promise}          Physical inventory promise
          */
         function getDraftByProgramAndFacilityForCyclic(programId, facilityId) {
-            var draftToReturn = {
-                            programId: programId,
-                            facilityId: facilityId,
-                            isStarter: true,
-                            lineItems: []
-                        };
-            return draftToReturn;
-                
+            return physicalInventoryService.getDraft(programId, facilityId)
+                .then(function(response) {
+                    var draftToReturn = {
+                        programId: programId,
+                        facilityId: facilityId,
+                        isStarter: true,
+                        lineItems: []
+                    };
+                    if (draftExists(response)) {
+                        draftToReturn.id = response[0].id;
+                    }
+                    return draftToReturn;
+                });
         }
 
 
