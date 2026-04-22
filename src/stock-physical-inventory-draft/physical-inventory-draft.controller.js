@@ -501,11 +501,22 @@
           $stateParams.facility = vm.facility;
           $stateParams.noReload = true;
 
-          // Only cache for Major — Cyclic has no draft persistence
-          if ($stateParams.physicalInventoryType !== 'Cyclic') {
-            draft.$modified = true;
-            vm.cacheDraft();
+          draft.$modified = true;
+          if ($stateParams.physicalInventoryType === 'Cyclic') {
+              // Set isAdded=true on newly added items so the displayLineItemsGroup
+              // filter shows them when the cached draft is returned on noReload.
+              draft.lineItems.forEach(function(item) {
+                  if (item.$isNewItem) {
+                      item.isAdded = true;
+                  }
+              });
+              // Give the Cyclic draft a stable cache key using program+facility
+              // since it has no server draft id.
+              if (!draft.id) {
+                  draft.id = 'cyclic-' + draft.programId + '-' + draft.facilityId;
+              }
           }
+          vm.cacheDraft();
 
           $state.go($state.current.name, $stateParams, {
             reload: $state.current.name
