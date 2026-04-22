@@ -17,7 +17,9 @@
             <div class="form-inline" ng-if="vm.showDeliveryNoteAttributes && !vm.servicePointUser">
                 <label for="referenceNumberSelect">{{vm.key('referenceNumber') | message}}</label>
                 <select id="referenceNumberSelect" ng-model="vm.referenceNumber"
-                    ng-options="value for value in vm.references" required>
+                    ng-options="value for value in vm.references"
+                    ng-change="vm.referenceNumberChanged()"
+                    required>
                 </select>
             </div>
             <form class="form-inline" ng-submit="vm.addProduct()" name="productForm">

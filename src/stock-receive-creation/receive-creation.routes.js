@@ -25,7 +25,7 @@
     function routes($stateProvider, STOCKMANAGEMENT_RIGHTS, SEARCH_OPTIONS, ADJUSTMENT_TYPE) {
         $stateProvider.state('openlmis.stockmanagement.receive.creation', {
             isOffline: true,
-            url: '/:programId/create?page&size&keyword',
+            url: '/:programId/create?page&size&keyword&requisitionToReceiveAgainst',
             views: {
                 '@openlmis': {
                     controller: 'StockAdjustmentCreationController',
@@ -133,16 +133,18 @@
                            return references;
                         });
                 },
-                //Add a new resolve called requisitionLineItems that fetches the full requisition and returns its line items
                 requisitionLineItems: function($stateParams, requisitionService) {
-                    if ($stateParams.requisitionToReceiveAgainst) {
-                        return requisitionService.get(
-                            $stateParams.requisitionToReceiveAgainst.id
-                        ).then(function(requisition) {
-                            return requisition.requisitionLineItems || [];
-                        }).catch(function() {
-                            return [];
-                        });
+                    var requisitionId = $stateParams.requisitionToReceiveAgainst
+                        ? ($stateParams.requisitionToReceiveAgainst.id
+                            || $stateParams.requisitionToReceiveAgainst)
+                        : null;
+                    if (requisitionId) {
+                        return requisitionService.get(requisitionId)
+                            .then(function(requisition) {
+                                return requisition.requisitionLineItems || [];
+                            }).catch(function() {
+                                return [];
+                            });
                     }
                     return [];
                 },
