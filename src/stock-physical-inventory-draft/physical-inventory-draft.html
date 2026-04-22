@@ -41,7 +41,7 @@
                     class="cyclic-tab-btn"
                     ng-class="{'cyclic-tab-btn--active': vm.productSelectionMode === 'select'}"
                     ng-click="vm.toggleProductSelectionMode('select')">
-                {{'stockPhysicalInventoryDraft.selectExistingProduct' | message}}
+                {{'stockPhysicalInventoryDraft.searchExistingProduct' | message}}
             </button>
             <!-- Tab 2: Opens the standard Add Products modal (full catalogue with batch picker) -->
             <button type="button"
@@ -53,7 +53,7 @@
 
         <!-- Select Existing Product Panel (only shown when tab 1 is active) -->
         <div ng-if="vm.productSelectionMode === 'select'" class="cyclic-panel">
-            <p class="cyclic-panel__hint">{{'stockPhysicalInventoryDraft.selectExistingProductDesc' | message}}</p>
+            <p class="cyclic-panel__hint">{{'stockPhysicalInventoryDraft.searchExistingProductDesc' | message}}</p>
             <div class="cyclic-search-row">
                 <input type="text"
                        class="cyclic-search-input"
@@ -87,9 +87,11 @@
         </div>
 
     </div>
-    <saving-indicator ng-if="vm.stateParams.physicalInventoryType === 'Major'" 
-                  class="draft-indicator" 
-                  object="vm.dataChanged"/>
+
+    <saving-indicator ng-if="vm.stateParams.physicalInventoryType === 'Major'"
+                      class="draft-indicator"
+                      object="vm.dataChanged"/>
+
     <table>
         <caption ng-if="!vm.displayLineItemsGroup.length && !vm.stateParams.keyword && vm.stateParams.physicalInventoryType !== 'Cyclic'">
             {{'stockPhysicalInventoryDraft.noLineItems' | message}}
@@ -169,7 +171,7 @@
                         line-item="lineItem"
                         reasons="vm.reasons"
                         ng-class="{'has-popover is-invalid': vm.validateOnPageChange()}"
-                        ng-change="vm.debugLineItem(lineItem); vm.checkUnaccountedStockAdjustments(lineItem); vm.validateUnaccountedQuantity(lineItem)"
+                        ng-change="vm.checkUnaccountedStockAdjustments(lineItem); vm.validateUnaccountedQuantity(lineItem)"
                         />
                 </td>
                 <td align="right"

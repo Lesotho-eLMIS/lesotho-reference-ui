@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 (function() {
@@ -75,10 +75,11 @@
         /**
          * @ngdoc method
          * @methodOf stock-physical-inventory.physicalInventoryFactory
-         * @name getDrafts
+         * @name getDraftsForCyclic
          *
          * @description
-         * Retrieves physical inventory drafts by facility and program.
+         * Retrieves physical inventory draft stubs for Cyclic count by facility and program.
+         * Each stub has empty lineItems so the Cyclic count always starts blank.
          *
          * @param  {Array}   programIds An array of program UUID
          * @param  {String}  facility   Facility UUID
@@ -101,32 +102,30 @@
         /**
          * @ngdoc method
          * @methodOf stock-physical-inventory.physicalInventoryFactory
-         * @name getDraftByProgramAndFacility
+         * @name getDraftByProgramAndFacilityForCyclic
          *
          * @description
-         * Retrieves simple physical inventory draft by facility and program.
+         * Returns a Cyclic physical inventory draft stub for the given facility and program.
+         * Cyclic count is submit-only and always starts blank — the stub has empty lineItems
+         * and no id so the Cyclic page never pre-loads line items from the server.
+         *
+         * The id is intentionally NOT copied from the server draft. Copying the Major draft id
+         * onto the Cyclic stub caused the Major-in-progress block check in the list controller
+         * to always find a draft, incorrectly blocking Cyclic counts even when no Major count
+         * was in progress.
          *
          * @param  {String}  programId  Program UUID
          * @param  {String}  facilityId Facility UUID
-         * @return {Promise}          Physical inventory promise
+         * @return {Object}             Cyclic draft stub with empty lineItems
          */
         function getDraftByProgramAndFacilityForCyclic(programId, facilityId) {
-            return physicalInventoryService.getDraft(programId, facilityId)
-                .then(function(response) {
-                    var draftToReturn = {
-                        programId: programId,
-                        facilityId: facilityId,
-                        isStarter: true,
-                        lineItems: []
-                    };
-                    if (draftExists(response)) {
-                        draftToReturn.id = response[0].id;
-                    }
-                    return draftToReturn;
-                });
+            return {
+                programId: programId,
+                facilityId: facilityId,
+                isStarter: true,
+                lineItems: []
+            };
         }
-
-
 
         /**
          * @ngdoc method
@@ -138,7 +137,7 @@
          *
          * @param  {String}  programId  Program UUID
          * @param  {String}  facilityId Facility UUID
-         * @return {Promise}          Physical inventory promise
+         * @return {Promise}            Physical inventory promise
          */
         function getDraftByProgramAndFacility(programId, facilityId) {
             return physicalInventoryService.getDraft(programId, facilityId)
@@ -170,10 +169,12 @@
          *
          * @description
          * Retrieves physical inventory draft by facility and program.
+         * Fetches both stock products and the server draft, then merges them.
+         * Used for supervised facilities and whenever fresh server data is needed.
          *
          * @param  {String}  programId  Program UUID
          * @param  {String}  facilityId Facility UUID
-         * @return {Promise}          Physical inventory promise
+         * @return {Promise}            Physical inventory promise
          */
         function getDraft(programId, facilityId) {
             return $q.all([
@@ -218,9 +219,11 @@
          * @name getPhysicalInventory
          *
          * @description
-         * Retrieves physical inventory by id.
+         * Retrieves physical inventory by id. Checks the local cache first —
+         * if the cached draft has $modified=true (e.g. after Add Product), returns
+         * the cached version. Otherwise returns the draft object passed in.
          *
-         * @param  {String}  id       Draft UUID
+         * @param  {Object}  draft    Physical inventory draft object with id
          * @return {Promise}          Physical inventory promise
          */
         function getPhysicalInventory(draft) {
@@ -250,7 +253,7 @@
          * @description
          * Performs logic on physical inventory draft and calls save method from draft service.
          *
-         * @param  {draft}   draft Physical Inventory Draft to be saved
+         * @param  {Object}  draft Physical Inventory Draft to be saved
          * @return {Promise}       Saved draft
          */
         function saveDraft(draft) {

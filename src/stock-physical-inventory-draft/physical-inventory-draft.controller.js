@@ -497,21 +497,37 @@
       addProductsModalService
         .show(notYetAddedItems, draft, vm.showInDoses())
         .then(function () {
-          $stateParams.program = vm.program;
-          $stateParams.facility = vm.facility;
+          $stateParams.program = $stateParams.program || vm.program;
+          $stateParams.facility = $stateParams.facility || vm.facility;
           $stateParams.noReload = true;
 
-          // Only cache for Major — Cyclic has no draft persistence
-          if ($stateParams.physicalInventoryType !== 'Cyclic') {
-            draft.$modified = true;
-            vm.cacheDraft();
+          if ($stateParams.physicalInventoryType === 'Cyclic') {
+              draft.lineItems.forEach(function(item) {
+                  if (item.$isNewItem) {
+                      item.isAdded = true;
+                  }
+              });
           }
+          
+          draft.$modified = true;
 
-          $state.go($state.current.name, $stateParams, {
-            reload: $state.current.name
+          var ensureId = draft.id
+            ? $q.resolve()
+            : physicalInventoryService.createDraft(
+                $stateParams.program.id,
+                $stateParams.facility.id
+              ).then(function(data) {
+                  draft.id = data.id;
+                  $stateParams.id = data.id;
+              });
+          ensureId.then(function() {
+            vm.cacheDraft();
+            $state.go($state.current.name, $stateParams, {
+              reload: $state.current.name
+            });
           });
-        });
-    };
+      });
+    },
 
     /**
      * @ngdoc method
@@ -747,7 +763,8 @@
             .then(function () {
               $state.go(
                 "openlmis.stockmanagement.physicalInventory",
-                $stateParams,
+                {},
+                //$stateParams,
                 {
                   reload: true
                 }
@@ -1159,11 +1176,6 @@
         }
     }
 
-    vm.debugLineItem = function(lineItem) {
-    console.log('[REASONS DEBUG] lineItem:', lineItem);
-    console.log('[REASONS DEBUG] orderable:', lineItem ? lineItem.orderable : 'undefined');
-    console.log('[REASONS DEBUG] netContent:', lineItem && lineItem.orderable ? lineItem.orderable.netContent : 'undefined');
-};
 
     /**
      * @ngdoc method
