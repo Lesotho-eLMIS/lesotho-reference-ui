@@ -14,5 +14,6 @@
   "stockPhysicalInventory.noFacilitySelected": "Select a Facility",
   "stockPhysicalInventory.countInventory": "countInventory",
   "stockPhysicalInventory.majorCount": "Start Major Count",
-  "stockPhysicalInventory.cyclicCount": "Start Cyclic Count"
+  "stockPhysicalInventory.cyclicCount": "Start Cyclic Count",
+  "stockPhysicalInventory.majorCountInProgress": "Please complete or delete the ongoing Major count before starting a Cyclic count."
 }

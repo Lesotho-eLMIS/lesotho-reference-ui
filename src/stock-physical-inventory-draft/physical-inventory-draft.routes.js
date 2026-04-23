@@ -47,6 +47,20 @@
             resolve: {
                 draft: function($stateParams, physicalInventoryFactory, offlineService,
                     physicalInventoryDraftCacheService, drafts) {
+
+                    if ($stateParams.physicalInventoryType === 'Cyclic') {
+                        if (!$stateParams.program || !$stateParams.facility) {
+                            return {
+                                programId: undefined,
+                                facilityId: undefined,
+                                isStarter: true,
+                                lineItems: []
+                            };
+                        }
+                        return physicalInventoryFactory
+                            .getDraft($stateParams.program.id, $stateParams.facility.id);
+                    }
+                        
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
