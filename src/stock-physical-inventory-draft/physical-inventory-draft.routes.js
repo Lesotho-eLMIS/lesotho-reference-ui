@@ -47,6 +47,42 @@
             resolve: {
                 draft: function($stateParams, physicalInventoryFactory, offlineService,
                     physicalInventoryDraftCacheService, drafts) {
+
+                    // Cyclic is handled first — it has no server draft and no id.
+                    // Both noReload and normal load use the same path: check cache
+                    // using a synthetic key (program+facility), then fall back to
+                    // getDraft for a fresh server fetch on first load.
+                    // Never call getPhysicalInventory for Cyclic — it would load the
+                    // Major draft's line items since they share the same server draft id.
+                    if ($stateParams.physicalInventoryType === 'Cyclic') {
+                        if (!$stateParams.program || !$stateParams.facility) {
+                            return {
+                                programId: undefined,
+                                facilityId: undefined,
+                                isStarter: true,
+                                lineItems: []
+                            };
+                        }
+                        // Synthetic cache key — Cyclic has no server draft id so we
+                        // use program+facility as a stable identifier. vm.addProducts
+                        // sets draft.id to this same key before calling cacheDraft().
+                        var cyclicKey = 'cyclic-' +
+                            $stateParams.program.id + '-' +
+                            $stateParams.facility.id;
+                        return physicalInventoryDraftCacheService.getDraft(cyclicKey)
+                            .then(function(cached) {
+                                if (cached && cached.$modified) {
+                                    return cached;
+                                }
+                                // No modified cache — fresh load. Call getDraft to get
+                                // real stock products for this facility so Search Existing
+                                // Product and Add from Catalogue have items to show.
+                                return physicalInventoryFactory
+                                    .getDraft($stateParams.program.id, $stateParams.facility.id);
+                            });
+                    }
+
+                    // noReload=true after Add Product or Save for Major — load from cache.
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }

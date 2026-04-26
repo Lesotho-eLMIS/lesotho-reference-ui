@@ -195,8 +195,7 @@
         return;
       }
 
-      // Only include active lots — reuses the same active===true check that
-      // physicalInventoryService.search() applies internally for Major counts.
+      
       var fullGroup = draft.lineItems.filter(function(item) {
         return item.orderable.id === orderableId && item.active === true;
       });
@@ -205,12 +204,19 @@
 
       fullGroup.forEach(function(item) {
         item.isAdded = true;
-        // Do not set quantity here — leave it null for display.
-        // physicalInventoryFactory.getQuantity() will send -1 to the server
-        // when quantity is null and isAdded is true.
+
       });
 
       draft.$modified = true;
+
+      if (!draft.$serverDraftId && draft.id) {
+          draft.$serverDraftId = draft.id;
+      }
+
+      //if (!draft.id) {
+          draft.id = 'cyclic-' + draft.programId + '-' + draft.facilityId;
+      //}
+
       vm.cacheDraft();
 
       notificationService.success(messageService.get('stockPhysicalInventoryDraft.productAdded'));
@@ -501,11 +507,18 @@
           $stateParams.facility = vm.facility;
           $stateParams.noReload = true;
 
-          // Only cache for Major — Cyclic has no draft persistence
-          if ($stateParams.physicalInventoryType !== 'Cyclic') {
-            draft.$modified = true;
-            vm.cacheDraft();
+          draft.$modified = true;
+
+          if ($stateParams.physicalInventoryType === 'Cyclic') {
+              if (!draft.$serverDraftId && draft.id) {
+                  draft.$serverDraftId = draft.id;
+              }
+              
+              //if (!draft.id) {
+                  draft.id = 'cyclic-' + draft.programId + '-' + draft.facilityId;
+              //}
           }
+          vm.cacheDraft();
 
           $state.go($state.current.name, $stateParams, {
             reload: $state.current.name
@@ -655,8 +668,11 @@
                   "stockPhysicalInventoryDraft.saved"
                 );
 
-                draft.$modified = undefined;
-                vm.cacheDraft();
+                //draft.$modified = undefined;
+                //vm.cacheDraft();
+
+                // Remove the stale cache entry so the resolver fetches fresh data from the server via getPhysicalInventory.
+                physicalInventoryDraftCacheService.removeById(draft.id);
 
                 $stateParams.isAddProduct = false;
                 $stateParams.program = vm.program;
@@ -666,7 +682,7 @@
                     lineItem.$isNewItem = false;
                   }
                 });
-                $stateParams.noReload = true;
+                $stateParams.noReload = undefined;
 
                 $state.go($state.current.name, $stateParams, {
                   reload: $state.current.name
@@ -741,6 +757,22 @@
           "stockPhysicalInventoryDraft.delete"
         )
         .then(function () {
+
+          if (vm.stateParams.physicalInventoryType === 'Cyclic') {
+        // Cyclic has no server draft. Clear the local cache entry so the
+        // next Cyclic session starts fresh, then navigate back to the list.
+        // Reset $modified so the resolver does not return this stale draft.
+        draft.$modified = false;
+        vm.cacheDraft();
+        $scope.needToConfirm = false;
+        $state.go(
+          "openlmis.stockmanagement.physicalInventory",
+          $stateParams,
+          { reload: true }
+        );
+        return;
+      }
+
           loadingModalService.open();
           physicalInventoryService
             .deleteDraft(draft.id)
@@ -786,6 +818,10 @@
           draft.occurredDate = resolvedData.occurredDate;
           draft.signature = resolvedData.signature;
 
+          if (vm.stateParams.physicalInventoryType === 'Cyclic' && draft.$serverDraftId) {
+              draft.id = undefined;
+          }
+
           return saveLots(draft, function () {
             physicalInventoryService
               .submitPhysicalInventory(
@@ -812,9 +848,11 @@
                       );
                     })
                     .finally(function () {
-                      // Clear the discard confirmation flag so navigating
-                      // away after a successful submit does not show the modal.
+                      
                       $scope.needToConfirm = false;
+                      // Clear the cyclic cache after successful submit so the next session starts fresh.
+                      var cyclicKey = 'cyclic-' + draft.programId + '-' + draft.facilityId;
+                      physicalInventoryDraftCacheService.removeById(cyclicKey);
                       $state.go("openlmis.stockmanagement.stockCardSummaries", {
                         program: program.id,
                         facility: draft.facilityId,
@@ -826,7 +864,6 @@
                 function (errorResponse) {
                   loadingModalService.close();
                   alertService.error(errorResponse.data.message);
-                  physicalInventoryDraftCacheService.removeById(draft.id);
                 }
               );
           });
@@ -1126,6 +1163,7 @@
               newList,
               vm.program.id
             );
+            vm.updateProgress();
           },
           true
         );

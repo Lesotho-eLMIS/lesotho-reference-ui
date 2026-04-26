@@ -119,10 +119,6 @@
                         isStarter: true,
                         lineItems: []
                     };
-                    if (draftExists(response)) {
-                        draftToReturn.id = response[0].id;
-                    }
-                    return draftToReturn;
                 });
         }
 

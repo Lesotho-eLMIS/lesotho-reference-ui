@@ -111,8 +111,6 @@
             // }
             var programId = vm.program.id;
             return _.find(vm.drafts, function (draft) {
-                // console.log("Program: ", vm.program);
-                // console.log("Draft: ", draft);
                 return draft.programId === programId;
             });
         };
@@ -173,15 +171,45 @@
          * @param {Object} draft Physical inventory draft
          */
         function editDraft(draft) {
-            // console.log("Edit: ", draft);
-            // console.log("Drafts: ", vm.drafts);
-            // console.log("Program: ", vm.program);
-            // console.log("Facility: ", vm.facility);
-            // console.log("Selected:" , vm.getDraft());
             $stateParams.stateOffline = setOfflineState();
+
             if (!draft) {
                 alertService.error('No draft found');
-                return;
+                return $q.reject();
+            }
+
+            // Cyclic path — check server live for a Major count in progress before
+            // allowing navigation. physicalInventoryService.getDraft is used directly
+            // (not the factory) to get the raw server response with lineItems and
+            // quantities. vm.program.id and vm.facility.id are always the currently
+            // selected values from openlmis-facility-program-select two-way binding,
+            // so supervised facilities are handled correctly.
+            if (vm.physicalInventoryType === 'Cyclic') {
+                return physicalInventoryService.getDraft(vm.program.id, vm.facility.id)
+                    .then(function(serverDrafts) {
+                        if (!Array.isArray(serverDrafts) ||
+                            serverDrafts.length === 0 ||
+                            !serverDrafts[0].id) {
+                            // No Major draft on server -> Cyclic is allowed.
+                            return navigateToCyclic(draft);
+                        }
+
+                        // A Major draft exists. Only block if it has real progress
+                        var lineItems = serverDrafts[0].lineItems || [];
+                        var hasProgress = lineItems.some(function(item) {
+                            return item.quantity !== null &&
+                                item.quantity !== undefined &&
+                                item.quantity !== -1; //&&
+                                //item.quantity !== 0;
+                        });
+
+                        if (hasProgress) {
+                            alertService.error('stockPhysicalInventory.majorCountInProgress');
+                            return $q.reject();
+                        }
+
+                        return navigateToCyclic(draft);
+                    });
             }
 
             // Get the draft , prefer passed draft, 
@@ -219,7 +247,6 @@
                         });
                 } else {
                     return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
-                        //    console.log("Data: ", data);
                         selectedDraft.id = data.id;
                         $state.go('openlmis.stockmanagement.physicalInventory.draft', {
                             id: selectedDraft.id,
@@ -245,6 +272,25 @@
             //         physicalInventoryType: vm.physicalInventoryType
             //     });
             // });
+        }
+        
+        function navigateToCyclic(draft) {
+            var selectedDraft = draft;
+            vm.drafts.forEach(function(item) {
+                if (item.programId === selectedDraft.programId &&
+                    selectedDraft.isStarter === true) {
+                    item.isStarter = false;
+                }
+            });
+            $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                id: undefined,
+                program: vm.program,
+                facility: vm.facility,
+                supervised: vm.isSupervised,
+                includeInactive: false,
+                physicalInventoryType: vm.physicalInventoryType
+            });
+            return $q.resolve();
         }
 
         function onInit() {
