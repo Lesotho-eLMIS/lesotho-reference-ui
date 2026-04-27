@@ -36,6 +36,14 @@
             vm.order = updatedOrder;
             vm.shipment = shipment;
             vm.tableLineItems = tableLineItems;
+
+            // Seed the previous type tracker so the first type-switch converts correctly
+            vm.tableLineItems.forEach(function(tli) {
+                if (tli.shipmentLineItem) {
+                    tli.shipmentLineItem._previousQuantityType =
+                        tli.shipmentLineItem.quantityType || 'PACKS';
+                }
+            });
         }
 
         function getOrderQuantityDisplay(tableLineItem) {
@@ -98,11 +106,60 @@
         }
 
         function onQuantityTypeChanged(lineItem) {
+            var netContent = getNetContentForLineItem(lineItem);
+            var previousType = lineItem._previousQuantityType || 'PACKS';
+            var currentQuantityInUnits;
+
+            // Convert whatever was entered previously into a canonical unit count
+            if (previousType === 'PACKS') {
+                currentQuantityInUnits = (lineItem.quantityShipped || 0) * netContent;
+            } else {
+                // Was DISPENSING_UNITS — reconstruct from the split packs+units fields
+                currentQuantityInUnits =
+                    ((lineItem.quantityInPacks || 0) * netContent) +
+                    (lineItem.quantityRemainderInUnits || 0);
+            }
+
+            // Apply the new quantity type on the domain object
             lineItem.setQuantityType(lineItem.quantityType);
+            lineItem._previousQuantityType = lineItem.quantityType;
+
+            if (lineItem.quantityType === 'PACKS') {
+                // Convert units → packs (whole packs only; remainder is intentionally dropped
+                // because the PACKS field only accepts whole packs)
+                lineItem.quantityShipped = Math.floor(currentQuantityInUnits / netContent);
+                lineItem.quantityInPacks = undefined;
+                lineItem.quantityRemainderInUnits = undefined;
+            } else {
+                // Convert packs → DISPENSING_UNITS: split into whole packs + leftover units
+                lineItem.quantityInPacks = Math.floor(currentQuantityInUnits / netContent);
+                lineItem.quantityRemainderInUnits = currentQuantityInUnits % netContent;
+                lineItem.updateQuantityShippedFromSplit();
+            }
         }
 
         function onUnitQuantityChanged(lineItem) {
+            var netContent = getNetContentForLineItem(lineItem);
+            var rawUnits = lineItem.quantityRemainderInUnits || 0;
+
+            // Auto-normalise: if the user typed more units than fit in a pack, carry the
+            // overflow into the packs field and leave only the true remainder in units.
+            if (rawUnits >= netContent) {
+                lineItem.quantityInPacks =
+                    (lineItem.quantityInPacks || 0) + Math.floor(rawUnits / netContent);
+                lineItem.quantityRemainderInUnits = rawUnits % netContent;
+            }
+
             lineItem.updateQuantityShippedFromSplit();
+        }
+
+        // Private helper: find the netContent for a given shipmentLineItem by walking the
+        // tableLineItems array (netContent lives on the view line item, not the domain object).
+        function getNetContentForLineItem(shipmentLineItem) {
+            var owningTableLineItem = vm.tableLineItems.find(function(tli) {
+                return tli.shipmentLineItem === shipmentLineItem;
+            });
+            return owningTableLineItem ? (owningTableLineItem.netContent || 1) : 1;
         }
 
         function getQuantityTypeOptions() {
