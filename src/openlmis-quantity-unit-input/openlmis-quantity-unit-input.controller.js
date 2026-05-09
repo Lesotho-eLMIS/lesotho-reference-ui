@@ -62,6 +62,12 @@
          */
         function changeValue(item) {
             //vm.newAdjustment.netContent = lineItem.orderable.netContent;
+            //Check if lineitem is missing orderable info and if so assign it's netContent from the Controller
+            if (!item.orderable) {
+                item.orderable = {
+                    netContent: vm.netContent
+                };
+            }
             item = quantityUnitCalculateService.recalculateInputQuantity(
                 item, item.netContent, vm.showInDoses
             );
