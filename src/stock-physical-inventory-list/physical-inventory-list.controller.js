@@ -193,6 +193,7 @@
                 // Step 1: Check if a Major count is in progress
                 return physicalInventoryService.getDraft(vm.program.id, vm.facility.id)
                     .then(function (serverDrafts) {
+                        // Only block if Major has real progress
                         if (Array.isArray(serverDrafts) && serverDrafts.length > 0 && serverDrafts[0].id) {
                             var lineItems = serverDrafts[0].lineItems || [];
                             var hasProgress = lineItems.some(function (item) {
@@ -206,24 +207,18 @@
                             }
                         }
 
-                        // Step 2: Same safety net as Major
-                        // draft may be null if getDraftsForCyclic returned nothing at page load
+                        // Step 2: draft already has an ID from page load, just navigate
                         if (draft && draft.id) {
-                            // Already has an ID, just navigate
                             return navigateToCyclic(draft);
                         }
 
-                        // Step 3: Try getting a cyclic draft from server
-                        return physicalInventoryService.getCyclicDraft(vm.program.id, vm.facility.id)
-                            .then(function (data) {
-                                if (Array.isArray(data) && data.length > 0 && data[0].id) {
-                                    return navigateToCyclic({ id: data[0].id, programId: vm.program.id });
-                                }
-                                // Step 4: None found, create one
-                                return physicalInventoryService.createDraft(vm.program.id, vm.facility.id)
-                                    .then(function (newDraft) {
-                                        return navigateToCyclic({ id: newDraft.id, programId: vm.program.id });
-                                    });
+                        // Step 3: No draft ID — create one directly, same as Major does
+                        return physicalInventoryService.createDraft(vm.program.id, vm.facility.id)
+                            .then(function (newDraft) {
+                                return navigateToCyclic({
+                                    id: newDraft.id,
+                                    programId: vm.program.id
+                                });
                             });
                     });
             }
