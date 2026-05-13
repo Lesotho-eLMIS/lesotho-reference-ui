@@ -88,7 +88,7 @@
             } else {
 
                 var draft = vm.getDraft();
-               
+
                 if (draft && draft.id) {
                     draft.isStarter = false;
                     return draft;
@@ -173,10 +173,15 @@
         function editDraft(draft) {
             $stateParams.stateOffline = setOfflineState();
 
-            if (!draft) {
-                alertService.error('No draft found');
+            // if (!draft) {
+            //     alertService.error('No draft found');
+            //     return $q.reject();
+            // }
+            if (!vm.program || !vm.facility) {
+                alertService.error('stockPhysicalInventory.selectProgramAndFacility');
                 return $q.reject();
             }
+
 
             // Cyclic path — check server live for a Major count in progress before
             // allowing navigation. physicalInventoryService.getDraft is used directly
@@ -185,32 +190,39 @@
             // selected values from openlmis-facility-program-select two-way binding,
             // so supervised facilities are handled correctly.
             if (vm.physicalInventoryType === 'Cyclic') {
+                // Step 1: Check if a Major count is in progress
                 return physicalInventoryService.getDraft(vm.program.id, vm.facility.id)
-                    .then(function(serverDrafts) {
-                        if (!Array.isArray(serverDrafts) ||
-                            serverDrafts.length === 0 ||
-                            !serverDrafts[0].id) {
-                            // No Major draft on server -> Cyclic is allowed.
+                    .then(function (serverDrafts) {
+                        // Only block if Major has real progress
+                        if (Array.isArray(serverDrafts) && serverDrafts.length > 0 && serverDrafts[0].id) {
+                            var lineItems = serverDrafts[0].lineItems || [];
+                            var hasProgress = lineItems.some(function (item) {
+                                return item.quantity !== null &&
+                                    item.quantity !== undefined &&
+                                    item.quantity !== -1;
+                            });
+                            if (hasProgress) {
+                                alertService.error('stockPhysicalInventory.majorCountInProgress');
+                                return $q.reject();
+                            }
+                        }
+
+                        // Step 2: draft already has an ID from page load, just navigate
+                        if (draft && draft.id) {
                             return navigateToCyclic(draft);
                         }
 
-                        // A Major draft exists. Only block if it has real progress
-                        var lineItems = serverDrafts[0].lineItems || [];
-                        var hasProgress = lineItems.some(function(item) {
-                            return item.quantity !== null &&
-                                item.quantity !== undefined &&
-                                item.quantity !== -1; //&&
-                                //item.quantity !== 0;
-                        });
-
-                        if (hasProgress) {
-                            alertService.error('stockPhysicalInventory.majorCountInProgress');
-                            return $q.reject();
-                        }
-
-                        return navigateToCyclic(draft);
+                        // Step 3: No draft ID — create one directly, same as Major does
+                        return physicalInventoryService.createDraft(vm.program.id, vm.facility.id)
+                            .then(function (newDraft) {
+                                return navigateToCyclic({
+                                    id: newDraft.id,
+                                    programId: vm.program.id
+                                });
+                            });
                     });
             }
+
 
             // Get the draft , prefer passed draft, 
             // then find existing, else create new
@@ -236,15 +248,15 @@
             return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function (data) {
 
                 if (Array.isArray(data) && data.length > 0 && data[0].id) {
-                     selectedDraft.id = data[0].id;
-                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                            id: selectedDraft.id,
-                            program: vm.program,
-                            facility: vm.facility,
-                            supervised: vm.isSupervised,
-                            includeInactive: false,
-                            physicalInventoryType: vm.physicalInventoryType
-                        });
+                    selectedDraft.id = data[0].id;
+                    $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                        id: selectedDraft.id,
+                        program: vm.program,
+                        facility: vm.facility,
+                        supervised: vm.isSupervised,
+                        includeInactive: false,
+                        physicalInventoryType: vm.physicalInventoryType
+                    });
                 } else {
                     return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
                         selectedDraft.id = data.id;
@@ -273,10 +285,10 @@
             //     });
             // });
         }
-        
+
         function navigateToCyclic(draft) {
             var selectedDraft = draft;
-            vm.drafts.forEach(function(item) {
+            vm.drafts.forEach(function (item) {
                 if (item.programId === selectedDraft.programId &&
                     selectedDraft.isStarter === true) {
                     item.isStarter = false;
