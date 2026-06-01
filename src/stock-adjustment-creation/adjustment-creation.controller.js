@@ -34,7 +34,7 @@
     'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS', 'hasPermissionToAddNewLot',
     'LotResource', '$q', 'editLotModalService', 'moment', 'rejectionReasonService', 'receivingAddDiscrepancyModalService',
     'complaintFormModalService', 'suppliers', 'ReferenceNumbers', 'facilityWithType',
-    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems'];
+    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems', 'adjustmentLineItemsService'];
 
   function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program, facility,
     orderableGroups, reasons, confirmService, messageService, user, adjustmentType, srcDstAssignments,
@@ -42,7 +42,7 @@
     MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService, alertService, dateUtils, displayItems, ADJUSTMENT_TYPE,
     UNPACK_REASONS, REASON_TYPES, STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService,
     moment, rejectionReasonService, receivingAddDiscrepancyModalService, complaintFormModalService,
-    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems) {
+    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems, adjustmentLineItemsService) {
     var vm = this,
       previousAdded = {};
 
@@ -204,8 +204,10 @@
 
       $stateParams.addedLineItems = vm.addedLineItems;
       $stateParams.displayItems = vm.displayItems;
+      adjustmentLineItemsService.setLineItems(vm.addedLineItems);
       $stateParams.keyword = vm.keyword;
       $stateParams.page = getPageNumber();
+      $stateParams.noReload = true;
       $state.go($state.current.name, $stateParams, {
         reload: true,
         notify: false,
@@ -807,6 +809,7 @@
             )
             .then(
               function () {
+                adjustmentLineItemsService.clearLineItems();
                 if (offlineService.isOffline()) {
                   notificationService.offline(vm.key('submittedOffline'));
                 } else {
@@ -981,8 +984,11 @@
         'openlmis.stockmanagement.stockCardSummaries'
       );
 
-      $scope.$on('$stateChangeStart', function () {
+      $scope.$on('$stateChangeStart', function (event, toState) {
         angular.element('.popover').popover('destroy');
+        if (toState.name !== $state.current.name && !$stateParams.noReload) {
+        adjustmentLineItemsService.clearLineItems();
+        }
       });
     }
 
@@ -1018,12 +1024,18 @@
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
 
-      vm.addedLineItems = $stateParams.addedLineItems || [];
+      var savedItems = adjustmentLineItemsService.getLineItems();
+      vm.addedLineItems = (savedItems.length > 0) ? savedItems : [];
+      $stateParams.noReload = undefined;
       $stateParams.displayItems = displayItems;
+      vm.keyword = $stateParams.keyword;
 
       // vm.displayItems = $stateParams.displayItems || [];
-      vm.displayItems = [];
-      vm.keyword = $stateParams.keyword;
+      vm.displayItems = stockAdjustmentCreationService.search(
+          vm.keyword,
+          vm.addedLineItems,
+          vm.hasLot
+      );
       updateNeedToConfirmFlag();
 
       vm.orderableGroups = orderableGroups;
@@ -1271,4 +1283,26 @@
 
     onInit();
   }
+})();
+
+(function() {
+    'use strict';
+
+    angular
+        .module('stock-adjustment-creation')
+        .service('adjustmentLineItemsService', function() {
+            var lineItems = [];
+
+            this.getLineItems = function() {
+                return lineItems;
+            };
+
+            this.setLineItems = function(items) {
+                lineItems = items;
+            };
+
+            this.clearLineItems = function() {
+                lineItems = [];
+            };
+        });
 })();
