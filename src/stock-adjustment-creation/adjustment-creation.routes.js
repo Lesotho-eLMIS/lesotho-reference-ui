@@ -70,11 +70,8 @@
                     }
                     return $stateParams.orderableGroups;
                 },
-                viewdislayitems:function($stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
-                },
-                displayItems: function(viewdislayitems, $stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
+                displayItems: function($stateParams, registerDisplayItemsService) {
+                    return registerDisplayItemsService($stateParams);
                 },
                 reasons: function($stateParams, stockReasonsFactory, facilityWithType) {
                     if (_.isUndefined($stateParams.reasons)) {
