@@ -51,6 +51,7 @@
     vm.validateExpirationDate = validateExpirationDate;
     vm.lotChanged = lotChanged;
     vm.addProduct = addProduct;
+    vm.saveOnPageChange = saveOnPageChange;
     vm.podReferenceNumbers = undefined;
     vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
     vm.formatDate = formatDate;
@@ -1019,10 +1020,8 @@
       /* eLMIS Lesotho : end */
 
       vm.addedLineItems = $stateParams.addedLineItems || [];
-      $stateParams.displayItems = displayItems;
-
-      // vm.displayItems = $stateParams.displayItems || [];
-      vm.displayItems = [];
+      vm.displayItems = displayItems || $stateParams.displayItems || [];
+      $stateParams.displayItems = vm.displayItems;
       vm.keyword = $stateParams.keyword;
       updateNeedToConfirmFlag();
 
@@ -1033,7 +1032,8 @@
       if (adjustmentType.state === 'receive'
           && !vm.servicePointUser
           && requisitionLineItems
-          && requisitionLineItems.length > 0) {
+          && requisitionLineItems.length > 0
+          && vm.addedLineItems.length === 0) {
           var defaultAssignment = srcDstAssignments.find(function(a) {
               return a.name === 'National Drug Service Organisation (NDSO)';
           });
@@ -1083,6 +1083,8 @@
               }
           });
           vm.displayItems = vm.addedLineItems;
+          $stateParams.addedLineItems = vm.addedLineItems;
+          $stateParams.displayItems = vm.displayItems;
       }
       //////////////////////////////////////////////////
       vm.hasLot = false;
@@ -1126,6 +1128,14 @@
         return totalPages > 0 ? totalPages - 1 : 0;
       }
       return pageNumber;
+    }
+
+    function saveOnPageChange() {
+      return $q.resolve({
+        addedLineItems: vm.addedLineItems,
+        displayItems: vm.displayItems,
+        keyword: vm.keyword
+      });
     }
 
     /**
