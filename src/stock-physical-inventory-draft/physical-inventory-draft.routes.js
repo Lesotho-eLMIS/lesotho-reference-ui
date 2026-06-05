@@ -56,6 +56,12 @@
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
                         if (!$stateParams.program || !$stateParams.facility) {
+                            // On refresh, program and facility are lost from stateParams.
+                            // Cyclic has no id in the URL so we cannot look up by id.
+                            // The cache key is cyclic-{programId}-{facilityId} but we
+                            // don't know either value here. Return an empty draft —
+                            // the program and facility resolves below will recover what
+                            // they can, and the page will render in its blank start state.
                             return {
                                 programId: undefined,
                                 facilityId: undefined,
@@ -80,6 +86,15 @@
                                 return physicalInventoryFactory
                                     .getDraft($stateParams.program.id, $stateParams.facility.id);
                             });
+                    }
+
+                    // On refresh for Major: program and facility are lost from stateParams
+                    // but id is always in the URL. Load directly from the cache which
+                    // holds the full draft object including programId and facilityId.
+                    // physicalInventoryFactory.getPhysicalInventory needs both program
+                    // and facility to load stock summaries — the cache avoids that call.
+                    if (!$stateParams.program || !$stateParams.facility) {
+                        return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
 
                     // noReload=true after Add Product or Save for Major — load from cache.
