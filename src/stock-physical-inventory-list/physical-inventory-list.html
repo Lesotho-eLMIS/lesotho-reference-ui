@@ -22,15 +22,12 @@
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
   </div> -->
   <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
-       value="{{(vm.getSelectedDraft() && vm.getSelectedDraft().isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+       value="{{(vm.majorCountInProgress ? 'stockPhysicalInventory.continueMajorCount' : 'stockPhysicalInventory.majorCount') | message}}"
        class="primary"/>
   <input ng-if="vm.physicalInventoryType === 'Cyclic'"
        id="proceedButton"
        type="button"
        ng-click="vm.editDraft(vm.getSelectedDraft())"
-       value="{{'stockPhysicalInventory.cyclicCount' | message}}"
+       value="{{(vm.majorCountInProgress ? 'stockPhysicalInventory.continueMajorCount' : 'stockPhysicalInventory.cyclicCount') | message}}"
        class="primary"/>
 </form>
-
-
-

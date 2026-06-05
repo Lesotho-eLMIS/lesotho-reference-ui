@@ -63,6 +63,18 @@
         /**
          * @ngdoc property
          * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
+         * @name majorCountInProgress
+         * @type {Boolean}
+         *
+         * @description
+         * Indicates whether a Major count with real progress exists for the selected
+         * program and facility. Set by the program watcher when a program is selected.
+         */
+        vm.majorCountInProgress = false;
+
+        /**
+         * @ngdoc property
+         * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
          * @name programs
          * @type {Array}
          *
@@ -83,6 +95,7 @@
 
             if (newVal == null || newVal == undefined) {
 
+                vm.majorCountInProgress = false;
                 return;
 
             } else {
@@ -91,8 +104,20 @@
 
                 if (draft && draft.id) {
                     draft.isStarter = false;
-                    return draft;
                 }
+
+                physicalInventoryService.getDraft(newVal.id, vm.facility.id)
+                    .then(function(serverDrafts) {
+                        var hasProgress = Array.isArray(serverDrafts) &&
+                            serverDrafts.length > 0 &&
+                            serverDrafts[0].id &&
+                            (serverDrafts[0].lineItems || []).some(function(item) {
+                                return item.quantity !== null &&
+                                    item.quantity !== undefined &&
+                                    item.quantity !== -1;
+                            });
+                        vm.majorCountInProgress = hasProgress;
+                    });
             }
         });
 
@@ -158,6 +183,7 @@
 
         vm.onChangePhysicalInventoryType = function () {
             vm.drafts = (vm.physicalInventoryType === "Major") ? drafts[0] : drafts[1];
+            vm.majorCountInProgress = false;
         }
 
         /**
@@ -336,4 +362,3 @@
         }
     }
 })();
-
