@@ -34,7 +34,8 @@
     'ADJUSTMENT_TYPE', 'UNPACK_REASONS', 'REASON_TYPES', 'STOCKCARD_STATUS', 'hasPermissionToAddNewLot',
     'LotResource', '$q', 'editLotModalService', 'moment', 'rejectionReasonService', 'receivingAddDiscrepancyModalService',
     'complaintFormModalService', 'suppliers', 'ReferenceNumbers', 'facilityWithType',
-    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems'];
+    'QUANTITY_UNIT', 'quantityUnitCalculateService', 'requisitionLineItems',
+    'receiveOrderableGroupService', '$timeout'];
 
   function controller($scope, $state, $stateParams, $filter, confirmDiscardService, program, facility,
     orderableGroups, reasons, confirmService, messageService, user, adjustmentType, srcDstAssignments,
@@ -42,9 +43,13 @@
     MAX_INTEGER_VALUE, VVM_STATUS, loadingModalService, alertService, dateUtils, displayItems, ADJUSTMENT_TYPE,
     UNPACK_REASONS, REASON_TYPES, STOCKCARD_STATUS, hasPermissionToAddNewLot, LotResource, $q, editLotModalService,
     moment, rejectionReasonService, receivingAddDiscrepancyModalService, complaintFormModalService,
-    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems) {
+    suppliers, ReferenceNumbers, facilityWithType, QUANTITY_UNIT, quantityUnitCalculateService, requisitionLineItems,
+    receiveOrderableGroupService, $timeout) {
     var vm = this,
-      previousAdded = {};
+      previousAdded = {},
+      lotOptionsByOrderableId = {},
+      productSearchPromise,
+      productSearchRequestNumber = 0;
 
     vm.expirationDateChanged = expirationDateChanged;
     vm.newLotCodeChanged = newLotCodeChanged;
@@ -60,6 +65,12 @@
     vm.orderableGroupOptions = [];
     vm.orderableGroupMap = {};
     vm.selectedOrderableGroupId = null;
+    vm.productSearchKeyword = '';
+    vm.productSearchLoading = false;
+    vm.productSelectPlaceholder = '';
+    vm.productSearchStatus = '';
+    vm.productSearchChanged = productSearchChanged;
+    vm.showInDosesValue = false;
   
 
     /**
@@ -84,7 +95,7 @@
      * @return {boolean} true if the quantities are in doses, false otherwise
      */
     function showInDoses() {
-      return vm.quantityUnit === QUANTITY_UNIT.DOSES;
+      return vm.showInDosesValue;
       // return true;
       
     }
@@ -213,6 +224,62 @@
       });
     };
 
+    function productSearchChanged(keyword) {
+      var requestNumber = ++productSearchRequestNumber;
+
+      if (productSearchPromise) {
+        $timeout.cancel(productSearchPromise);
+      }
+
+      productSearchPromise = $timeout(function() {
+        keyword = keyword ? keyword.trim() : '';
+        vm.productSearchKeyword = keyword;
+
+        if (adjustmentType.state !== 'receive' || keyword.length < 2) {
+          vm.productSearchLoading = false;
+          vm.productSearchStatus = '';
+          updateProductSelectPlaceholder();
+          return;
+        }
+
+        vm.productSearchLoading = true;
+        vm.productSearchStatus = messageService.get(vm.key('searchingProducts'));
+        updateProductSelectPlaceholder();
+        receiveOrderableGroupService.search(program.id, facility.id, keyword)
+          .then(function(groups) {
+            if (requestNumber !== productSearchRequestNumber) {
+              return;
+            }
+            groups = groups || [];
+            setOrderableGroupOptions(groups || []);
+            vm.productSearchStatus = messageService.get(
+              groups.length ? vm.key('productSearchComplete') : vm.key('productSearchNoResults'),
+              {
+                count: groups.length
+              }
+            );
+          })
+          .finally(function() {
+            if (requestNumber !== productSearchRequestNumber) {
+              return;
+            }
+            vm.productSearchLoading = false;
+            updateProductSelectPlaceholder();
+          });
+      }, 300);
+    }
+
+    function updateProductSelectPlaceholder() {
+      if (adjustmentType.state !== ADJUSTMENT_TYPE.RECEIVE.state) {
+        vm.productSelectPlaceholder = '';
+        return;
+      }
+
+      vm.productSelectPlaceholder = messageService.get(
+        vm.productSearchLoading ? vm.key('searchingProducts') : vm.key('searchProducts')
+      );
+    }
+
     /**
      * @ngdoc method
      * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
@@ -267,11 +334,11 @@
 
 
 
-        vm.addedLineItems.unshift(_.extend({
+        vm.addedLineItems.unshift(prepareLineItem(_.extend({
           $errors: {},
           $previewSOH: selectedItem.stockOnHand
         },
-          selectedItem, copyDefaultValue()));
+          selectedItem, copyDefaultValue())));
         previousAdded = vm.addedLineItems[0];
         vm.search();
       }
@@ -375,6 +442,7 @@
         lineItem.$errors.quantityInvalid = messageService.get(
           vm.key('positiveInteger'));
       }
+      updateLineItemDerivedFields(lineItem);
       return lineItem;
     };
 
@@ -428,6 +496,7 @@
       ) {
         lineItem.$errors.assignmentInvalid = isEmpty(lineItem.assignment);
       }
+      updateLineItemDerivedFields(lineItem);
       return lineItem;
     };
 
@@ -510,6 +579,7 @@
                     if (newItem) {
                         lineItem.$previewSOH = newItem.stockOnHand; // Will be 0
                         lineItem.stockOnHand = newItem.stockOnHand; // Will be 0
+                        updateLineItemDerivedFields(lineItem);
                     }
                 });
             return;
@@ -523,6 +593,7 @@
             lineItem.stockOnHand = selectedItem.stockOnHand;
             lineItem.lot.expirationDate = selectedItem.lot.expirationDate;
         }
+        updateLineItemDerivedFields(lineItem);
     };
 
     vm.referenceNumberChanged = function() {
@@ -670,6 +741,7 @@
           lineItem.$errors.unitPriceInvalid = false;
         }
       }
+      updateLineItemDerivedFields(lineItem);
       return lineItem;
     };
 
@@ -912,11 +984,21 @@
       initiateNewLotObject();
     }
 
+    function setOrderableGroupOptions(groups) {
+      vm.orderableGroupOptions = [];
+      resetOrderableSelectionState();
+      addOrderableGroupsToLookups(groups);
+    }
+
     function buildOrderableGroupLookups() {
       vm.orderableGroupOptions = [];
       vm.orderableGroupMap = {};
+      addOrderableGroupsToLookups(vm.orderableGroups);
+    }
 
-      vm.orderableGroups.forEach(function (group) {
+    function addOrderableGroupsToLookups(groups) {
+      groups = groups || [];
+      groups.forEach(function (group) {
         if (!group || !group.length || !group[0].orderable) {
           return;
         }
@@ -927,7 +1009,90 @@
           id: orderable.id,
           displayName: orderable.fullProductName
         });
+
+        vm.hasLot = vm.hasLot ||
+          orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length > 0;
+        vm.showVVMStatusColumn = vm.showVVMStatusColumn ||
+          orderableGroupService.areOrderablesUseVvm([group]);
+
+        if (vm.allItems) {
+          group.forEach(function(item) {
+            if (vm.allItems.indexOf(item) === -1) {
+              vm.allItems.push(item);
+            }
+          });
+        }
       });
+    }
+
+    function prepareLineItem(lineItem) {
+      if (!lineItem.timestamp) {
+        lineItem.timestamp = new Date().getTime() + Math.random();
+      }
+      lineItem.$rowKey = lineItem.timestamp;
+      updateLineItemDerivedFields(lineItem);
+      return lineItem;
+    }
+
+    function prepareVisibleLineItems(lineItems) {
+      (lineItems || []).forEach(function(lineItem) {
+        if (!lineItem) {
+          return;
+        }
+        prepareLineItem(lineItem);
+        ensureLineItemLots(lineItem);
+      });
+    }
+
+    function ensureLineItemLots(lineItem) {
+      if (lineItem.$lots || !lineItem.$orderableGroup) {
+        return;
+      }
+
+      var orderableId = lineItem.orderable.id;
+      if (!lotOptionsByOrderableId[orderableId]) {
+        lotOptionsByOrderableId[orderableId] = buildLotOptions(lineItem.$orderableGroup);
+      }
+      lineItem.$lots = lotOptionsByOrderableId[orderableId];
+    }
+
+    function buildLotOptions(orderableGroup) {
+      var lots = orderableGroupService.lotsOf(
+        orderableGroup,
+        hasPermissionToAddNewLot
+      );
+      var specialOptions = ['Add new batch', 'No batch defined'];
+      var specialLots = lots.filter(function(lot) {
+        return specialOptions.indexOf(lot.lotCode) !== -1;
+      });
+      var realLots = lots.filter(function(lot) {
+        return specialOptions.indexOf(lot.lotCode) === -1;
+      });
+
+      realLots.sort(function(a, b) {
+        if (!a.expirationDate) {
+          return 1;
+        }
+        if (!b.expirationDate) {
+          return -1;
+        }
+        return new Date(b.expirationDate) - new Date(a.expirationDate);
+      });
+
+      return specialLots.concat(realLots);
+    }
+
+    function updateLineItemDerivedFields(lineItem) {
+      if (!lineItem || !lineItem.orderable) {
+        return;
+      }
+      lineItem.$sohDisplay = recalculateSOHQuantity(lineItem.$previewSOH, lineItem.orderable.netContent);
+      lineItem.$expiryDateDisplay = lineItem.lot ? formatDate(lineItem.lot.expirationDate) : '';
+      lineItem.$isNdsoAssignment = !!(lineItem.assignment && lineItem.assignment.name &&
+        lineItem.assignment.name.indexOf('NDSO') !== -1);
+      lineItem.$amountDisplay = $filter('openlmisCurrency')(
+        (lineItem.quantityInPacks * lineItem.unitPrice) || 0
+      );
     }
 
     //Merging Facility Arrays
@@ -977,6 +1142,7 @@
 
       initViewModel();
       initStateParams();
+      registerViewWatchers();
 
       confirmDiscardService.register(
         $scope,
@@ -985,6 +1151,21 @@
 
       $scope.$on('$stateChangeStart', function () {
         angular.element('.popover').popover('destroy');
+      });
+    }
+
+    function registerViewWatchers() {
+      $scope.$watchCollection(function() {
+        return vm.items;
+      }, function(items) {
+        prepareVisibleLineItems(items);
+      });
+
+      $scope.$watch(function() {
+        return vm.quantityUnit;
+      }, function(quantityUnit) {
+        vm.showInDosesValue = quantityUnit === QUANTITY_UNIT.DOSES;
+        (vm.addedLineItems || []).forEach(updateLineItemDerivedFields);
       });
     }
 
@@ -1019,6 +1200,7 @@
       vm.servicePointUser =
         adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && (facilityWithType.type.code === "service_point");//(facility.type.code === "quarantine" || facility.type.code === "unserviceable");
       /* eLMIS Lesotho : end */
+      updateProductSelectPlaceholder();
 
       vm.addedLineItems = $stateParams.addedLineItems || [];
       vm.displayItems = displayItems || $stateParams.displayItems || [];
@@ -1027,6 +1209,8 @@
       updateNeedToConfirmFlag();
 
       vm.orderableGroups = orderableGroups;
+      vm.hasLot = false;
+      vm.showVVMStatusColumn = false;
       buildOrderableGroupLookups();
 
       // Auto-populate from requisition line items if receiving against a requisition
@@ -1046,58 +1230,23 @@
           }).forEach(function(lineItem) {
               var orderableGroup = vm.orderableGroupMap[lineItem.orderable.id];
               if (orderableGroup && orderableGroup.length > 0) {
-                  var lots = orderableGroupService.lotsOf(
-                      orderableGroup,
-                      hasPermissionToAddNewLot
-                  );
-                  // Sort only real batches (those with lotCode that are not special options)
-                  var specialOptions = ['Add new batch', 'No batch defined'];
-                  var specialLots = lots.filter(function(lot) {
-                      return specialOptions.indexOf(lot.lotCode) !== -1;
-                  });
-                  var realLots = lots.filter(function(lot) {
-                      return specialOptions.indexOf(lot.lotCode) === -1;
-                  });
-                  realLots.sort(function(a, b) {
-                      if (!a.expirationDate) {
-                          return 1;
-                      }
-                      if (!b.expirationDate) {
-                          return -1;
-                      }
-                      return new Date(b.expirationDate) - new Date(a.expirationDate);
-                  });
-                  // Put special options first, then sorted real batches
-                  lots = specialLots.concat(realLots);
                   var item = orderableGroup[0];
                   item.requisition = $stateParams.requisitionToReceiveAgainst.id
                       || $stateParams.requisitionToReceiveAgainst;
-                  vm.addedLineItems.push(_.extend({
+                  vm.addedLineItems.push(prepareLineItem(_.extend({
                       $errors: {},
                       $previewSOH: item.stockOnHand
                   }, item, copyDefaultValue(), {
                       assignment: defaultAssignment || null,
                       reason: defaultReason || null,
-                      $lots: lots,
                       $orderableGroup: orderableGroup
-                  }));
+                  })));
               }
           });
           vm.displayItems = vm.addedLineItems;
           $stateParams.addedLineItems = vm.addedLineItems;
           $stateParams.displayItems = vm.displayItems;
       }
-      //////////////////////////////////////////////////
-      vm.hasLot = false;
-      vm.orderableGroups.forEach(function (group) {
-        vm.hasLot =
-          vm.hasLot ||
-          orderableGroupService.lotsOf(group, hasPermissionToAddNewLot).length >
-          0;
-      });
-      vm.showVVMStatusColumn = orderableGroupService.areOrderablesUseVvm(
-        vm.orderableGroups
-      );
       vm.hasPermissionToAddNewLot = hasPermissionToAddNewLot;
       resetOrderableSelectionState();
 

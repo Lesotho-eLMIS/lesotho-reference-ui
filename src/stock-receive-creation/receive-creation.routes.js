@@ -65,10 +65,34 @@
                 user: function(authorizationService) {
                     return authorizationService.getUser();
                 },
-                orderableGroups: function($stateParams, program, facility, orderableGroupService) {
+                requisitionLineItems: function($stateParams, requisitionService) {
+                    var requisitionId = $stateParams.requisitionToReceiveAgainst
+                        ? ($stateParams.requisitionToReceiveAgainst.id
+                            || $stateParams.requisitionToReceiveAgainst)
+                        : null;
+                    if (requisitionId) {
+                        return requisitionService.get(requisitionId)
+                            .then(function(requisition) {
+                                return requisition.requisitionLineItems || [];
+                            }).catch(function() {
+                                return [];
+                            });
+                    }
+                    return [];
+                },
+                orderableGroups: function($stateParams, program, facility, requisitionLineItems,
+                    receiveOrderableGroupService) {
                     if (!$stateParams.orderableGroups) {
-                        $stateParams.orderableGroups = orderableGroupService
-                            .findAvailableProductsAndCreateOrderableGroups(program.id, facility.id, true);
+                        var requisitionOrderableIds = requisitionLineItems
+                            .filter(function(lineItem) {
+                                return !lineItem.skipped && lineItem.orderable;
+                            })
+                            .map(function(lineItem) {
+                                return lineItem.orderable.id;
+                            });
+
+                        $stateParams.orderableGroups = receiveOrderableGroupService
+                            .findByOrderableIds(program.id, facility.id, requisitionOrderableIds);
                     }
                     return $stateParams.orderableGroups;
                 },
@@ -132,21 +156,6 @@
                             });
                            return references;
                         });
-                },
-                requisitionLineItems: function($stateParams, requisitionService) {
-                    var requisitionId = $stateParams.requisitionToReceiveAgainst
-                        ? ($stateParams.requisitionToReceiveAgainst.id
-                            || $stateParams.requisitionToReceiveAgainst)
-                        : null;
-                    if (requisitionId) {
-                        return requisitionService.get(requisitionId)
-                            .then(function(requisition) {
-                                return requisition.requisitionLineItems || [];
-                            }).catch(function() {
-                                return [];
-                            });
-                    }
-                    return [];
                 },
             }
         });
