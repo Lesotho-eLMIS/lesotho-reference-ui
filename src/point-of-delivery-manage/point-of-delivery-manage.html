@@ -55,9 +55,20 @@
                                 <!-- <td><input type="number" min="0" step="1" oninput="validity.valid||(value='');"
                                         style="width: 60px;" ng-model="vm.POD.cartonsQuantityRejected"></td> -->
                                 <td><button type="button"
-                                        ng-click="vm.addDiscrepancyOnModal('carton', vm.tempPOD.discrepancies)"
-                                        class="primary"><b>+ </b>{{'proofOfDeliveryManage.addDiscrepancy'|
-                                        message}}</button></td>
+                                        ng-click="vm.addDiscrepancyOnModal('carton')"
+                                        class="reasons"
+                                        ng-class="{edit: vm.hasShipmentDiscrepancies('carton'), add: !vm.hasShipmentDiscrepancies('carton')}">
+                                        <span ng-if="!vm.hasShipmentDiscrepancies('carton')">
+                                            {{'proofOfDeliveryManage.addDiscrepancy' | message}}
+                                        </span>
+                                        <span ng-if="vm.getShipmentDiscrepancies('carton').length === 1">
+                                            {{vm.getDiscrepancySummary('carton')}}
+                                        </span>
+                                        <span ng-if="vm.getShipmentDiscrepancies('carton').length > 1">
+                                            {{vm.getShipmentDiscrepancies('carton').length}}
+                                            {{'pointOfDeliveryManage.discrepancies' | message}}
+                                        </span>
+                                    </button></td>
                             </tr>
                             <!-- <tr>
                                 <td>{{vm.Containers}}</td>
@@ -68,9 +79,20 @@
                                 <!-- <td><input type="number" min="0" step="1" oninput="validity.valid||(value='');"
                                         style="width: 60px;" ng-model="vm.POD.containersQuantityRejected"></td> -->
                                 <!-- <td><button type="button"
-                                        ng-click="vm.addDiscrepancyOnModal('container', vm.tempPOD.discrepancies)"
-                                        class="primary"><b>+ </b>{{'proofOfDeliveryManage.addDiscrepancy'|
-                                        message}}</button></td>
+                                        ng-click="vm.addDiscrepancyOnModal('container')"
+                                        class="reasons"
+                                        ng-class="{edit: vm.hasShipmentDiscrepancies('container'), add: !vm.hasShipmentDiscrepancies('container')}">
+                                        <span ng-if="!vm.hasShipmentDiscrepancies('container')">
+                                            {{'proofOfDeliveryManage.addDiscrepancy' | message}}
+                                        </span>
+                                        <span ng-if="vm.getShipmentDiscrepancies('container').length === 1">
+                                            {{vm.getDiscrepancySummary('container')}}
+                                        </span>
+                                        <span ng-if="vm.getShipmentDiscrepancies('container').length > 1">
+                                            {{vm.getShipmentDiscrepancies('container').length}}
+                                            {{'pointOfDeliveryManage.discrepancies' | message}}
+                                        </span>
+                                    </button></td>
                             </tr> -->
                         </tbody>
                     </table>

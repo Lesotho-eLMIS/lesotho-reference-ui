@@ -55,25 +55,8 @@
         this.submitPodManage = submitPodManage; // To post data POD Manage payload
         this.getPODs = getPODs; //To retrieve PODs from the database
         this.show = show;
-        this.getDiscrepancies = getDiscrepancies; // To retrieve the compiled discrepancies
-        this.addDiscrepancies = addDiscrepancies; // To compile the list of discrepancies
-        this.clearDiscrepancies = clearDiscrepancies;
         this.showViewModal = showViewModal;
         this.editPOD = editPOD;
-
-        var discrepancyList = [];
-
-        function getDiscrepancies() {
-            return discrepancyList;
-        }
-
-        function addDiscrepancies (discrepancies) {
-                discrepancyList.push(discrepancies);
-        }
-        function clearDiscrepancies() {
-                discrepancyList = [];
-        }
-       
 
         /**
          * @ngdoc method

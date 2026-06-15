@@ -52,6 +52,10 @@
 
         vm.homeFacilities = [facility];
         vm.validateConsignment = validateConsignment;
+        vm.addDiscrepancyOnModal = addDiscrepancyOnModal;
+        vm.getShipmentDiscrepancies = getShipmentDiscrepancies;
+        vm.hasShipmentDiscrepancies = hasShipmentDiscrepancies;
+        vm.getDiscrepancySummary = getDiscrepancySummary;
 
         /**
             * @ngdoc method
@@ -68,6 +72,8 @@
             vm.supplyingFacilities = facilities;
             vm.offline = $stateParams.offline === 'true' || offlineService.isOffline();
             vm.POD.referenceNo = $rootScope.referenceNoPOD; // Getting  Ref Number from Quality Checks
+            vm.POD.receivingFacility = facility;
+            vm.POD.discrepancies = [];
             $rootScope.referenceNoPOD = undefined; // Clear Var on Root Scope 
             if ($stateParams.podId) {
                 vm.tempPOD = filterShipmentById(podEvents, $stateParams.podId);
@@ -84,16 +90,42 @@
             }
         }
 
-        vm.addDiscrepancyOnModal = function (shipmentType, currentDiscrepancies) {
-            pointOfDeliveryService.show(shipmentType, currentDiscrepancies).then(function () {
-                $stateParams.noReload = true;
-                draft.$modified = true;
-                vm.cacheDraft();
-                //Only reload current state and avoid reloading parent state
-                $state.go($state.current.name, $stateParams, {
-                    reload: $state.current.name
-                });
+        function addDiscrepancyOnModal(shipmentType) {
+            pointOfDeliveryService.show(shipmentType, vm.POD.discrepancies).then(function (discrepancies) {
+                vm.POD.discrepancies = discrepancies || [];
             });
+        }
+
+        function getShipmentDiscrepancies(shipmentType) {
+            return (vm.POD.discrepancies || []).filter(function(discrepancy) {
+                return discrepancy.shipmentType === shipmentType;
+            });
+        }
+
+        function hasShipmentDiscrepancies(shipmentType) {
+            return getShipmentDiscrepancies(shipmentType).length > 0;
+        }
+
+        function getDiscrepancySummary(shipmentType) {
+            var discrepancies = getShipmentDiscrepancies(shipmentType);
+
+            if (!discrepancies.length) {
+                return '';
+            }
+
+            if (discrepancies.length === 1) {
+                return getDiscrepancyName(discrepancies[0]);
+            }
+
+            return discrepancies.length + ' Discrepancies';
+        }
+
+        function getDiscrepancyName(discrepancy) {
+            if (discrepancy.name) {
+                return discrepancy.name;
+            }
+
+            return discrepancy.rejectionReason ? discrepancy.rejectionReason.name : '';
         }
 
         /**
@@ -111,6 +143,7 @@
             vm.POD.cartonsQuantityOnWaybill = podObject.cartonsQuantityOnWaybill;
             vm.POD.cartonsQuantityAccepted = podObject.cartonsQuantityAccepted;
             vm.POD.cartonsQuantityRejected = podObject.cartonsQuantityRejected;
+            vm.POD.discrepancies = angular.copy(podObject.discrepancies || []);
             // vm.POD.containersQuantityOnWayBill = podObject.containersQuantityOnWaybill;
             // vm.POD.containersQuantityAccepted = podObject.containersQuantityAccepted;
             // vm.POD.containersQuantityRejected = podObject.containersQuantityRejected;
@@ -128,8 +161,6 @@
          */
         vm.buildPayload = function () {
 
-            var discrepancyList = pointOfDeliveryService.getDiscrepancies();
-
             var payloadData = {
                 sourceId: vm.POD.supplyingFacility.id,
                 destinationId: vm.POD.receivingFacility.id,
@@ -142,7 +173,7 @@
                 // containersQuantityOnWaybill: vm.POD ? vm.POD.containersQuantityOnWayBill : null,
                 // containersQuantityShipped: vm.POD ? (vm.POD.containersQuantityAccepted + vm.POD.containersQuantityRejected) : null,
                 // containersQuantityAccepted: vm.POD ? vm.POD.containersQuantityAccepted : null,
-                discrepancies: discrepancyList
+                discrepancies: vm.POD.discrepancies || []
             };
             const inputsValid = vm.validatePODinputs(payloadData);
             const consignmentValid = validateConsignment(payloadData);
@@ -261,9 +292,9 @@
          */
         vm.clearForm = function () {
             vm.POD = {};
+            vm.POD.discrepancies = [];
             vm.discrepancy = [];
             vm.proofOfDelivery = {};
-            pointOfDeliveryService.clearDiscrepancies();
             $scope.podManageForm.$setPristine();
             $scope.podManageForm.$setUntouched();
         };
