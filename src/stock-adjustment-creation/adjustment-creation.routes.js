@@ -39,8 +39,8 @@
                 facility: undefined,
                 stockCardSummaries: undefined,
                 reasons: undefined,
-                displayItems: [],
-                addedLineItems: [],
+                displayItems: undefined,
+                addedLineItems: undefined,
                 orderableGroups: undefined, 
                 supervised: undefined
             },
