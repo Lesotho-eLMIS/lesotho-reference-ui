@@ -28,9 +28,9 @@
         .module('pod-add-discrepancy-modal')
         .controller('podAddDiscrepancyModalController', controller);
 
-    controller.$inject = ['pointOfDeliveryService', 'rejectionReasons','$filter', 'shipmentType', 'notificationService', 'modalDeferred','discrepancies'];
+    controller.$inject = ['rejectionReasons', '$filter', 'shipmentType', 'notificationService', 'modalDeferred', 'discrepancies'];
 
-    function controller( pointOfDeliveryService, rejectionReasons, $filter, shipmentType, notificationService, modalDeferred, discrepancies) {
+    function controller(rejectionReasons, $filter, shipmentType, notificationService, modalDeferred, discrepancies) {
         var vm = this;
 
         vm.$onInit = onInit;
@@ -85,39 +85,36 @@
         }
         
         function confirm (){
-            if(vm.discrepancies.length!=0){
-                var rejection = {};
-                angular.forEach(vm.discrepancies, function(reason){
-                // Use $filter to find the matching object in rejectionReasons
-                    var reasonDetails = $filter('filter')(vm.rejectionReasons, { name: reason.name }, true);
-                    // If a match is found, build the rejection object
-                    if (reasonDetails.length > 0) {
-                        rejection = {
-                            rejectionReason: angular.copy(reasonDetails[0]), 
-                            quantityAffected: reason.quantity, 
-                            shipmentType: reason.shipmentType, 
-                            comments: reason.comments
-                        }
-                        pointOfDeliveryService.addDiscrepancies(rejection);
-                        vm.discrepancies = [];
-                        rejection = {};
-                    }
-                });
-                modalDeferred.resolve();
-            }
-            else{
-                notificationService.error('Add discrepancies before saving them.');
-            }
+            var resolvedDiscrepancies = [];
+
+            angular.forEach(vm.discrepancies, function(reason) {
+                var reasonDetails = $filter('filter')(vm.rejectionReasons, {
+                    name: reason.name
+                }, true);
+
+                if (reasonDetails.length > 0) {
+                    resolvedDiscrepancies.push({
+                        rejectionReason: angular.copy(reasonDetails[0]),
+                        quantityAffected: reason.quantity,
+                        shipmentType: reason.shipmentType,
+                        comments: reason.comments
+                    });
+                }
+            });
+
+            modalDeferred.resolve(resolvedDiscrepancies);
         }
 
         function populateModalWithCurrentDiscrepancies (currentDiscrepancies){
-            if(currentDiscrepancies.length!=0){
-                angular.forEach(currentDiscrepancies, function(reason){
-                    reason.quantity = reason.quantityAffected;
-                    reason.name = reason.rejectionReason.name
-                    
+            if(currentDiscrepancies && currentDiscrepancies.length!=0){
+                return currentDiscrepancies.map(function(reason) {
+                    return {
+                        shipmentType: reason.shipmentType,
+                        name: reason.name || (reason.rejectionReason ? reason.rejectionReason.name : ''),
+                        quantity: angular.isDefined(reason.quantity) ? reason.quantity : reason.quantityAffected,
+                        comments: reason.comments
+                    };
                 });
-                return currentDiscrepancies;
             }
             else{
                return [];

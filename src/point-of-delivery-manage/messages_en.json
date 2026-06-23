@@ -24,6 +24,7 @@
   "proofOfDeliveryManage.quantityRejected":"Rejected Quantity",
   "proofOfDeliveryManage.action":"Discrepancy",
   "proofOfDeliveryManage.addDiscrepancy":"Add",
+  "pointOfDeliveryManage.discrepancies": "Discrepancies",
   "proofOfDeliveryManage.cartons": "Cartons",
   "pointOfDeliveryManage.containers": "Containers",
   "pointOfDeliveryManage.emptyConsignment": "Waybill Quantity and Accepted Quantity cannot be zero. Please enter correct values"
