@@ -813,6 +813,7 @@
                 } else {
                   notificationService.success(vm.key('submitted'));
                 }
+                clearAddedLineItems();
                 $state.go('openlmis.stockmanagement.stockCardSummaries', {
                   facility: facility.id,
                   program: program.id,
@@ -1128,6 +1129,17 @@
         return totalPages > 0 ? totalPages - 1 : 0;
       }
       return pageNumber;
+    }
+
+    function clearAddedLineItems() {
+      vm.addedLineItems = [];
+      vm.displayItems = [];
+      vm.items = [];
+      $stateParams.addedLineItems = undefined;
+      $stateParams.displayItems = undefined;
+      $stateParams.keyword = undefined;
+      $stateParams.page = 0;
+      updateNeedToConfirmFlag();
     }
 
     function saveOnPageChange() {
