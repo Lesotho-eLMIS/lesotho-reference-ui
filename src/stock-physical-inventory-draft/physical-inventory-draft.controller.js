@@ -655,7 +655,7 @@
      */
     vm.saveDraft = function () {
       confirmService
-        .confirmDestroy(
+        .confirm(
           "stockPhysicalInventoryDraft.saveDraft",
           "stockPhysicalInventoryDraft.save"
         )
@@ -1112,16 +1112,31 @@
           regroupCyclicItems();
         }
 
-        // Reuse confirmDiscardService from the receive page — intercepts any
-        // navigation away and shows a confirmation modal warning the user that
-        // their count will be lost if they leave without submitting.
-        // needToConfirm is always true for Cyclic since there is no save —
-        // the only way to preserve the count is to submit.
-        $scope.needToConfirm = true;
-        confirmDiscardService.register(
-          $scope,
-          'openlmis.stockmanagement.stockCardSummaries'
-        );
+        // Use confirmService.confirmDestroy for Cyclic navigation-away guard so
+        // the Leave button renders red (danger), matching the destructive action
+        // of discarding an unsaved cyclic count. confirmDiscardService uses
+        // confirm() internally which renders the button blue — wrong for Leave.
+        // cyclicNavigationConfirmed lets the second $state.go() pass through
+        // the listener without being intercepted again, preventing an infinite
+        // reload loop that would otherwise occur because preventDefault() fires
+        // on every $stateChangeStart including the confirmed navigation itself.
+        var cyclicNavigationConfirmed = false;
+        $scope.$on('$stateChangeStart', function(event, toState, toParams) {
+          if (cyclicNavigationConfirmed) {
+            return;
+          }
+          if (toState.name === $state.current.name) {
+            return;
+          }
+          event.preventDefault();
+          confirmService.confirmDestroy(
+            'stockPhysicalInventoryDraft.cyclicLeaveWarning',
+            'stockPhysicalInventoryDraft.leave'
+          ).then(function() {
+            cyclicNavigationConfirmed = true;
+            $state.go(toState.name, toParams);
+          });
+        });
       }
 
       vm.hasLot = _.any(draft.lineItems, function (item) {
