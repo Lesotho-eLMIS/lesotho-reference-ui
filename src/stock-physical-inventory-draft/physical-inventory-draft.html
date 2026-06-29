@@ -160,7 +160,7 @@
                         ng-model="lineItem.vvmStatus"
                         ng-options="status as vm.getStatusDisplay(status) for status in vm.vvmStatuses"
                         placeholder="{{'stockPhysicalInventoryDraft.selectStatus' | message}}"
-                        ng-change="vm.stateParams.physicalInventoryType !== 'Cyclic' && vm.cacheDraft()">
+                        ng-change="vm.stateParams.physicalInventoryType !== 'Cyclic' && vm.persistDraftChange()">
                     </select>
                 </td>
                 <td class="reasons-cell">

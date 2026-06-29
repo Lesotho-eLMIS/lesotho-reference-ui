@@ -62,7 +62,8 @@
     "editLotModalService",
     "dateUtils",
     "QUANTITY_UNIT",
-    "quantityUnitCalculateService"
+    "quantityUnitCalculateService",
+    "$timeout"
   ];
 
   function controller(
@@ -100,17 +101,29 @@
     editLotModalService,
     dateUtils,
     QUANTITY_UNIT,
-    quantityUnitCalculateService
+    quantityUnitCalculateService,
+    $timeout
   ) {
     var vm = this;
+    var durableAutosaveTimeout,
+      durableAutosaveInFlight = false,
+      durableAutosaveQueued = false;
+
+    var DURABLE_AUTOSAVE_DELAY = 2000;
+
     vm.$onInit = onInit;
     vm.cacheDraft = cacheDraft;
+    vm.persistDraftChange = persistDraftChange;
     vm.quantityChanged = quantityChanged;
     vm.checkUnaccountedStockAdjustments = checkUnaccountedStockAdjustments;
     vm.formatDate = formatDate;
     vm.showInDoses = showInDoses;
     vm.recalculateQuantity = recalculateQuantity;
     vm.removeGroup = removeGroup;
+
+    $scope.$on('$destroy', function() {
+      $timeout.cancel(durableAutosaveTimeout);
+    });
 
     /**
      * @ngdoc property
@@ -518,7 +531,7 @@
                   draft.id = 'cyclic-' + draft.programId + '-' + draft.facilityId;
               //}
           }
-          vm.cacheDraft();
+          vm.persistDraftChange();
 
           $state.go($state.current.name, $stateParams, {
             reload: $state.current.name
@@ -609,7 +622,7 @@
                 }
               }).active = false;
 
-              vm.cacheDraft();
+              vm.persistDraftChange();
               $state.go($state.current.name, $stateParams, {
                 reload: $state.current.name
               });
@@ -654,6 +667,7 @@
      * Save physical inventory draft. Used for Major count only.
      */
     vm.saveDraft = function () {
+      $timeout.cancel(durableAutosaveTimeout);
       confirmService
         .confirmDestroy(
           "stockPhysicalInventoryDraft.saveDraft",
@@ -685,7 +699,7 @@
                 $stateParams.noReload = undefined;
 
                 $state.go($state.current.name, $stateParams, {
-                  reload: $state.current.name
+                  reload: true
                 });
               },
               function (errorResponse) {
@@ -1129,21 +1143,28 @@
       });
 
       draft.lineItems.forEach(function (item) {
-        item = quantityUnitCalculateService.recalculateInputQuantity(
-          item,
-          item.orderable.netContent,
-          true
-        );
+        // -1 is the server marker for an item that was added but not counted.
+        // Restore the blank value before calculating packs and doses.
+        if (item.quantity === -1) {
+          item.quantity = null;
+        }
+
+        if (!_.isNull(item.quantity) && !_.isUndefined(item.quantity)) {
+          item = quantityUnitCalculateService.recalculateInputQuantity(
+            item,
+            item.orderable.netContent,
+            true
+          );
+        } else {
+          item.quantityInPacks = null;
+          item.quantityRemainderInDoses = null;
+        }
+
         item.unaccountedQuantity =
           stockReasonsCalculations.calculateUnaccounted(
             item,
             item.stockAdjustments
           );
-        // Convert -1 back to null for display — -1 is only used as the
-        // server-persisted marker for "added but not yet counted" in Cyclic.
-        if (vm.stateParams.physicalInventoryType === 'Cyclic' && item.quantity === -1) {
-          item.quantity = null;
-        }
       });
 
       if (vm.stateParams.physicalInventoryType === "Major") {
@@ -1192,8 +1213,7 @@
         );
       
        if ($stateParams.physicalInventoryType !== 'Cyclic') {
-            draft.$modified = true;
-            vm.cacheDraft();
+            vm.persistDraftChange();
         }
     }
 
@@ -1246,6 +1266,60 @@
      */
     function cacheDraft() {
       physicalInventoryDraftCacheService.cacheDraft(draft);
+    }
+
+    function persistDraftChange() {
+      draft.$modified = true;
+      vm.cacheDraft();
+      scheduleDurableAutosave();
+    }
+
+    function scheduleDurableAutosave() {
+      if (!canDurablyAutosave()) {
+        return;
+      }
+
+      $timeout.cancel(durableAutosaveTimeout);
+      durableAutosaveTimeout = $timeout(durableAutosave, DURABLE_AUTOSAVE_DELAY);
+    }
+
+    function durableAutosave() {
+      if (!canDurablyAutosave()) {
+        return $q.resolve();
+      }
+
+      if (durableAutosaveInFlight) {
+        durableAutosaveQueued = true;
+        return $q.resolve();
+      }
+
+      durableAutosaveInFlight = true;
+      return physicalInventoryFactory.saveDraft(draft)
+        .catch(function(errorResponse) {
+          if (errorResponse && errorResponse.data && errorResponse.data.message) {
+            alertService.error(errorResponse.data.message);
+          }
+        })
+        .finally(function() {
+          durableAutosaveInFlight = false;
+          if (durableAutosaveQueued) {
+            durableAutosaveQueued = false;
+            scheduleDurableAutosave();
+          }
+        });
+    }
+
+    function canDurablyAutosave() {
+      return $stateParams.physicalInventoryType === 'Major' &&
+        draft.id &&
+        !offlineService.isOffline() &&
+        !hasUnsavedNewLots();
+    }
+
+    function hasUnsavedNewLots() {
+      return draft.lineItems.some(function(lineItem) {
+        return lineItem.lot && lineItem.$isNewItem && !lineItem.lot.id;
+      });
     }
 
     /**

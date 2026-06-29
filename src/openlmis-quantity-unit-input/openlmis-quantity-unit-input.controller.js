@@ -47,7 +47,15 @@
          * Initiate method for QuantityUnitInputController.
          */
         function onInit() {
-            if (vm.item && vm.isQuantityRemainderInDosesDisabled()) {
+            var hasQuantity = vm.item &&
+                vm.item.quantity !== null &&
+                vm.item.quantity !== undefined;
+            var hasQuantityInPacks = vm.item &&
+                vm.item.quantityInPacks !== null &&
+                vm.item.quantityInPacks !== undefined;
+
+            if (vm.item && vm.isQuantityRemainderInDosesDisabled() &&
+                    (hasQuantity || hasQuantityInPacks)) {
                 vm.item.quantityRemainderInDoses = 0;
             }
         }
