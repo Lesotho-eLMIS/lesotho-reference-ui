@@ -666,7 +666,6 @@
         if (isNaN(price) || price < 0) {
           lineItem.$errors.unitPriceInvalid = messageService.get('stockAdjustmentCreation.unitPriceInvalid');
         } else {
-          lineItem.unitPrice = price;
           lineItem.$errors.unitPriceInvalid = false;
         }
       }
