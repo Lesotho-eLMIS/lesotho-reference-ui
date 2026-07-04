@@ -61,11 +61,11 @@
                             <select
                                 ng-model="tableLineItem.shipmentLineItem.quantityType"
                                 ng-options="option === 'UNITS' ? 'DISPENSING_UNITS' : option as vm.getQuantityTypeLabel(option === 'UNITS' ? 'DISPENSING_UNITS' : option) for option in vm.getQuantityTypeOptions()"
-                                ng-change="vm.onQuantityTypeChanged(tableLineItem.shipmentLineItem)">
+                                ng-change="vm.onQuantityTypeChanged(tableLineItem)">
                             </select>
                         </div>
                         <div ng-if="tableLineItem.shipmentLineItem.quantityType === 'PACKS'" class="shipment-fill-editor__fields shipment-fill-editor__fields--single">
-                            <div class="shipment-fill-editor__field">
+                            <div class="form-group shipment-fill-editor__field">
                                 <label class="shipment-fill-editor__label">{{'shipmentView.packs' | message}}</label>
                                 <input positive-integer
                                     ng-model="tableLineItem.shipmentLineItem.quantityShipped"
@@ -74,28 +74,18 @@
                                     openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>
                             </div>
                         </div>
-                        <div ng-if="tableLineItem.shipmentLineItem.quantityType === 'DISPENSING_UNITS'" class="shipment-fill-editor__fields shipment-fill-editor__fields--split">
-                            <div class="shipment-fill-editor__field">
-                                <label class="shipment-fill-editor__label">{{'shipmentView.packs' | message}}</label>
-                                <input positive-integer
-                                    ng-model="tableLineItem.shipmentLineItem.quantityInPacks"
-                                    ng-change="vm.onUnitQuantityChanged(tableLineItem.shipmentLineItem)"
-                                    placeholder="{{'shipmentView.packs' | message}}"
-                                    ng-class="{'is-invalid': tableLineItem.shipmentLineItem.isInvalid().quantityShipped}"
-                                    openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>
-                            </div>
-                            <div class="shipment-fill-editor__field">
+                        <div ng-if="tableLineItem.shipmentLineItem.quantityType === 'DISPENSING_UNITS'" class="shipment-fill-editor__fields shipment-fill-editor__fields--single">
+                            <div class="form-group shipment-fill-editor__field">
                                 <label class="shipment-fill-editor__label">{{'shipmentView.units' | message}}</label>
                                 <input positive-integer
-                                    ng-model="tableLineItem.shipmentLineItem.quantityRemainderInUnits"
-                                    ng-change="vm.onUnitQuantityChanged(tableLineItem.shipmentLineItem)"
+                                    ng-model="tableLineItem.shipmentLineItem.quantityShipped"
                                     placeholder="{{'shipmentView.units' | message}}"
                                     ng-class="{'is-invalid': tableLineItem.shipmentLineItem.isInvalid().quantityShipped}"
                                     openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>
                             </div>
                         </div>
                         <small class="shipment-fill-editor__summary">
-                            {{'shipmentView.calculatedTotal' | message}}: {{vm.getEditableQuantitySummary(tableLineItem.shipmentLineItem)}}
+                            {{'shipmentView.calculatedTotal' | message}}: {{vm.getEditableQuantitySummary(tableLineItem)}}
                         </small>
                     </div>
                     <div ng-if="!vm.shipment.isEditable()">{{vm.getFillQuantityDisplay(tableLineItem)}}</div>
