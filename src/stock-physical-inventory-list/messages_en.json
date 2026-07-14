@@ -15,5 +15,6 @@
   "stockPhysicalInventory.countInventory": "countInventory",
   "stockPhysicalInventory.majorCount": "Start Major Count",
   "stockPhysicalInventory.cyclicCount": "Start Cyclic Count",
+  "stockPhysicalInventory.continueMajorCount": "Continue Major Count",
   "stock.PhysicalInventory.majorCountInProgress": "Please complete or delete the ongoing Major count before stating a Cyclic count."
 }

@@ -21,8 +21,18 @@
     <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
   </div> -->
+  <!--
+    Uses vm.majorCountInProgress, which is driven entirely by
+    checkMajorProgress() in the controller. That function asks the server
+    directly (physicalInventoryService.getDraft) for the Major draft's real
+    lineItems, because the summary drafts list resolved into this page does
+    not carry lineItems and can not be used to detect progress. The flag is
+    checked at controller construction, on program and facility selection,
+    and when toggling back to the Major tab, and it is not reset when
+    switching to Cyclic, so it survives Major -> Cyclic -> Major.
+  -->
   <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
-       value="{{(vm.getSelectedDraft() && vm.getSelectedDraft().isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+       value="{{(vm.majorCountInProgress ? 'stockPhysicalInventory.continueMajorCount' : 'stockPhysicalInventory.majorCount') | message}}"
        class="primary"/>
   <input ng-if="vm.physicalInventoryType === 'Cyclic'"
        id="proceedButton"
@@ -31,6 +41,3 @@
        value="{{'stockPhysicalInventory.cyclicCount' | message}}"
        class="primary"/>
 </form>
-
-
-
