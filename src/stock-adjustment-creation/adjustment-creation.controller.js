@@ -447,6 +447,30 @@
       }
       return lineItem;
     };
+    /**
+     * @ngdoc method
+     * @methodOf stock-adjustment-creation.controller:StockAdjustmentCreationController
+     * @name validateLot
+     *
+     * @description
+     * Validate that a line item being received has a defined batch.
+     * Products cannot be received without a batch.
+     *
+     * @param {Object} lineItem line item to be validated.
+     */
+    vm.validateLot = function (lineItem) {
+    if (adjustmentType.state === ADJUSTMENT_TYPE.RECEIVE.state && !vm.hasPermissionToAddNewLot) {
+      var noLotDefined = messageService.get('orderableGroupService.noLotDefined');
+
+      lineItem.$errors.lotInvalid =
+        isEmpty(lineItem.lot) ||
+        isEmpty(lineItem.lot.lotCode) ||
+        lineItem.lot.lotCode === noLotDefined
+          ? messageService.get('stockAdjustmentCreation.lotRequired')
+          : false;
+    }
+    return lineItem;
+  };
 
     /**
     * @ngdoc method
@@ -679,6 +703,7 @@
         vm.validateAssignment(item);
         vm.validateReason(item);
         vm.validateUnitPrice(item);
+        vm.validateLot(item); 
         if (adjustmentType.state === 'receive' && vm.hasOwnProperty('totalCartonNumber')) {
           vm.validateCartonNumber(item);
         }
