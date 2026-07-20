@@ -461,18 +461,11 @@
       var notYetAddedItems;
 
       if ($stateParams.physicalInventoryType === 'Cyclic') {
-        // For Cyclic "Add from Catalogue": show programme products that have never
-        // been stocked at this facility. A product is "at the facility" if ANY of
-        // its lot entries in draft.lineItems has a non-null stockOnHand.
-        var orderableIdsAtFacility = {};
-        draft.lineItems.forEach(function(item) {
-          if (item.stockOnHand !== null && item.stockOnHand !== undefined) {
-            orderableIdsAtFacility[item.orderable.id] = true;
-          }
-        });
-
+        // For Cyclic "Add from Catalogue": show individual lots that have never been
+        // stocked (stockOnHand === null). Filter per lot, not per product, so that
+        // a product with multiple batches remains available after the first batch is submitted.
         notYetAddedItems = draft.lineItems.filter(function(item) {
-          return !orderableIdsAtFacility[item.orderable.id];
+          return item.stockOnHand === null || item.stockOnHand === undefined;
         });
       } else {
         // Original Major logic — unchanged.
