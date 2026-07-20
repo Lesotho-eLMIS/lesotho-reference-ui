@@ -1173,6 +1173,7 @@
             return vm.pagedLineItems;
           },
           function (newList) {
+            ensureOrderableHasProgramCategory(newList, vm.program.id);
             vm.groupedCategories = $filter("groupByProgramProductCategory")(
               newList,
               vm.program.id
@@ -1186,6 +1187,22 @@
           vm.cacheDraft();
         }
       }
+    }
+
+    function ensureOrderableHasProgramCategory(groups, programId) {
+      angular.forEach(groups, function (group) {
+        var orderable = group[0].orderable;
+        var programOrderable = _.findWhere(orderable.programs, {
+          programId: programId
+        });
+        if (!programOrderable) {
+          orderable.programs = orderable.programs || [];
+          orderable.programs.push({
+            programId: programId,
+            orderableCategoryDisplayName: "Uncategorized"
+          });
+        }
+      });
     }
 
     /**
