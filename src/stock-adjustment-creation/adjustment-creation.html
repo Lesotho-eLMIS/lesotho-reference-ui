@@ -28,8 +28,16 @@
                         <label for="productSelect">{{vm.key('product') | message}}</label>
                         <select id="productSelect" ng-model="vm.selectedOrderableGroupId"
                             ng-options="option.id as option.displayName for option in vm.orderableGroupOptions track by option.id"
-                            ng-change="vm.orderableSelectionChanged()" required>
+                            ng-change="vm.orderableSelectionChanged()"
+                            receive-product-search="vm.productSearchChanged(keyword)"
+                            receive-product-placeholder="vm.productSelectPlaceholder"
+                            receive-product-search-enabled="vm.showDeliveryNoteAttributes"
+                            required>
+                            <option class="placeholder" value=""></option>
                         </select>
+                        <span ng-if="vm.productSearchStatus" aria-live="polite">
+                            {{vm.productSearchStatus}}
+                        </span>
                     </div>
                     <div ng-if="vm.selectedOrderableHasLots">
                         <label for="lotSelect">{{'stockAddProductsModal.lotCode' | message}}</label>
@@ -60,7 +68,7 @@
                     <th>{{vm.key('product') | message}}</th>
                     <th ng-show="vm.hasLot">{{vm.key('lotCode') | message}}</th>
                     <th ng-show="vm.hasLot">{{vm.key('expiryDate') | message}}</th>
-                    <th>{{vm.showInDoses() ? vm.key('sohDoses') : vm.key('sohPacks') | message}}</th>
+                    <th>{{vm.showInDosesValue ? vm.key('sohDoses') : vm.key('sohPacks') | message}}</th>
 
                     <th ng-show="vm.srcDstAssignments"
                         ng-hide="vm.showReasonsInAdjustment">{{vm.key('srcDstLabel') |
@@ -77,9 +85,9 @@
 
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('deliveryNoteQuantity') | message}}</th>
 
-                    <th>{{ (vm.showInDoses() ? vm.key('quantityDoses') : vm.key('quantityPacks')) | message }}</th>
+                    <th>{{ (vm.showInDosesValue ? vm.key('quantityDoses') : vm.key('quantityPacks')) | message }}</th>
 
-                    <th ng-if="!vm.showInDoses()">{{vm.key('totalQuantityInDoses') | message}}</th>
+                    <th ng-if="!vm.showInDosesValue">{{vm.key('totalQuantityInDoses') | message}}</th>
 
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('comments') | message}}</th>
                     <th ng-if="vm.showDeliveryNoteAttributes">{{vm.key('unitPrice') | message}}</th>
@@ -94,9 +102,9 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="lineItem in vm.items">
-                    <td>{{lineItem.orderable.productCode}}</td>
-                    <td>{{lineItem.orderable | productName}}</td>
+                <tr ng-repeat="lineItem in vm.items track by lineItem.$rowKey">
+                    <td>{{::lineItem.orderable.productCode}}</td>
+                    <td>{{::(lineItem.orderable | productName)}}</td>
                     <td ng-show="vm.hasLot && vm.canEditLot(lineItem)">
                         <button class="edit" ng-click="vm.editLot(lineItem)">
                             {{lineItem.displayLotMessage}}
@@ -113,13 +121,13 @@
                             {{lineItem.displayLotMessage}}
                         </span>
                     </td>
-                    <td ng-show="vm.hasLot">{{vm.formatDate(lineItem.lot.expirationDate) | message}}</td>
-                    <td align="right">{{vm.recalculateSOHQuantity(lineItem.$previewSOH, lineItem.orderable.netContent)}}</td>
+                    <td ng-show="vm.hasLot">{{lineItem.$expiryDateDisplay}}</td>
+                    <td align="right">{{lineItem.$sohDisplay}}</td>
                     <td ng-show="vm.srcDstAssignments"
                         ng-hide="vm.showReasonsInAdjustment"
                         openlmis-invalid="{{lineItem.$errors.assignmentInvalid ? 'openlmisForm.required' : '' | message}}">
                         <select ng-model="lineItem.assignment"
-                            ng-change="vm.validateAssignment(lineItem);vm.clearFreeText(lineItem, 'srcDstFreeText');vm.hideColumns()"
+                            ng-change="vm.validateAssignment(lineItem);vm.clearFreeText(lineItem, 'srcDstFreeText')"
                             ng-options="assignment.name for assignment in vm.srcDstAssignments track by assignment.id"
                             autofocus>
                         </select>
@@ -172,17 +180,17 @@
                     <td ng-if="vm.showDeliveryNoteAttributes"><input ng-model="lineItem.deliveryNoteQuantity"
                         class="form-control" type="number" style="width: 50px;" min="0" step="1"
                         oninput="validity.valid||(value='');" ng-change="vm.validateQuantity(lineItem)"
-                        ng-show="lineItem.assignment.name.includes('NDSO')" required>
+                        ng-show="lineItem.$isNdsoAssignment" required>
                 </td>
 
                     <td class="digit-cell" openlmis-invalid="{{lineItem.$errors.quantityInvalid}}">
                         <openlmis-quantity-unit-input 
-                            show-in-doses="vm.showInDoses()" 
+                            show-in-doses="vm.showInDosesValue" 
                             item="lineItem" 
-                            on-change-quantity="vm.test(lineItem); vm.validateQuantity(lineItem)"
+                            on-change-quantity="vm.validateQuantity(lineItem)"
                             input-class="{'error': lineItem.$errors.quantityInvalid}"/>
                     </td>
-                    <td ng-if="!vm.showInDoses()">{{lineItem.quantity}}</td>
+                    <td ng-if="!vm.showInDosesValue">{{lineItem.quantity}}</td>
                    
                     <td ng-if="vm.showDeliveryNoteAttributes"><input class="form-control"
                             type="text" style="width: 100px;"></td> 
@@ -191,13 +199,13 @@
                             type="text" inputmode="decimal" style="width: 50px;"
                             ng-model="lineItem.unitPrice"
                             ng-change="vm.validateUnitPrice(lineItem)"
-                            ng-show="lineItem.assignment.name.includes('NDSO')"
+                            ng-show="lineItem.$isNdsoAssignment"
                             oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')"
                             openlmis-invalid="{{lineItem.$errors.unitPriceInvalid ? lineItem.$errors.unitPriceInvalid : ''}}"></td>
                     <td ng-if="vm.showDeliveryNoteAttributes" ng-hide="vm.FromSupplier"><input type="text" readonly
                             style="width: 85px;"
-                            value="{{ (lineItem.quantityInPacks*lineItem.unitPrice) || 0 | openlmisCurrency}}"
-                            ng-show="lineItem.assignment.name.includes('NDSO')" /></td>
+                            value="{{lineItem.$amountDisplay}}"
+                            ng-show="lineItem.$isNdsoAssignment" /></td>
                     <td ng-if="vm.showVVMStatusColumn">
                         <select ng-if="lineItem.orderable.extraData.useVVM == 'true'" ng-model="lineItem.vvmStatus"
                             ng-options="status as vm.getStatusDisplay(status) for status in vm.vvmStatuses"
@@ -206,7 +214,7 @@
                     </td>
 
                     <td ng-if="vm.showDeliveryNoteAttributes">
-                        <button ng-show="lineItem.assignment.name.includes('NDSO')"
+                        <button ng-show="lineItem.$isNdsoAssignment"
                             type="button" class="primary" ng-click="vm.addDiscrepancyOnModal(lineItem.timestamp)"><b>+
                             </b>Add</button>
                     </td>
