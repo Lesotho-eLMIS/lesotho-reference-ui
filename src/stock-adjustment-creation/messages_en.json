@@ -40,5 +40,6 @@
   "stockAdjustmentCreation.cartonsInvalidError": "Cartons cannot be zero or greater than total received",
   "stockAdjustmentCreation.unitPrice": "Unit Price (M)",
   "stockAdjustmentCreation.unitPriceInvalid": "Unit price must be a positive number",
-  "stockAdjustmentCreation.amount": "Amount (M)"
+  "stockAdjustmentCreation.amount": "Amount (M)",
+  "stockAdjustmentCreation.lotRequired": "No batch defined. Ask a supervisor with lot management rights to create a batch."
 }

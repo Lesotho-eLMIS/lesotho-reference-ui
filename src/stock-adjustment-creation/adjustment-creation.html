@@ -97,13 +97,14 @@
                 <tr ng-repeat="lineItem in vm.items">
                     <td>{{lineItem.orderable.productCode}}</td>
                     <td>{{lineItem.orderable | productName}}</td>
-                    <td ng-show="vm.hasLot && vm.canEditLot(lineItem)">
+                    <td ng-show="vm.hasLot && vm.canEditLot(lineItem)"
+                        openlmis-invalid="{{lineItem.$errors.lotInvalid}}">
                         <button class="edit" ng-click="vm.editLot(lineItem)">
                             {{lineItem.displayLotMessage}}
                         </button>
                     </td>
-
-                    <td ng-show="vm.hasLot && !vm.canEditLot(lineItem)">
+                    <td ng-show="vm.hasLot && !vm.canEditLot(lineItem)"
+                        openlmis-invalid="{{lineItem.$errors.lotInvalid}}">
                         <select ng-if="lineItem.$lots && lineItem.$lots.length > 0"
                             ng-model="lineItem.lot"
                             ng-options="lot.lotCode for lot in lineItem.$lots track by lot.lotCode"
