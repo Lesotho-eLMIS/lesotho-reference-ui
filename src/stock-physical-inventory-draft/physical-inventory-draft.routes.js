@@ -55,16 +55,6 @@
                     // Never call getPhysicalInventory for Cyclic — it would load the
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
-                        // [DIAGNOSTIC] Temporary - remove once the refresh
-                        // param-visibility question is settled.
-                        console.log('[DIAGNOSTIC] cyclic draft resolve running', {
-                            id: $stateParams.id,
-                            hasProgramObject: !!$stateParams.program,
-                            hasFacilityObject: !!$stateParams.facility,
-                            programId: $stateParams.programId,
-                            facilityId: $stateParams.facilityId,
-                            noReload: $stateParams.noReload
-                        });
                         // Cyclic identity comes from two possible sources:
                         // - $stateParams.program / .facility: full objects,
                         //   only ever present via in-app $state.go(...) params
@@ -92,8 +82,6 @@
                             $stateParams.facility.id : $stateParams.facilityId;
 
                         if (!cyclicProgramId || !cyclicFacilityId) {
-                            // [DIAGNOSTIC] Temporary.
-                            console.log('[DIAGNOSTIC] cyclic redirect branch FIRING - ids missing at resolve time');
                             // Truly unrecoverable - no in-app params and
                             // nothing usable in the URL either. Nothing to
                             // render; send the user to pick a program and
