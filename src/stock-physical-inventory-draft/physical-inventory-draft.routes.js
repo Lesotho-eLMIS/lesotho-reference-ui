@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 (function() {
@@ -46,7 +46,7 @@
             },
             resolve: {
                 draft: function($stateParams, physicalInventoryFactory, offlineService,
-                    physicalInventoryDraftCacheService, drafts) {
+                    physicalInventoryDraftCacheService, drafts, $state, $q) {
 
                     // Cyclic is handled first — it has no server draft and no id.
                     // Both noReload and normal load use the same path: check cache
@@ -56,12 +56,22 @@
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
                         if (!$stateParams.program || !$stateParams.facility) {
-                            return {
-                                programId: undefined,
-                                facilityId: undefined,
-                                isStarter: true,
-                                lineItems: []
-                            };
+                            // Fix: previously returned a stub draft here
+                            // ({ programId: undefined, facilityId: undefined,
+                            // isStarter: true, lineItems: [] }). $stateParams.program
+                            // and .facility are full objects only ever passed via
+                            // in-app $state.go(...) params - they are not part of the
+                            // url pattern above, so a real browser refresh (F5) always
+                            // loses them. The program/facility resolves below could not
+                            // recover from the stub's undefined programId, which is why
+                            // refreshing on Cyclic broke the page instead of behaving
+                            // like a fresh visit. Redirecting back to the physical
+                            // inventory picker page gives the desired behavior directly:
+                            // the user starts over, with nothing restored.
+                            $state.go('openlmis.stockmanagement.physicalInventory', {}, {
+                                reload: true
+                            });
+                            return $q.reject();
                         }
                         // Synthetic cache key — Cyclic has no server draft id so we
                         // use program+facility as a stable identifier. vm.addProducts

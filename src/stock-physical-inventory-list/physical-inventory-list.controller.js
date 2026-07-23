@@ -322,12 +322,19 @@
             // (not the factory) to get the raw server response with lineItems and quantities. vm.program.id and vm.facility.id are always the currently
             // selected values from openlmis-facility-program-select two-way binding, so supervised facilities are handled correctly.
             if (vm.physicalInventoryType === 'Cyclic') {
-                // Step 1: Check if a Major count is in progress
+                // Check if a Major count is in progress, and whether a server
+                // draft already exists at all. Major and Cyclic share one
+                // server draft per program and facility, so this same live
+                // response is used for both decisions instead of two calls.
                 return physicalInventoryService.getDraft(vm.program.id, vm.facility.id)
                     .then(function (serverDrafts) {
-                        // Only block if Major has real progress
+                        var existingServerDraft = null;
                         if (Array.isArray(serverDrafts) && serverDrafts.length > 0 && serverDrafts[0].id) {
-                            var lineItems = serverDrafts[0].lineItems || [];
+                            existingServerDraft = serverDrafts[0];
+                        }
+
+                        if (existingServerDraft) {
+                            var lineItems = existingServerDraft.lineItems || [];
                             var hasProgress = lineItems.some(function (item) {
                                 return item.quantity !== null &&
                                     item.quantity !== undefined &&
@@ -337,14 +344,30 @@
                                 alertService.error('stockPhysicalInventory.majorCountInProgress');
                                 return $q.reject();
                             }
+
+                            // Fix: a server draft already exists for this
+                            // program and facility with no real progress yet.
+                            // This is now the common case after a Cyclic
+                            // refresh, since the refresh redirect back to the
+                            // picker page means the passed-in draft parameter
+                            // is always falsy here, regardless of whether a
+                            // server draft was already created before the
+                            // refresh (for example by adding a product to the
+                            // count). The old code only checked draft.id on
+                            // that passed-in parameter, so it always fell
+                            // through to createDraft and the server correctly
+                            // rejected it with "already exists". Reusing the
+                            // id from the live response fetched above avoids
+                            // that collision regardless of how the page was
+                            // reached.
+                            return navigateToCyclic({
+                                id: existingServerDraft.id,
+                                programId: vm.program.id
+                            });
                         }
 
-                        // Step 2: draft already has an ID from page load, just navigate
-                        if (draft && draft.id) {
-                            return navigateToCyclic(draft);
-                        }
-
-                        // Step 3: No draft ID — create one directly, same as Major does
+                        // No server draft at all yet for this program and
+                        // facility. Safe to create one.
                         return physicalInventoryService.createDraft(vm.program.id, vm.facility.id)
                             .then(function (newDraft) {
                                 return navigateToCyclic({
