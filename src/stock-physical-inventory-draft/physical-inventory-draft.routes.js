@@ -25,7 +25,7 @@
 
     function routes($stateProvider, STOCKMANAGEMENT_RIGHTS) {
         $stateProvider.state('openlmis.stockmanagement.physicalInventory.draft', {
-            url: '/:id?physicalInventoryType&keyword&includeInactive&page&size',
+            url: '/:id?physicalInventoryType&keyword&includeInactive&page&size&programId&facilityId',
             isOffline: true,
             views: {
                 '@openlmis': {
@@ -55,41 +55,73 @@
                     // Never call getPhysicalInventory for Cyclic — it would load the
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
-                        if (!$stateParams.program || !$stateParams.facility) {
-                            // Fix: previously returned a stub draft here
-                            // ({ programId: undefined, facilityId: undefined,
-                            // isStarter: true, lineItems: [] }). $stateParams.program
-                            // and .facility are full objects only ever passed via
-                            // in-app $state.go(...) params - they are not part of the
-                            // url pattern above, so a real browser refresh (F5) always
-                            // loses them. The program/facility resolves below could not
-                            // recover from the stub's undefined programId, which is why
-                            // refreshing on Cyclic broke the page instead of behaving
-                            // like a fresh visit. Redirecting back to the physical
-                            // inventory picker page gives the desired behavior directly:
-                            // the user starts over, with nothing restored.
+                        // Cyclic identity comes from two possible sources:
+                        // - $stateParams.program / .facility: full objects,
+                        //   only ever present via in-app $state.go(...) params
+                        //   (normal navigation, and selectExistingProductForCyclic's
+                        //   own soft-reload both set these explicitly).
+                        // - $stateParams.programId / .facilityId: plain string
+                        //   ids carried in the URL itself (see url pattern
+                        //   above), set by navigateToCyclic. These are what
+                        //   survive a real browser refresh, since the full
+                        //   objects above do not.
+                        var cyclicProgramId = $stateParams.program ?
+                            $stateParams.program.id : $stateParams.programId;
+                        var cyclicFacilityId = $stateParams.facility ?
+                            $stateParams.facility.id : $stateParams.facilityId;
+
+                        if (!cyclicProgramId || !cyclicFacilityId) {
+                            // Truly unrecoverable - no in-app params and
+                            // nothing usable in the URL either. Nothing to
+                            // render; send the user to pick a program and
+                            // facility.
                             $state.go('openlmis.stockmanagement.physicalInventory', {}, {
                                 reload: true
                             });
                             return $q.reject();
                         }
-                        // Synthetic cache key — Cyclic has no server draft id so we
-                        // use program+facility as a stable identifier. vm.addProducts
-                        // sets draft.id to this same key before calling cacheDraft().
-                        var cyclicKey = 'cyclic-' +
-                            $stateParams.program.id + '-' +
-                            $stateParams.facility.id;
-                        return physicalInventoryDraftCacheService.getDraft(cyclicKey)
-                            .then(function(cached) {
-                                if (cached && cached.$modified) {
-                                    return cached;
-                                }
-                                // No modified cache — fresh load. Call getDraft to get
-                                // real stock products for this facility so Search Existing
-                                // Product and Add from Catalogue have items to show.
-                                return physicalInventoryFactory
-                                    .getDraft($stateParams.program.id, $stateParams.facility.id);
-                            });
+
+                        var cyclicKey = 'cyclic-' + cyclicProgramId + '-' + cyclicFacilityId;
+
+                        // Fix: previously this cache read fired any time a
+                        // modified cache entry existed for this key,
+                        // regardless of how the page was reached - which
+                        // meant a real refresh incorrectly restored old
+                        // counts (the earlier bug this session was trying to
+                        // fix). But removing it outright (a later attempt)
+                        // broke selectExistingProductForCyclic in the
+                        // controller, which deliberately does its own
+                        // in-app soft-reload after adding a product
+                        // (sets $stateParams.noReload = true, then
+                        // $state.go(current state)) specifically relying on
+                        // this exact cache read to bring back the
+                        // just-cached draft with the new product included -
+                        // without it, the product vanished from the table
+                        // after being "added".
+                        // $stateParams.noReload is the right signal to tell
+                        // these two cases apart: it is not part of the url
+                        // pattern above, so it is only ever true when set
+                        // deliberately in JS (as selectExistingProductForCyclic
+                        // does) - a real browser refresh always loses it,
+                        // coming back undefined. So: restore from cache only
+                        // when noReload is explicitly true (the deliberate
+                        // add-product case); otherwise - a first visit or a
+                        // real refresh - always fetch fresh from the server,
+                        // which naturally reflects nothing counted yet since
+                        // Cyclic never saves anything there until Submit.
+                        if ($stateParams.noReload) {
+                            return physicalInventoryDraftCacheService.getDraft(cyclicKey)
+                                .then(function(cached) {
+                                    if (cached && cached.$modified) {
+                                        return cached;
+                                    }
+                                    return physicalInventoryFactory
+                                        .getDraft(cyclicProgramId, cyclicFacilityId);
+                                });
+                        }
+
+                        return physicalInventoryFactory
+                            .getDraft(cyclicProgramId, cyclicFacilityId);
                     }
 
                     // noReload=true after Add Product or Save for Major — load from cache.

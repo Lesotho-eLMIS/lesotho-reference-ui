@@ -452,6 +452,13 @@
                 id: undefined,
                 program: vm.program,
                 facility: vm.facility,
+                // Also carried as plain ids in the URL itself (see
+                // physical-inventory-draft.routes.js url pattern). vm.program
+                // and vm.facility above are full objects only available via
+                // this in-app navigation; a raw browser refresh cannot see
+                // them, so the draft resolve falls back to these ids instead.
+                programId: vm.program.id,
+                facilityId: vm.facility.id,
                 supervised: vm.isSupervised,
                 includeInactive: false,
                 physicalInventoryType: vm.physicalInventoryType
