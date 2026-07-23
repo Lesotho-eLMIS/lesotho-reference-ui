@@ -449,7 +449,20 @@
                 }
             });
             $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                id: undefined,
+                // Fix: was id: undefined, which produced a URL with an empty
+                // :id segment (/physicalInventory/?...). In-app navigation
+                // does not care, but on a raw browser refresh ui-router must
+                // match that URL back to a state, and with non-strict
+                // matching an empty trailing segment is ambiguous between
+                // the parent list state (/physicalInventory) and this draft
+                // state (/physicalInventory/:id). The parent is registered
+                // first and wins, so a refresh silently landed on the list
+                // page without the draft resolve ever running. A non-empty
+                // sentinel makes the URL unambiguous. The Cyclic branch of
+                // the draft resolve never reads $stateParams.id (it works
+                // purely off programId/facilityId), so the sentinel is
+                // otherwise inert.
+                id: 'cyclic',
                 program: vm.program,
                 facility: vm.facility,
                 // Also carried as plain ids in the URL itself (see

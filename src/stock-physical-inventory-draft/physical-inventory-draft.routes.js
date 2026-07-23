@@ -55,6 +55,16 @@
                     // Never call getPhysicalInventory for Cyclic — it would load the
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
+                        // [DIAGNOSTIC] Temporary - remove once the refresh
+                        // param-visibility question is settled.
+                        console.log('[DIAGNOSTIC] cyclic draft resolve running', {
+                            id: $stateParams.id,
+                            hasProgramObject: !!$stateParams.program,
+                            hasFacilityObject: !!$stateParams.facility,
+                            programId: $stateParams.programId,
+                            facilityId: $stateParams.facilityId,
+                            noReload: $stateParams.noReload
+                        });
                         // Cyclic identity comes from two possible sources:
                         // - $stateParams.program / .facility: full objects,
                         //   only ever present via in-app $state.go(...) params
@@ -65,12 +75,25 @@
                         //   above), set by navigateToCyclic. These are what
                         //   survive a real browser refresh, since the full
                         //   objects above do not.
-                        var cyclicProgramId = $stateParams.program ?
+                        // Note: checked for a real .id rather than mere
+                        // truthiness. The facility resolve below mutates
+                        // $stateParams.facility to the PROMISE returned by
+                        // facilityFactory.getUserHomeFacility() when it runs
+                        // first (it has no dependency on draft, so ui-router
+                        // may run it before this resolve; program cannot race
+                        // this way because its resolve injects draft). A
+                        // pending promise is truthy but has no .id, which
+                        // made the previous truthiness check pick the object
+                        // branch, get undefined, and wrongly fire the
+                        // redirect below even with valid ids in the URL.
+                        var cyclicProgramId = ($stateParams.program && $stateParams.program.id) ?
                             $stateParams.program.id : $stateParams.programId;
-                        var cyclicFacilityId = $stateParams.facility ?
+                        var cyclicFacilityId = ($stateParams.facility && $stateParams.facility.id) ?
                             $stateParams.facility.id : $stateParams.facilityId;
 
                         if (!cyclicProgramId || !cyclicFacilityId) {
+                            // [DIAGNOSTIC] Temporary.
+                            console.log('[DIAGNOSTIC] cyclic redirect branch FIRING - ids missing at resolve time');
                             // Truly unrecoverable - no in-app params and
                             // nothing usable in the URL either. Nothing to
                             // render; send the user to pick a program and
