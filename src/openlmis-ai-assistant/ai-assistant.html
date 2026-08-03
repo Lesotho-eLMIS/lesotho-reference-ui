@@ -1,0 +1,104 @@
+<section class="ai-assistant" ng-class="{'is-open': vm.isOpen}">
+
+  <button type="button"
+          class="ai-assistant-toggle"
+          ng-click="vm.toggleOpen()"
+          aria-expanded="{{vm.isOpen}}"
+          aria-controls="ai-assistant-panel">
+    <span class="ai-assistant-toggle-title">{{'openlmisAiAssistant.title' | message}}</span>
+    <span class="ai-assistant-toggle-hint">{{'openlmisAiAssistant.subtitle' | message}}</span>
+    <span class="ai-assistant-chevron" aria-hidden="true"></span>
+  </button>
+
+  <div class="ai-assistant-panel" id="ai-assistant-panel" ng-if="vm.isOpen">
+
+    <!-- Nothing asked yet -->
+    <div class="ai-assistant-intro" ng-if="vm.turns.length === 0">
+      <p class="ai-assistant-lead">{{'openlmisAiAssistant.intro' | message}}</p>
+      <p class="ai-assistant-heading">{{'openlmisAiAssistant.tryOne' | message}}</p>
+      <ul class="ai-assistant-examples">
+        <li ng-repeat="example in vm.examples">
+          <button type="button" ng-click="vm.askExample(example | message)">
+            {{example | message}}
+          </button>
+        </li>
+      </ul>
+      <p class="ai-assistant-notice">{{'openlmisAiAssistant.slowNotice' | message}}</p>
+    </div>
+
+    <!-- Conversation -->
+    <ol class="ai-assistant-thread">
+      <li class="ai-assistant-turn" ng-repeat="turn in vm.turns">
+
+        <p class="ai-assistant-label">{{'openlmisAiAssistant.youAsked' | message}}</p>
+        <p class="ai-assistant-question">{{turn.question}}</p>
+
+        <!-- Working trace: what the agent is doing, and afterwards what it did -->
+        <div class="ai-assistant-trace">
+          <div class="ai-assistant-trace-head">
+            <span class="ai-assistant-trace-label" ng-if="!turn.answer && !turn.errorKey">
+              {{'openlmisAiAssistant.working' | message}}
+            </span>
+            <span class="ai-assistant-trace-label" ng-if="turn.answer || turn.errorKey">
+              {{'openlmisAiAssistant.steps' | message:{count: turn.tools.length} }}
+            </span>
+            <button type="button"
+                    class="ai-assistant-trace-toggle"
+                    ng-if="turn.answer || turn.errorKey"
+                    ng-click="vm.toggleTrace(turn)"
+                    aria-expanded="{{!turn.traceHidden}}">
+              {{(turn.traceHidden ? 'openlmisAiAssistant.show' : 'openlmisAiAssistant.hide') | message}}
+            </button>
+            <span class="ai-assistant-clock">{{turn.elapsed}}s</span>
+          </div>
+
+          <ul class="ai-assistant-steps" ng-hide="turn.traceHidden">
+            <li ng-repeat="tool in turn.tools">
+              <span class="ai-assistant-tick" aria-hidden="true">&#10003;</span>
+              <span class="ai-assistant-tool">{{tool.tool}}</span>
+              <span class="ai-assistant-args">{{tool.arguments | json:0}}</span>
+            </li>
+            <li class="ai-assistant-pending" ng-if="!turn.answer && !turn.errorKey">
+              <span class="ai-assistant-pulse" aria-hidden="true"></span>
+              <span>{{(turn.tools.length ? 'openlmisAiAssistant.readingResults' : 'openlmisAiAssistant.reading') | message}}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Answer -->
+        <div class="ai-assistant-answer" ng-if="turn.answer" aria-live="polite">
+          <p ng-repeat="paragraph in turn.answer.split('\n')" ng-if="paragraph.trim()">{{paragraph}}</p>
+        </div>
+
+        <!-- Failure -->
+        <div class="ai-assistant-error" ng-if="turn.errorKey" role="alert">
+          {{turn.errorKey | message}}
+        </div>
+
+      </li>
+    </ol>
+
+    <!-- Composer -->
+    <form class="ai-assistant-composer" ng-submit="vm.ask()">
+      <label class="sr-only" for="ai-assistant-input">{{'openlmisAiAssistant.inputLabel' | message}}</label>
+      <input type="text"
+             id="ai-assistant-input"
+             ng-model="vm.question"
+             ng-disabled="vm.isBusy"
+             placeholder="{{'openlmisAiAssistant.placeholder' | message}}">
+      <button type="submit" ng-disabled="vm.isBusy || !vm.question">
+        {{(vm.isBusy ? 'openlmisAiAssistant.asking' : 'openlmisAiAssistant.askButton') | message}}
+      </button>
+    </form>
+
+    <div class="ai-assistant-footer">
+      <span>{{'openlmisAiAssistant.permissionsNote' | message}}</span>
+      <button type="button"
+              ng-if="vm.turns.length"
+              ng-click="vm.startNewConversation()">
+        {{'openlmisAiAssistant.newConversation' | message}}
+      </button>
+    </div>
+
+  </div>
+</section>
