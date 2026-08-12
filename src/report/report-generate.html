@@ -2,162 +2,131 @@
     {{vm.report.name}} - {{'report.chooseReportOptions' | message}}
 </h2>
 
-
 <form ng-submit="vm.downloadReport()">
 
-    <label
-        for="{{parameter.name}}"
-        ng-repeat-start="parameter in vm.report.templateParameters">
+    <label for="{{parameter.name}}"
+           ng-repeat-start="parameter in vm.report.templateParameters">
         {{parameter.displayName}}
     </label>
 
-    <!-- Date Picker -->
-    <input
-        id="{{parameter.name}}"
-        ng-if="
-            parameter.description == 'datepickers' &&
-            parameter.description != 'booleanSelect'
-        "
-        type="date"
-        ng-model="vm.selectedParamsOptions[parameter.name]"
-        ng-required="{{parameter.required}}" />
+    <input id="{{parameter.name}}"
+           ng-if="parameter.description == 'datepickers'"
+           type="date"
+           ng-model="vm.selectedParamsOptions[parameter.name]"
+           ng-required="{{parameter.required}}" />
 
-    <!-- Select -->
-    <select
-        id="{{parameter.name}}"
-        ng-if="
-            parameter.description != 'datepickers' &&
-            parameter.description != 'booleanSelect' &&
-            (
-                vm.paramsOptions[parameter.name].length > 0 ||
-                parameter.dependencies.length > 0
-            )
-        "
-        ng-model="vm.selectedParamsOptions[parameter.name]"
-        ng-disabled="
-            vm.paramsOptions[parameter.name].length == 0
-        "
-        ng-options="
-            option.value as option.name
-            for option in vm.paramsOptions[parameter.name]
-        "
-        ng-required="{{parameter.required}}"
-        aria-labelledby="infolabelForSelect"
-        ng-init="vm.reinitializeSelect(parameter.name)">
+    <select id="{{parameter.name}}"
+            ng-if="parameter.description != 'datepickers' &&
+                   parameter.description != 'booleanSelect' &&
+                   (vm.paramsOptions[parameter.name].length > 0 ||
+                    parameter.dependencies.length > 0 ||
+                    parameter.name == 'facility')"
+            ng-model="vm.selectedParamsOptions[parameter.name]"
+
+            <!-- Keep Facility disabled until a District has been selected. -->
+            ng-disabled="vm.paramsOptions[parameter.name].length == 0 ||
+                         (parameter.name == 'facility' &&
+                          !vm.selectedParamsOptions.district)"
+
+            ng-options="option.value as option.name
+                        for option in vm.paramsOptions[parameter.name]"
+            ng-required="{{parameter.required}}"
+            aria-labelledby="infolabelForSelect"
+            ng-init="vm.reinitializeSelect(parameter.name)">
     </select>
 
-    <!-- Boolean Select -->
-    <select
-        id="{{parameter.name}}"
-        ng-if="
-            parameter.description == 'booleanSelect' &&
-            parameter.description != 'datepickers' &&
-            parameter.description != 'multipleselect' &&
-            vm.paramsOptions[parameter.name].length == 0
-        "
-        ng-model="vm.selectedParamsOptions[parameter.name]"
-        ng-options="
-            option.value as option.name
-            for option in vm.booleanOptions
-        "
-        ng-required="{{parameter.required}}"
-        aria-labelledby="infolabelForSelect"
-        ng-init="vm.reinitializeSelect(parameter.name)">
+    <select id="{{parameter.name}}"
+            ng-if="parameter.description == 'booleanSelect' &&
+                   vm.paramsOptions[parameter.name].length == 0"
+            ng-model="vm.selectedParamsOptions[parameter.name]"
+            ng-options="option.value as option.name for option in vm.booleanOptions"
+            ng-required="{{parameter.required}}"
+            aria-labelledby="infolabelForSelect"
+            ng-init="vm.reinitializeSelect(parameter.name)">
     </select>
 
-    <!-- Input -->
-    <span
-        ng-if="
-            vm.paramsOptions[parameter.name].length == 0 &&
-            parameter.dependencies.length == 0 &&
-            parameter.description != 'datepickers' &&
-            parameter.description != 'booleanSelect'
-        "
-        ng-switch="parameter.dataType"
-        ng-repeat-end>
+    <span ng-if="vm.paramsOptions[parameter.name].length == 0 &&
+                 parameter.dependencies.length == 0 &&
+                 parameter.description != 'datepickers' &&
+                 parameter.description != 'booleanSelect' &&
+                 parameter.name != 'facility'"
+          ng-switch="parameter.dataType"
+          ng-repeat-end>
 
-        <input
-            ng-switch-when="java.lang.Integer"
-            ng-model="vm.selectedParamsOptions[parameter.name]"
-            ng-required="{{parameter.required}}"
-            positive-integer />
+        <input ng-switch-when="java.lang.Integer"
+               ng-model="vm.selectedParamsOptions[parameter.name]"
+               ng-required="{{parameter.required}}"
+               positive-integer />
 
-        <input
-            ng-switch-default
-            ng-model="vm.selectedParamsOptions[parameter.name]"
-            ng-required="{{parameter.required}}"
-            type="text"
-            aria-labelledby="infolabelForInteger" />
+        <input ng-switch-default
+               ng-model="vm.selectedParamsOptions[parameter.name]"
+               ng-required="{{parameter.required}}"
+               type="text"
+               aria-labelledby="infolabelForInteger" />
 
-        <p
-            class="param-info"
-            ng-if="vm.paramsInfo[parameter.name]"
-            id="infoLabelForInteger">
+        <p class="param-info"
+           ng-if="vm.paramsInfo[parameter.name]"
+           id="infoLabelForInteger">
             {{vm.paramsInfo[parameter.name] | message}}
         </p>
     </span>
 
-    <p
-        class="param-info"
-        ng-if="
-            vm.paramsInfo[parameter.name] &&
-            parameter.selectExpression != null
-        "
-        id="infolabelForSelect">
+    <p class="param-info"
+       ng-if="vm.paramsInfo[parameter.name] &&
+              parameter.selectExpression != null"
+       id="infolabelForSelect">
         {{vm.paramsInfo[parameter.name] | message}}
     </p>
 
     <fieldset class="form-group">
-        <legend>{{'report.format' | message}}</legend>
+
+        <legend>
+            {{'report.format' | message}}
+        </legend>
 
         <label class="radio">
-            <input
-                type="radio"
-                ng-model="vm.format"
-                value="pdf"
-                required />
+            <input type="radio"
+                   ng-model="vm.format"
+                   value="pdf"
+                   required />
             {{'report.pdf' | message}}
         </label>
 
         <label class="radio">
-            <input
-                type="radio"
-                ng-model="vm.format"
-                value="csv"
-                required />
+            <input type="radio"
+                   ng-model="vm.format"
+                   value="csv"
+                   required />
             {{'report.csv' | message}}
         </label>
 
         <label class="radio">
-            <input
-                type="radio"
-                ng-model="vm.format"
-                value="xls"
-                required />
+            <input type="radio"
+                   ng-model="vm.format"
+                   value="xls"
+                   required />
             {{'report.xls' | message}}
         </label>
 
         <label class="radio">
-            <input
-                type="radio"
-                ng-model="vm.format"
-                value="xlsx"
-                required />
+            <input type="radio"
+                   ng-model="vm.format"
+                   value="xlsx"
+                   required />
             {{'report.xlsx' | message}}
         </label>
 
         <label class="radio">
-            <input
-                type="radio"
-                ng-model="vm.format"
-                value="html"
-                required />
+            <input type="radio"
+                   ng-model="vm.format"
+                   value="html"
+                   required />
             {{'report.html' | message}}
         </label>
+
     </fieldset>
 
-    <input
-        type="submit"
-        value="{{'report.generate' | message}}" />
+    <input type="submit"
+           value="{{'report.generate' | message}}" />
 
 </form>
