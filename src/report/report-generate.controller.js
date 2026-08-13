@@ -17,13 +17,6 @@
 
     'use strict';
 
-    /**
-     * @ngdoc controller
-     * @name report.controller:ReportGenerateController
-     *
-     * @description
-     * Controller for report options page.
-     */
     angular
         .module('report')
         .controller('ReportGenerateController', controller);
@@ -37,9 +30,10 @@
     function controller($state, $scope, $window, report, reportFactory, $timeout,
                         reportParamsOptions, reportUrlFactory, accessTokenFactory, $q,
                         messageService, facilitiesByDistrict) {
+
         var vm = this;
 
-        // Lesotho administrative districts used by report filtering.
+        // Custom Lesotho district list used to filter geographic-zone options.
         var allowedDistricts = [
             'Berea',
             'Butha-Buthe',
@@ -64,25 +58,8 @@
             DueDays: 'report.dueDaysInfo'
         };
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name messageService
-         * @type {Object}
-         *
-         * @description
-         * The object representing the message service.
-         */
         vm.messageService = messageService;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name booleanOptions
-         *
-         * @description
-         * The options for the report parameter of type boolean.
-         */
         vm.booleanOptions = [{
             name: messageService.get('report.boolean.true'),
             value: 'true'
@@ -91,69 +68,16 @@
             value: 'false'
         }];
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name report
-         * @type {Object}
-         *
-         * @description
-         * The object representing the selected report.
-         */
         vm.report = report;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name paramsOptions
-         * @type {Array}
-         *
-         * @description
-         * The param options for this report, by param. A param can have multiple options.
-         */
         vm.paramsOptions = reportParamsOptions;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name selectedParamsOptions
-         * @type {Object}
-         *
-         * @description
-         * The collection of selected options by param name.
-         */
         vm.selectedParamsOptions = {};
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name selectedParamsDependencies
-         * @type {Object}
-         *
-         * @description
-         * The collection of parameter dependencies and their selected values.
-         */
         vm.selectedParamsDependencies = {};
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name format
-         * @type {String}
-         *
-         * @description
-         * The format selected for the report.
-         */
         vm.format = 'pdf';
 
-        /**
-         * @ngdoc method
-         * @methodOf report.controller:ReportGenerateController
-         * @name downloadReport
-         *
-         * @description
-         * Downloads the report.
-         */
         function downloadReport() {
             $window.open(
                 accessTokenFactory.addAccessToken(
@@ -168,14 +92,6 @@
             );
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf report.controller:ReportGenerateController
-         * @name watchDependency
-         *
-         * @description
-         * Sets up a watch on report parameter selection to update dependent parameters.
-         */
         function watchDependency(param, dep) {
             var watchProperty = 'vm.selectedParamsOptions.' + dep.dependency;
 
@@ -183,62 +99,142 @@
                 vm.selectedParamsDependencies[dep.dependency] = newVal;
 
                 if (newVal) {
-                    reportFactory.getReportParamOptions(param, vm.selectedParamsDependencies)
-                        .then(function(items) {
-                            vm.paramsOptions[param.name] = items;
-                        });
+                    reportFactory.getReportParamOptions(
+                        param,
+                        vm.selectedParamsDependencies
+                    ).then(function(items) {
+                        vm.paramsOptions[param.name] = items;
+                    });
                 }
             });
         }
 
-        // Keep only the ten administrative districts in the District parameter.
+        // Keep only the ten administrative districts.
         function filterDistrictOptions() {
             if (!vm.paramsOptions.district ||
                 !angular.isArray(vm.paramsOptions.district)) {
                 return;
             }
 
-            vm.paramsOptions.district = vm.paramsOptions.district.filter(function(option) {
-                var districtName = option.name || option.displayName || option.value;
+            vm.paramsOptions.district =
+                vm.paramsOptions.district.filter(function(option) {
 
-                return allowedDistricts.indexOf(districtName) !== -1;
-            });
+                    var districtName =
+                        option.name ||
+                        option.displayName ||
+                        option.value;
+
+                    return allowedDistricts.indexOf(districtName) !== -1;
+                });
         }
 
-        // Replace Facility options whenever a different district is selected.
-        function watchDistrictSelection() {
-            $scope.$watch('vm.selectedParamsOptions.district', function(district) {
-                vm.selectedParamsOptions.facility = null;
+        function getSelectedDistrictName(selectedValue) {
+            if (!selectedValue) {
+                return null;
+            }
 
-                if (!district) {
-                    vm.paramsOptions.facility = [];
-                    reinitializeSelect('facility');
+            if (angular.isString(selectedValue) &&
+                allowedDistricts.indexOf(selectedValue) !== -1) {
+                return selectedValue;
+            }
+
+            if (angular.isObject(selectedValue)) {
+                var objectName =
+                    selectedValue.name ||
+                    selectedValue.displayName ||
+                    selectedValue.value;
+
+                if (allowedDistricts.indexOf(objectName) !== -1) {
+                    return objectName;
+                }
+            }
+
+            var districtName = null;
+
+            angular.forEach(vm.paramsOptions.district, function(option) {
+                if (districtName) {
                     return;
                 }
 
-                vm.paramsOptions.facility = (facilitiesByDistrict[district] || [])
-                    .map(function(facility) {
-                        return {
-                            name: facility.name,
-                            value: facility.name
-                        };
-                    });
+                if (option.value === selectedValue ||
+                    option.id === selectedValue) {
 
-                reinitializeSelect('facility');
+                    districtName =
+                        option.name ||
+                        option.displayName ||
+                        option.value;
+                }
             });
+
+            return districtName;
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf report.controller:ReportGenerateController
-         * @name $onInit
-         *
-         * @description
-         * Initialization method of the ReportGenerateController.
-         */
+        // Rebuild only the Facility Select2 when district-based options change.
+        function refreshFacilitySelect() {
+            $timeout(function() {
+                var element = angular.element('#facility');
+
+                if (!element.length) {
+                    return;
+                }
+
+                if (element.data('select2')) {
+                    element.select2('destroy');
+                }
+
+                $timeout(function() {
+                    reinitializeSelect('facility');
+                }, 0);
+
+            }, 0);
+        }
+
+        // Replace Facility options with facilities from the selected district.
+        function updateFacilityOptions(selectedDistrict) {
+            vm.selectedParamsOptions.facility = null;
+
+            var districtName =
+                getSelectedDistrictName(selectedDistrict);
+
+            if (!districtName) {
+                vm.paramsOptions.facility = [];
+                refreshFacilitySelect();
+                return;
+            }
+
+            var facilities =
+                facilitiesByDistrict[districtName] || [];
+
+            vm.paramsOptions.facility =
+                facilities.map(function(facility) {
+                    return {
+                        name: facility.name,
+                        value: facility.name
+                    };
+                });
+
+            refreshFacilitySelect();
+        }
+
+        // Watch the District parameter and update Facility accordingly.
+        function watchDistrictSelection() {
+            $scope.$watch(
+                'vm.selectedParamsOptions.district',
+                function(newDistrict, oldDistrict) {
+
+                    if (newDistrict === oldDistrict &&
+                        !newDistrict) {
+                        return;
+                    }
+
+                    updateFacilityOptions(newDistrict);
+                }
+            );
+        }
+
         function onInit() {
 
-            // Configure district-based facility filtering for report parameters.
+            // Custom district/facility filtering.
             filterDistrictOptions();
 
             if (vm.paramsOptions.facility) {
@@ -247,6 +243,7 @@
 
             watchDistrictSelection();
 
+            // Original OpenLMIS dependency handling.
             angular.forEach(report.templateParameters, function(param) {
                 angular.forEach(param.dependencies, function(dependency) {
                     watchDependency(param, dependency);
@@ -255,20 +252,15 @@
         }
 
         /**
-         * @ngdoc method
-         * @methodOf report.controller:ReportGenerateController
-         * @name reinitializeSelect
+         * Original OpenLMIS Select2 initialization.
          *
-         * @description
-         * Reinitializes the select2 plugin for the given parameter name.
+         * Important:
+         * Do not destroy Select2 here because this function is used
+         * by every report dropdown, including Program and District.
          */
         function reinitializeSelect(parameterName) {
             $timeout(function() {
                 var element = angular.element('#' + parameterName);
-
-                if (element.data('select2')) {
-                    element.select2('destroy');
-                }
 
                 element.select2({
                     allowClear: true,
@@ -276,23 +268,18 @@
                     placeholder: getPlaceholder(element),
                     language: {
                         noResults: function() {
-                            return messageService.get('openlmisForm.selectNoResults');
+                            return messageService.get(
+                                'openlmisForm.selectNoResults'
+                            );
                         }
                     }
                 });
             });
         }
 
-        /**
-         * @ngdoc method
-         * @methodOf report.controller:ReportGenerateController
-         * @name getPlaceholder
-         *
-         * @description
-         * Gets the placeholder text from the first item in the placeholder list.
-         */
         function getPlaceholder(element) {
-            var placeholderOption = element.children('.placeholder:first');
+            var placeholderOption =
+                element.children('.placeholder:first');
 
             if (placeholderOption.length === 0) {
                 return false;
