@@ -879,6 +879,15 @@
     }
 
     function onInit() {
+      // Filter out all COM- generic products immediately upon initialization
+      if (orderableGroups && orderableGroups.length > 0) {
+        orderableGroups = orderableGroups.filter(function(group) {
+          if (group && group.length > 0 && group[0].orderable && group[0].orderable.productCode) {
+            return !group[0].orderable.productCode.startsWith('COM-');
+          }
+          return true;
+        });
+      }
 
       vm.srcDstAssignments = srcDstAssignments;
       vm.suppliers = suppliers;
