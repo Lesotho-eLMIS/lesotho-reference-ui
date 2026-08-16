@@ -49,8 +49,21 @@
                     if (!offlineService.isOffline()) {
                         return systemNotificationService.getSystemNotifications();
                     }
+                },
+                homeFacility: function($q, facilityFactory) {
+                    return facilityFactory.getUserHomeFacility()
+                        .catch(function() {
+                            return $q.resolve(undefined);
+                        });
+                },
+                userPrograms: function($q, programService, authorizationService) {
+                    return programService.getUserPrograms(authorizationService.getUser().user_id)
+                        .catch(function() {
+                            return $q.resolve([]);
+                        });
                 }
             }
+            
         });
 
         $urlRouterProvider

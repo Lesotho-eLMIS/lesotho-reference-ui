@@ -3,5 +3,9 @@
     "openlmisHome.welcome": "Lesotho Ministry of Health",
     "openlmisHome.welcome2": "Logistics Management Information System",
     "openlmisSystemNotifications.systemNotifications": "Notifications",
-    "openlmisSystemNotifications.noSystemNotifications": "no notifications."
+    "openlmisSystemNotifications.noSystemNotifications": "no notifications.",
+    "openlmisHome.outstandingPods": "Deliveries not yet received into stock",
+    "openlmisHome.outstandingPodsDescription": "These deliveries were signed for but their contents have not been recorded in Stock Management.",
+    "openlmisHome.receivedOn": "Received on",
+    "openlmisHome.recordNow": "Record now"
 }
