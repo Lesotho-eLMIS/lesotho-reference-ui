@@ -1,0 +1,167 @@
+<h2>
+    {{vm.report.name}} - {{'report.chooseReportOptions' | message}}
+</h2>
+
+<form ng-submit="vm.downloadReport()">
+
+    <div ng-repeat="parameter in vm.report.templateParameters">
+
+        <label for="{{parameter.name}}">
+            {{parameter.displayName}}
+        </label>
+
+        <!-- Date parameters -->
+        <input
+            id="{{parameter.name}}"
+            ng-if="parameter.description == 'datepickers'"
+            type="date"
+            ng-model="vm.selectedParamsOptions[parameter.name]"
+            ng-required="{{parameter.required}}" />
+
+
+        <!--
+            Normal report selects.
+
+            Facility is also kept rendered when its option list is empty,
+            because its options are populated after District is selected.
+        -->
+        <select
+            id="{{parameter.name}}"
+            ng-if="
+                parameter.description != 'datepickers' &&
+                parameter.description != 'booleanSelect' &&
+                (
+                    vm.paramsOptions[parameter.name].length > 0 ||
+                    parameter.dependencies.length > 0 ||
+                    parameter.name == 'facility'
+                )
+            "
+            ng-model="vm.selectedParamsOptions[parameter.name]"
+            ng-disabled="
+                parameter.name == 'facility' &&
+                !vm.selectedParamsOptions.district
+            "
+            ng-options="
+                option.value as option.name
+                for option in vm.paramsOptions[parameter.name]
+            "
+            ng-required="{{parameter.required}}"
+            ng-init="vm.reinitializeSelect(parameter.name)">
+        </select>
+
+
+        <!-- Boolean parameters -->
+        <select
+            id="{{parameter.name}}"
+            ng-if="
+                parameter.description == 'booleanSelect' &&
+                vm.paramsOptions[parameter.name].length == 0
+            "
+            ng-model="vm.selectedParamsOptions[parameter.name]"
+            ng-options="
+                option.value as option.name
+                for option in vm.booleanOptions
+            "
+            ng-required="{{parameter.required}}"
+            ng-init="vm.reinitializeSelect(parameter.name)">
+        </select>
+
+
+        <!-- Plain input parameters -->
+        <span
+            ng-if="
+                vm.paramsOptions[parameter.name].length == 0 &&
+                parameter.dependencies.length == 0 &&
+                parameter.description != 'datepickers' &&
+                parameter.description != 'booleanSelect' &&
+                parameter.name != 'facility'
+            "
+            ng-switch="parameter.dataType">
+
+            <input
+                ng-switch-when="java.lang.Integer"
+                ng-model="vm.selectedParamsOptions[parameter.name]"
+                ng-required="{{parameter.required}}"
+                positive-integer />
+
+            <input
+                ng-switch-default
+                ng-model="vm.selectedParamsOptions[parameter.name]"
+                ng-required="{{parameter.required}}"
+                type="text" />
+
+        </span>
+
+
+        <!-- Optional parameter information -->
+        <p
+            class="param-info"
+            ng-if="
+                vm.paramsInfo[parameter.name] &&
+                parameter.selectExpression != null
+            ">
+            {{vm.paramsInfo[parameter.name] | message}}
+        </p>
+
+    </div>
+
+
+    <fieldset class="form-group">
+
+        <legend>
+            {{'report.format' | message}}
+        </legend>
+
+        <label class="radio">
+            <input
+                type="radio"
+                ng-model="vm.format"
+                value="pdf"
+                required />
+            {{'report.pdf' | message}}
+        </label>
+
+        <label class="radio">
+            <input
+                type="radio"
+                ng-model="vm.format"
+                value="csv"
+                required />
+            {{'report.csv' | message}}
+        </label>
+
+        <label class="radio">
+            <input
+                type="radio"
+                ng-model="vm.format"
+                value="xls"
+                required />
+            {{'report.xls' | message}}
+        </label>
+
+        <label class="radio">
+            <input
+                type="radio"
+                ng-model="vm.format"
+                value="xlsx"
+                required />
+            {{'report.xlsx' | message}}
+        </label>
+
+        <label class="radio">
+            <input
+                type="radio"
+                ng-model="vm.format"
+                value="html"
+                required />
+            {{'report.html' | message}}
+        </label>
+
+    </fieldset>
+
+
+    <input
+        type="submit"
+        value="{{'report.generate' | message}}" />
+
+</form>
