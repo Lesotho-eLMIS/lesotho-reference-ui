@@ -69,5 +69,8 @@
   "adminRoleForm.requisitionView": "View Requisition",
   "adminRoleForm.supervision.description": "Provides rights for managing Requisitions.",
   "adminRoleForm.supervision.label": "Requisition",
-  "adminRoleForm.dhis2Management": "Manage DHIS2 integration"
+  "adminRoleForm.dhis2Management": "Manage DHIS2 integration",
+  "requisitionView.facility": "Facility Details",
+  "requisitionView.district": "Facility Name",
+  "requisitionView.region": "District"
 }

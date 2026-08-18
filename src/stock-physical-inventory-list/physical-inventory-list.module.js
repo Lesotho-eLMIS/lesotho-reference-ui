@@ -29,6 +29,7 @@
         'referencedata-program',
         'stock-physical-inventory',
         'stock-physical-inventory-draft',
+        'stock-confirm-discard',
         'openlmis-function-decorator',
         'openlmis-facility-program-select',
         'ui.router'

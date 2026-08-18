@@ -39,8 +39,8 @@
                 facility: undefined,
                 stockCardSummaries: undefined,
                 reasons: undefined,
-                displayItems: [],
-                addedLineItems: [],
+                displayItems: undefined,
+                addedLineItems: undefined,
                 orderableGroups: undefined, 
                 supervised: undefined
             },
@@ -70,11 +70,8 @@
                     }
                     return $stateParams.orderableGroups;
                 },
-                viewdislayitems:function($stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
-                },
-                displayItems: function(viewdislayitems, $stateParams, registerDisplayItemsService) {
-                    return registerDisplayItemsService($stateParams)
+                displayItems: function($stateParams, registerDisplayItemsService) {
+                    return registerDisplayItemsService($stateParams);
                 },
                 reasons: function($stateParams, stockReasonsFactory, facilityWithType) {
                     if (_.isUndefined($stateParams.reasons)) {
@@ -95,6 +92,10 @@
                     return false;
                 },
                 ReferenceNumbers:function() {
+                    return undefined;
+                },
+                //Add a new resolve called requisitionLineItems that fetches the full requisition and returns its line items
+                requisitionLineItems: function($stateParams, requisitionService) {
                     return undefined;
                 }
             }

@@ -21,9 +21,21 @@
     <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
   </div> -->
+  <!-- Commented out - this ternary only ever chose between
+       'stockPhysicalInventory.start' ("Start") and
+       'stockPhysicalInventory.majorCount' ("Start Major Count") based on
+       getSelectedDraft().isStarter. Neither branch could ever show
+       "Continue", so it was structurally incapable of reflecting real
+       progress. Replaced below with vm.majorCountInProgress, which is
+       checked live against the server (see checkMajorProgress() in the
+       controller) rather than derived from the summary drafts list.
   <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
-               value="{{(draft.isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
-               class="primary"/>
+       value="{{(vm.getSelectedDraft() && vm.getSelectedDraft().isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+       class="primary"/>
+  -->
+  <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
+       value="{{(vm.majorCountInProgress ? 'stockPhysicalInventory.continueMajorCount' : 'stockPhysicalInventory.majorCount') | message}}"
+       class="primary"/>
   <input ng-if="vm.physicalInventoryType === 'Cyclic'"
        id="proceedButton"
        type="button"
@@ -31,6 +43,3 @@
        value="{{'stockPhysicalInventory.cyclicCount' | message}}"
        class="primary"/>
 </form>
-
-
-

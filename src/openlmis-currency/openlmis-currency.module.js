@@ -14,25 +14,21 @@
  */
 
 (function() {
+
     'use strict';
 
-    angular.module('stock-adjustment-creation', [
-        'openlmis-date',
-        'stock-adjustment',
-        'stock-confirm-discard',
-        'stock-orderable-group',
-        'stock-product-name',
-        'stock-constants',
-        'stock-valid-reason',
-        'referencedata-program',
-        'referencedata-facility',
-        'referencedata-lot',
-        'stock-unpack-kit',
-        'stock-reasons-modal',
-        'stock-edit-lot-modal',
-        'receiving-add-discrepancy-modal',
-        'complaint-form-modal',
-        'openlmis-currency',
-        
+    /**
+     * @module openlmis-currency
+     *
+     * @description
+     * The openlmis-currency module is responsible for currency.
+     */
+    angular.module('openlmis-currency', [
+        'openlmis-local-storage',
+        'openlmis-locale',
+        'openlmis-offline',
+        'openlmis-urls',
+        'ngResource'
     ]);
+
 })();

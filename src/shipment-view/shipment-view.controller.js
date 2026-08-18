@@ -28,7 +28,7 @@
         vm.getFillQuantityDisplay = getFillQuantityDisplay;
         vm.getEditableQuantitySummary = getEditableQuantitySummary;
         vm.onQuantityTypeChanged = onQuantityTypeChanged;
-        vm.onUnitQuantityChanged = onUnitQuantityChanged;
+        vm.onQuantityShippedChanged = onQuantityShippedChanged;
         vm.getQuantityTypeOptions = getQuantityTypeOptions;
         vm.getQuantityTypeLabel = getQuantityTypeLabel;
 
@@ -75,8 +75,6 @@
         }
 
         function getEditableQuantitySummary(lineItem) {
-            var quantityInPacks;
-            var quantityRemainderInUnits;
             var quantityShipped;
 
             if (!lineItem) {
@@ -85,25 +83,19 @@
 
             quantityShipped = lineItem.quantityShipped || 0;
 
-            if (lineItem.quantityType === 'DISPENSING_UNITS') {
-                quantityInPacks = lineItem.quantityInPacks || 0;
-                quantityRemainderInUnits = lineItem.quantityRemainderInUnits || 0;
-
-                return quantityInPacks + ' ' + messageService.get('shipmentView.packs') +
-                    ' + ' + quantityRemainderInUnits + ' ' + messageService.get('shipmentView.units') +
-                    ' = ' + quantityShipped + ' ' + messageService.get('shipmentView.units');
-            }
-
-            return quantityShipped + ' ' + messageService.get('shipmentView.packs');
+            return lineItem.quantityType === 'DISPENSING_UNITS' ?
+                quantityShipped + ' ' + messageService.get('shipmentView.units') :
+                quantityShipped + ' ' + messageService.get('shipmentView.packs');
         }
 
         function onQuantityTypeChanged(lineItem) {
             lineItem.setQuantityType(lineItem.quantityType);
         }
 
-        function onUnitQuantityChanged(lineItem) {
-            lineItem.updateQuantityShippedFromSplit();
+        function onQuantityShippedChanged(lineItem) {
+            lineItem.updateQuantityShipped();
         }
+
 
         function getQuantityTypeOptions() {
             return [

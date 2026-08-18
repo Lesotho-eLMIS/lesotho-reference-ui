@@ -71,27 +71,37 @@
          */
         vm.programs = programs;
 
-        vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
+        //vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
 
-        $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
+        //Default to Major drafts
+        vm.drafts = drafts[0];
 
-            if (newVal === oldVal) return;
-            // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
-
-            if (newVal == null || newVal == undefined) {
-
-                return;
-
-            } else {
-
-                var draft = vm.getDraft();
-               
-                if (draft.id) {
-                    draft.isStarter = false;
-                    return draft;
-                }
-            }
-        });
+        // Commented out - superseded by the majorCountInProgress watches
+        // added below (on vm.physicalInventoryType, vm.program.id and
+        // vm.facility.id). This watch only ever set a local variable
+        // (draft.isStarter) as a side effect and its return value was never
+        // used by anything, since $scope.$watch listeners are not
+        // consumed.
+        //
+        // $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
+        //
+        //     if (newVal === oldVal) return;
+        //     // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
+        //
+        //     if (newVal == null || newVal == undefined) {
+        //
+        //         return;
+        //
+        //     } else {
+        //
+        //         var draft = vm.getDraft();
+        //
+        //         if (draft && draft.id) {
+        //             draft.isStarter = false;
+        //             return draft;
+        //         }
+        //     }
+        // });
 
 
         vm.editDraft = new FunctionDecorator()
@@ -108,8 +118,6 @@
             // }
             var programId = vm.program.id;
             return _.find(vm.drafts, function (draft) {
-                // console.log("Program: ", vm.program);
-                // console.log("Draft: ", draft);
                 return draft.programId === programId;
             });
         };
@@ -160,6 +168,134 @@
         }
 
         /**
+         * @ngdoc property
+         * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
+         * @name majorCountInProgress
+         * @type {Boolean}
+         *
+         * @description
+         * Whether the Major count currently has real progress (at least one
+         * counted line item), independent of which tab is active. This is
+         * what lets the button show "Continue Major Count" instead of
+         * "Start Major Count", and persists correctly across toggling to
+         * Cyclic and back to Major as long as program and facility do not
+         * change.
+         *
+         * Deliberately not derived from vm.drafts / getSelectedDraft(),
+         * because the summary list resolved for this page does not carry
+         * lineItems and cannot reflect real progress. Deliberately not
+         * derived from a draft's isStarter flag either, since isStarter only
+         * tracks whether this browser session has opened the draft before,
+         * not whether it has any counted quantity.
+         */
+        vm.majorCountInProgress = false;
+
+        // Guards against a stale response overwriting a newer check, for
+        // example if program or facility change again before the previous
+        // getDraft call resolves.
+        var progressCheckToken = 0;
+
+        /**
+         * @ngdoc method
+         * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
+         * @name checkMajorProgress
+         *
+         * @description
+         * Single source of truth for vm.majorCountInProgress. Reuses the same
+         * physicalInventoryService.getDraft call and the same hasProgress
+         * calculation already used inside editDraft's Cyclic branch below,
+         * instead of introducing a second way of detecting progress.
+         */
+        function checkMajorProgress() {
+            if (!vm.program || !vm.program.id || !vm.facility || !vm.facility.id) {
+                vm.majorCountInProgress = false;
+                return $q.resolve(false);
+            }
+
+            var thisCheck = ++progressCheckToken;
+            var programId = vm.program.id;
+            var facilityId = vm.facility.id;
+
+            return physicalInventoryService.getDraft(programId, facilityId)
+                .then(function (serverDrafts) {
+                    if (thisCheck !== progressCheckToken) {
+                        return vm.majorCountInProgress;
+                    }
+                    if (!vm.program || vm.program.id !== programId ||
+                        !vm.facility || vm.facility.id !== facilityId) {
+                        return vm.majorCountInProgress;
+                    }
+
+                    var hasProgress = false;
+                    if (Array.isArray(serverDrafts) && serverDrafts.length > 0 && serverDrafts[0].id) {
+                        var lineItems = serverDrafts[0].lineItems || [];
+                        hasProgress = lineItems.some(function (item) {
+                            return item.quantity !== null &&
+                                item.quantity !== undefined &&
+                                item.quantity !== -1;
+                        });
+                    }
+
+                    vm.majorCountInProgress = hasProgress;
+                    return hasProgress;
+                })
+                .catch(function () {
+                    return vm.majorCountInProgress;
+                });
+        }
+
+        // Reliable trigger for tab changes. Calls the existing vm.onChangePhysicalInventoryType() so its behavior stays exactly
+        // the same, then re-checks Major progress whenever the Major tab becomes active. The flag is not reset when switching to Cyclic,
+        // which is what makes it survive Major to Cyclic to Major toggling.
+        $scope.$watch(function () {
+            return vm.physicalInventoryType;
+        }, function (newType, oldType) {
+            if (newType === oldType) {
+                return;
+            }
+            vm.onChangePhysicalInventoryType();
+            if (newType === 'Major') {
+                checkMajorProgress();
+            }
+        });
+
+        // Program watch. Resets the flag on a real change so a previous program's progress never leaks, then re-checks. Also re-checks on
+        // the first digest if a program is already selected at that point (a restored selection), since no change event would follow that.
+        $scope.$watch(function () {
+            return vm.program ? vm.program.id : null;
+        }, function (newId, oldId) {
+            if (newId === oldId) {
+                if (newId) {
+                    checkMajorProgress();
+                }
+                return;
+            }
+            vm.majorCountInProgress = false;
+            if (newId) {
+                checkMajorProgress();
+            }
+        });
+
+        // Facility watch. Same treatment as the program watch.
+        $scope.$watch(function () {
+            return vm.facility ? vm.facility.id : null;
+        }, function (newId, oldId) {
+            if (newId === oldId) {
+                if (newId) {
+                    checkMajorProgress();
+                }
+                return;
+            }
+            vm.majorCountInProgress = false;
+            if (newId) {
+                checkMajorProgress();
+            }
+        });
+
+        // Immediate check at construction, in case program and facility are already resolved when this controller is built.
+        checkMajorProgress();
+
+        /**
          * @ngdoc method
          * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
          * @name editDraft
@@ -170,19 +306,57 @@
          * @param {Object} draft Physical inventory draft
          */
         function editDraft(draft) {
-            // console.log("Edit: ", draft);
-            // console.log("Drafts: ", vm.drafts);
-            // console.log("Program: ", vm.program);
-            // console.log("Facility: ", vm.facility);
-            // console.log("Selected:" , vm.getDraft());
             $stateParams.stateOffline = setOfflineState();
-            if (!draft) {
-                alertService.error('No draft found');
-                return;
+
+            // if (!draft) {
+            //     alertService.error('No draft found');
+            //     return $q.reject();
+            // }
+            if (!vm.program || !vm.facility) {
+                alertService.error('stockPhysicalInventory.selectProgramAndFacility');
+                return $q.reject();
             }
 
-            // Get the draft , prefer passed draft, 
-            // then find existing, else create new
+
+            // Cyclic path - check server live for a Major count in progress before allowing navigation. physicalInventoryService.getDraft is used directly
+            // (not the factory) to get the raw server response with lineItems and quantities. vm.program.id and vm.facility.id are always the currently
+            // selected values from openlmis-facility-program-select two-way binding, so supervised facilities are handled correctly.
+            if (vm.physicalInventoryType === 'Cyclic') {
+                // Step 1: Check if a Major count is in progress
+                return physicalInventoryService.getDraft(vm.program.id, vm.facility.id)
+                    .then(function (serverDrafts) {
+                        // Only block if Major has real progress
+                        if (Array.isArray(serverDrafts) && serverDrafts.length > 0 && serverDrafts[0].id) {
+                            var lineItems = serverDrafts[0].lineItems || [];
+                            var hasProgress = lineItems.some(function (item) {
+                                return item.quantity !== null &&
+                                    item.quantity !== undefined &&
+                                    item.quantity !== -1;
+                            });
+                            if (hasProgress) {
+                                alertService.error('stockPhysicalInventory.majorCountInProgress');
+                                return $q.reject();
+                            }
+                        }
+
+                        // Step 2: draft already has an ID from page load, just navigate
+                        if (draft && draft.id) {
+                            return navigateToCyclic(draft);
+                        }
+
+                        // Step 3: No draft ID — create one directly, same as Major does
+                        return physicalInventoryService.createDraft(vm.program.id, vm.facility.id)
+                            .then(function (newDraft) {
+                                return navigateToCyclic({
+                                    id: newDraft.id,
+                                    programId: vm.program.id
+                                });
+                            });
+                    });
+            }
+
+
+            // Get the draft , prefer passed draft, then find existing, else create new 
             var selectedDraft = draft || vm.getDraft();
 
             vm.drafts.forEach(function (item) {
@@ -205,18 +379,17 @@
             return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function (data) {
 
                 if (Array.isArray(data) && data.length > 0 && data[0].id) {
-                     selectedDraft.id = data[0].id;
-                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                            id: selectedDraft.id,
-                            program: vm.program,
-                            facility: vm.facility,
-                            supervised: vm.isSupervised,
-                            includeInactive: false,
-                            physicalInventoryType: vm.physicalInventoryType
-                        });
+                    selectedDraft.id = data[0].id;
+                    $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                        id: selectedDraft.id,
+                        program: vm.program,
+                        facility: vm.facility,
+                        supervised: vm.isSupervised,
+                        includeInactive: false,
+                        physicalInventoryType: vm.physicalInventoryType
+                    });
                 } else {
                     return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
-                        //    console.log("Data: ", data);
                         selectedDraft.id = data.id;
                         $state.go('openlmis.stockmanagement.physicalInventory.draft', {
                             id: selectedDraft.id,
@@ -242,6 +415,25 @@
             //         physicalInventoryType: vm.physicalInventoryType
             //     });
             // });
+        }
+
+        function navigateToCyclic(draft) {
+            var selectedDraft = draft;
+            vm.drafts.forEach(function (item) {
+                if (item.programId === selectedDraft.programId &&
+                    selectedDraft.isStarter === true) {
+                    item.isStarter = false;
+                }
+            });
+            $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                id: undefined,
+                program: vm.program,
+                facility: vm.facility,
+                supervised: vm.isSupervised,
+                includeInactive: false,
+                physicalInventoryType: vm.physicalInventoryType
+            });
+            return $q.resolve();
         }
 
         function onInit() {
@@ -275,4 +467,3 @@
         }
     }
 })();
-

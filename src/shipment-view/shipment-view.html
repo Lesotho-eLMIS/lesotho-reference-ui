@@ -69,26 +69,18 @@
                                 <label class="shipment-fill-editor__label">{{'shipmentView.packs' | message}}</label>
                                 <input positive-integer
                                     ng-model="tableLineItem.shipmentLineItem.quantityShipped"
+                                    ng-change="vm.onQuantityShippedChanged(tableLineItem.shipmentLineItem)"
                                     placeholder="{{'shipmentView.packs' | message}}"
                                     ng-class="{'is-invalid': tableLineItem.shipmentLineItem.isInvalid().quantityShipped}"
                                     openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>
                             </div>
                         </div>
-                        <div ng-if="tableLineItem.shipmentLineItem.quantityType === 'DISPENSING_UNITS'" class="shipment-fill-editor__fields shipment-fill-editor__fields--split">
-                            <div class="shipment-fill-editor__field">
-                                <label class="shipment-fill-editor__label">{{'shipmentView.packs' | message}}</label>
-                                <input positive-integer
-                                    ng-model="tableLineItem.shipmentLineItem.quantityInPacks"
-                                    ng-change="vm.onUnitQuantityChanged(tableLineItem.shipmentLineItem)"
-                                    placeholder="{{'shipmentView.packs' | message}}"
-                                    ng-class="{'is-invalid': tableLineItem.shipmentLineItem.isInvalid().quantityShipped}"
-                                    openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>
-                            </div>
+                        <div ng-if="tableLineItem.shipmentLineItem.quantityType === 'DISPENSING_UNITS'" class="shipment-fill-editor__fields shipment-fill-editor__fields--single">
                             <div class="shipment-fill-editor__field">
                                 <label class="shipment-fill-editor__label">{{'shipmentView.units' | message}}</label>
                                 <input positive-integer
-                                    ng-model="tableLineItem.shipmentLineItem.quantityRemainderInUnits"
-                                    ng-change="vm.onUnitQuantityChanged(tableLineItem.shipmentLineItem)"
+                                    ng-model="tableLineItem.shipmentLineItem.quantityShipped"
+                                    ng-change="vm.onQuantityShippedChanged(tableLineItem.shipmentLineItem)"
                                     placeholder="{{'shipmentView.units' | message}}"
                                     ng-class="{'is-invalid': tableLineItem.shipmentLineItem.isInvalid().quantityShipped}"
                                     openlmis-invalid="{{tableLineItem.shipmentLineItem.isInvalid().quantityShipped | message}}"/>

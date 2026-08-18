@@ -12,8 +12,7 @@
         ShipmentLineItem.prototype.setQuantityType = setQuantityType;
         ShipmentLineItem.prototype.getQuantityShippedInUnits = getQuantityShippedInUnits;
         ShipmentLineItem.prototype.getRemainingSohInUnits = getRemainingSohInUnits;
-        ShipmentLineItem.prototype.updateQuantityShippedFromSplit = updateQuantityShippedFromSplit;
-        ShipmentLineItem.prototype.syncSplitFields = syncSplitFields;
+        ShipmentLineItem.prototype.updateQuantityShipped = updateQuantityShipped;
 
         return ShipmentLineItem;
 
@@ -25,11 +24,14 @@
             this.quantityType = json.quantityType || 'PACKS';
             this.stockOnHand = getStockOnHandInUnits(json.canFulfillForMe);
             this.netContent = getNetContent(json);
-            this.savedQuantities = {
-                PACKS: this.quantityType === 'PACKS' ? (this.quantityShipped || 0) : undefined,
-                DISPENSING_UNITS: this.quantityType === 'DISPENSING_UNITS' ? (this.quantityShipped || 0) : undefined
-            };
-            this.syncSplitFields();
+
+            // Canonical value: total quantity in dispensing units. quantityShipped is
+            // only ever a *view* of this in the currently selected quantityType.
+            // Switching quantityType never mutates this value, only how it's
+            // displayed/edited - so nothing is lost when toggling back and forth.
+            this.totalQuantityInUnits = this.quantityType === 'DISPENSING_UNITS' ?
+                (this.quantityShipped || 0) :
+                (this.quantityShipped || 0) * this.netContent;
         }
 
         function isInvalid() {
@@ -47,63 +49,31 @@
         }
 
         function setQuantityType(quantityType) {
-            var quantityInUnits = this.getQuantityShippedInUnits();
-            var previousQuantityType = this.quantityType;
-
             this.quantityType = quantityType || 'PACKS';
-            this.savedQuantities[previousQuantityType] = this.quantityShipped || 0;
 
             if (this.quantityType === 'DISPENSING_UNITS') {
-                this.quantityShipped = getSavedQuantity(this.savedQuantities.DISPENSING_UNITS, quantityInUnits);
+                this.quantityShipped = this.totalQuantityInUnits || 0;
             } else {
-                this.quantityShipped = getSavedQuantity(
-                    this.savedQuantities.PACKS,
-                    Math.floor(quantityInUnits / this.netContent)
-                );
+                this.quantityShipped = Math.floor((this.totalQuantityInUnits || 0) / this.netContent);
             }
-
-            this.syncSplitFields();
         }
 
         function getQuantityShippedInUnits() {
-            if (this.quantityType === 'DISPENSING_UNITS') {
-                return this.quantityShipped || 0;
-            }
-
-            return (this.quantityShipped || 0) * this.netContent;
+            return this.totalQuantityInUnits || 0;
         }
 
         function getRemainingSohInUnits() {
             return Math.max(0, this.stockOnHand - this.getQuantityShippedInUnits());
         }
 
-        function updateQuantityShippedFromSplit() {
+        function updateQuantityShipped() {
             if (this.quantityType === 'DISPENSING_UNITS') {
-                this.quantityShipped =
-                    ((this.quantityInPacks || 0) * this.netContent) +
-                    (this.quantityRemainderInUnits || 0);
-                this.savedQuantities.DISPENSING_UNITS = this.quantityShipped;
-                return;
+                this.totalQuantityInUnits = this.quantityShipped || 0;
+            } else {
+                this.totalQuantityInUnits = (this.quantityShipped || 0) * this.netContent;
             }
-
-            this.quantityRemainderInUnits = 0;
-            this.quantityShipped = this.quantityShipped || 0;
-            this.savedQuantities.PACKS = this.quantityShipped;
         }
 
-        function syncSplitFields() {
-            var quantityInUnits;
-
-            if (this.quantityType === 'DISPENSING_UNITS') {
-                quantityInUnits = this.quantityShipped || 0;
-                this.quantityInPacks = Math.floor(quantityInUnits / this.netContent);
-                this.quantityRemainderInUnits = quantityInUnits % this.netContent;
-                return;
-            }
-
-            this.quantityInPacks = this.quantityShipped || 0;
-            this.quantityRemainderInUnits = 0;
-        }
 
         function getStockOnHandInUnits(canFulfillForMe) {
             return canFulfillForMe ? canFulfillForMe.stockOnHand : 0;
@@ -119,14 +89,6 @@
             }
 
             return 1;
-        }
-
-        function getSavedQuantity(savedQuantity, fallbackQuantity) {
-            if (savedQuantity === undefined || savedQuantity === null) {
-                return fallbackQuantity;
-            }
-
-            return savedQuantity;
         }
     }
 })();

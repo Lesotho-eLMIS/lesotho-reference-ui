@@ -47,16 +47,57 @@
             resolve: {
                 draft: function($stateParams, physicalInventoryFactory, offlineService,
                     physicalInventoryDraftCacheService, drafts) {
+
+                    // Cyclic is handled first — it has no server draft and no id.
+                    // Both noReload and normal load use the same path: check cache
+                    // using a synthetic key (program+facility), then fall back to
+                    // getDraft for a fresh server fetch on first load.
+                    // Never call getPhysicalInventory for Cyclic — it would load the
+                    // Major draft's line items since they share the same server draft id.
+                    if ($stateParams.physicalInventoryType === 'Cyclic') {
+                        if (!$stateParams.program || !$stateParams.facility) {
+                            return {
+                                programId: undefined,
+                                facilityId: undefined,
+                                isStarter: true,
+                                lineItems: []
+                            };
+                        }
+                        // Synthetic cache key — Cyclic has no server draft id so we
+                        // use program+facility as a stable identifier. vm.addProducts
+                        // sets draft.id to this same key before calling cacheDraft().
+                        var cyclicKey = 'cyclic-' +
+                            $stateParams.program.id + '-' +
+                            $stateParams.facility.id;
+                        return physicalInventoryDraftCacheService.getDraft(cyclicKey)
+                            .then(function(cached) {
+                                if (cached && cached.$modified) {
+                                    return cached;
+                                }
+                                // No modified cache — fresh load. Call getDraft to get
+                                // real stock products for this facility so Search Existing
+                                // Product and Add from Catalogue have items to show.
+                                return physicalInventoryFactory
+                                    .getDraft($stateParams.program.id, $stateParams.facility.id);
+                            });
+                    }
+
+                    // noReload=true after Add Product or Save for Major — load from cache.
                     if (offlineService.isOffline() || $stateParams.noReload) {
                         return physicalInventoryDraftCacheService.getDraft($stateParams.id);
                     }
-                    var currentDraft =  undefined; // getDraftFromParent(drafts, $stateParams);
-                    if($stateParams.supervised){
-                        currentDraft = physicalInventoryFactory.getDraft($stateParams.program.id,$stateParams.facility.id);
-                    }else{
-                        currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    if ($stateParams.supervised) {
+                        // getDraft() is async — chain .then() so getPhysicalInventory
+                        // receives the resolved draft object, not the Promise itself.
+                        return physicalInventoryFactory
+                            .getDraft($stateParams.program.id, $stateParams.facility.id)
+                            .then(function(draft) {
+                                return physicalInventoryFactory.getPhysicalInventory(draft);
+                            });
                     }
-                    //var currentDraft = getDraftFromParent(drafts, $stateParams);
+
+                    var currentDraft = getDraftFromParent(drafts, $stateParams);
                     return physicalInventoryFactory.getPhysicalInventory(currentDraft);
                 },
                 program: function($stateParams, programService, draft) {
@@ -88,13 +129,20 @@
                             draft.lineItems, $stateParams.includeInactive === 'true');
                         var lineItems = $filter('orderBy')(searchResult, 'orderable.productCode');
 
+                        var isCyclic = $stateParams.physicalInventoryType === 'Cyclic';
+
                         var groups = _.chain(lineItems).filter(function(item) {
                             var hasQuantity = !(_.isNull(item.quantity) || _.isUndefined(item.quantity));
                             var hasSoh = !_.isNull(item.stockOnHand);
-                            return item.isAdded || hasQuantity || hasSoh;
+                            // For Cyclic counts the table must start blank — only show items
+                            // the user has explicitly added (isAdded) or already counted (hasQuantity).
+                            // hasSoh alone would pre-load every product at the facility.
+                            return isCyclic
+                                ? (item.isAdded || hasQuantity)
+                                : (item.isAdded || hasQuantity || hasSoh);
                         })
                             .each(function(lineItem) {
-                                if (lineItem.quantity === -1) {
+                                if (lineItem.quantity === -1 && !isCyclic) {
                                     lineItem.quantity = null;
                                 }
                                 lineItem.isAdded = true;

@@ -25,7 +25,7 @@
     function routes($stateProvider, STOCKMANAGEMENT_RIGHTS, SEARCH_OPTIONS, ADJUSTMENT_TYPE) {
         $stateProvider.state('openlmis.stockmanagement.receive.creation', {
             isOffline: true,
-            url: '/:programId/create?page&size&keyword',
+            url: '/:programId/create?page&size&keyword&requisitionToReceiveAgainst',
             views: {
                 '@openlmis': {
                     controller: 'StockAdjustmentCreationController',
@@ -132,7 +132,22 @@
                             });
                            return references;
                         });
-                }
+                },
+                requisitionLineItems: function($stateParams, requisitionService) {
+                    var requisitionId = $stateParams.requisitionToReceiveAgainst
+                        ? ($stateParams.requisitionToReceiveAgainst.id
+                            || $stateParams.requisitionToReceiveAgainst)
+                        : null;
+                    if (requisitionId) {
+                        return requisitionService.get(requisitionId)
+                            .then(function(requisition) {
+                                return requisition.requisitionLineItems || [];
+                            }).catch(function() {
+                                return [];
+                            });
+                    }
+                    return [];
+                },
             }
         });
     }
