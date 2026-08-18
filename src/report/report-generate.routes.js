@@ -10,7 +10,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses. For additional information contact info@OpenLMIS.org.
+ * http://www.gnu.org/licenses/. For additional information contact info@OpenLMIS.org.
  */
 
 (function() {
@@ -52,7 +52,10 @@
                             );
                         },
 
-                       
+                        /*
+                         * Load all facilities using the existing
+                         * OpenLMIS facility service.
+                         */
                         facilities: function(facilityService) {
                             return facilityService.search(
                                 {
@@ -66,8 +69,8 @@
                         },
 
                         /*
-                         * Group facilities by their actual district
-                         * using the geographic-zone hierarchy.
+                         * Group facilities by their real district
+                         * using the geographic zone hierarchy.
                          */
                         facilitiesByDistrict: function(facilities) {
 
@@ -85,9 +88,6 @@
                                 ],
                                 grouped = {};
 
-                            /*
-                             * Create an empty bucket for each district.
-                             */
                             angular.forEach(
                                 districts,
                                 function(district) {
@@ -95,10 +95,6 @@
                                 }
                             );
 
-                            /*
-                             * Walk up the geographic-zone hierarchy
-                             * until a district-level zone is found.
-                             */
                             function findDistrict(geographicZone) {
 
                                 var zone = geographicZone;
@@ -121,9 +117,6 @@
                                 return null;
                             }
 
-                            /*
-                             * Assign each facility to its district.
-                             */
                             angular.forEach(
                                 facilities,
                                 function(facility) {
@@ -135,10 +128,9 @@
                                         return;
                                     }
 
-                                    var district =
-                                        findDistrict(
-                                            facility.geographicZone
-                                        );
+                                    var district = findDistrict(
+                                        facility.geographicZone
+                                    );
 
                                     if (
                                         !district ||
@@ -147,15 +139,13 @@
                                         return;
                                     }
 
-                                    grouped[district].push(
-                                        facility
-                                    );
+                                    grouped[district].push(facility);
                                 }
                             );
 
                             /*
-                             * Sort facilities alphabetically
-                             * inside each district.
+                             * Keep facility names ordered alphabetically
+                             * inside every district.
                              */
                             angular.forEach(
                                 districts,
@@ -179,9 +169,7 @@
                             reportFactory
                         ) {
                             return reportFactory
-                                .getReportParamsOptions(
-                                    report
-                                );
+                                .getReportParamsOptions(report);
                         }
                     }
                 }
