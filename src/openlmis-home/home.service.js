@@ -60,7 +60,7 @@
         }
 
         function getOutstandingPods(facilityId, programId) {
-            var activePeriod = new Date(new Date().getTime() - (14 * 24 * 60 * 60 * 1000));
+            var activePeriod = new Date(new Date().getTime() - (30 * 24 * 60 * 60 * 1000));
 
             return pointOfDeliveryService.getPODs(facilityId).then(function(result) {
                 var recent = Object.values(result).filter(function(pod) {
