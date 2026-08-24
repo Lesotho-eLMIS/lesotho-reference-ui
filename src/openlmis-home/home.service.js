@@ -14,7 +14,7 @@
  */
 
 (function() {
-    angular.module('openlmis-home').service('homeService', ['$http','openlmisUrlFactory','$resource', function($http,openlmisUrlFactory,$resource) {
+    angular.module('openlmis-home').service('homeService', ['$http','openlmisUrlFactory','$resource','pointOfDeliveryService', function($http,openlmisUrlFactory,$resource,pointOfDeliveryService) {
         var data = [];
         var resource = $resource(openlmisUrlFactory('/api/notifications:id'), {}, {
             get: {
@@ -27,7 +27,16 @@
             }             
         });
 
+        var referenceNumberResource = $resource(
+            openlmisUrlFactory('/api/stockCardLineItems/referenceNumbers/search'), {}, {
+                search: {
+                    method: 'POST',
+                    isArray: true
+                }
+            });
+
         this.getNotifications = getNotifications;
+        this.getOutstandingPods = getOutstandingPods;
         this.markNotificationsAsRead = markNotificationsAsRead;
 
         function getNotifications(currentUserId){
@@ -37,6 +46,8 @@
            return resource.get(params).$promise.then(function(response) {
                     return response.content;
             });
+
+        
         }
 
         function markNotificationsAsRead(notificationId) {
@@ -46,6 +57,32 @@
             //    "bf6d1c18-3cc9-4ca3-b25a-209ea265ebcd"
             return resource.save({ id:notificationId }, params).$promise
             
+        }
+
+        function getOutstandingPods(facilityId, programId) {
+            var activePeriod = new Date(new Date().getTime() - (30 * 24 * 60 * 60 * 1000));
+
+            return pointOfDeliveryService.getPODs(facilityId).then(function(result) {
+                var recent = Object.values(result).filter(function(pod) {
+                    return pod.referenceNumber && new Date(pod.receivingDate) >= activePeriod;
+                });
+
+                if (!recent.length) {
+                    return [];
+                }
+
+                return referenceNumberResource.search({}, {
+                    facilityId: facilityId,
+                    programId: programId,
+                    referenceNumbers: recent.map(function(pod) {
+                        return pod.referenceNumber;
+                    })
+                }).$promise.then(function(received) {
+                    return recent.filter(function(pod) {
+                        return received.indexOf(pod.referenceNumber) === -1;
+                    });
+                });
+            });
         }
 
     }]);

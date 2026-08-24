@@ -270,7 +270,18 @@
                             .then(function (response) {
                                 vm.clearForm();
                                 notificationService.success('point of delivery event Submitted.');
-                                $state.go('openlmis.pointOfDelivery.view');
+                                confirmService.confirm(
+                                    'Delivery recorded. The contents have NOT been added to stock yet. '
+                                        + 'Record them now in Stock Management > Receive?',
+                                    'Go to Receive',
+                                    'Later'
+                                )
+                                    .then(function() {
+                                        $state.go('openlmis.stockmanagement.receive');
+                                    })
+                                    .catch(function() {
+                                        $state.go('openlmis.pointOfDelivery.view');
+                                    });
                             })
                             .catch(function (error) {
                                 // Error callback

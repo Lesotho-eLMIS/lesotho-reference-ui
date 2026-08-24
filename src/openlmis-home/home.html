@@ -8,6 +8,17 @@
         {{'openlmisSystemNotifications.noSystemNotifications' | message}}
       </h3>
       <div class="scroll">
+        <div ng-repeat="pod in vm.outstandingPods | orderBy: '-receivingDate'">
+          <article class="message">
+            <header>
+              <div class="title">
+                <p>{{'openlmisHome.outstandingPods' | message}}</p>
+              </div>
+            </header>
+            <div class="content">{{'openlmisHome.outstandingPodsDescription' | message}}
+{{pod.referenceNumber}} &mdash; {{'openlmisHome.receivedOn' | message}} {{pod.receivingDate | openlmisDate}} <a ui-sref="openlmis.stockmanagement.receive">{{'openlmisHome.recordNow' | message}}</a></div>
+          </article>
+        </div>
         <div ng-repeat="systemNotification in vm.homePageSystemNotifications | orderBy: '-createdDate'">
           <openlmis-message
                   message-title="systemNotification.title"

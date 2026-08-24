@@ -28,9 +28,10 @@
         .module('openlmis-home')
         .controller('HomeSystemNotificationsController', controller);
 
-    controller.$inject = ['homePageSystemNotifications', 'offlineService', 'user', 'homeService'];
+    controller.$inject = ['homePageSystemNotifications', 'offlineService', 'user', 'homeService','homeFacility','userPrograms'];
 
-    function controller(homePageSystemNotifications, offlineService, user, homeService) {
+    function controller(homePageSystemNotifications, offlineService, user, homeService,
+        homeFacility, userPrograms) {
 
         var vm = this;
 
@@ -59,6 +60,17 @@
         vm.isOffline = undefined;
 
         /**
+         * @ngdoc property
+         * @propertyOf home-system-notifications.controller:HomeSystemNotificationsController
+         * @type {Array}
+         * @name outstandingPods
+         *
+         * @description
+         * Point of delivery events that have not yet been received into stock.
+         */
+        vm.outstandingPods = undefined;
+
+        /**
          * @ngdoc method
          * @methodOf home-system-notifications.controller:HomeSystemNotificationsController
          * @name $onInit
@@ -75,10 +87,21 @@
                 vm.userNotifications = notifications.filter(msg => msg.isRead !== true); // Show only notifications that have not been read.
                 
             })
+            
             .catch(function(error) {
                 // Handle any errors that occurred during the resource request
                 console.error(error);
             });
+
+            if (homeFacility && userPrograms && userPrograms.length) {
+                homeService.getOutstandingPods(homeFacility.id, userPrograms[0].id)
+                    .then(function(pods) {
+                        vm.outstandingPods = pods;
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                    });
+            }
         }
     }
 
