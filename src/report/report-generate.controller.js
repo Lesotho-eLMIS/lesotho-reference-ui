@@ -39,7 +39,8 @@
         'reportUrlFactory',
         'accessTokenFactory',
         '$q',
-        'messageService'
+        'messageService',
+        'facilitiesByDistrict'
     ];
 
     function controller(
@@ -53,9 +54,28 @@
         reportUrlFactory,
         accessTokenFactory,
         $q,
-        messageService
+        messageService,
+        facilitiesByDistrict
     ) {
+
         var vm = this;
+
+        /*
+         * Only these districts should appear
+         * in the District dropdown.
+         */
+        var allowedDistricts = [
+            'Berea',
+            'Butha-Buthe',
+            'Leribe',
+            'Mafeteng',
+            'Maseru',
+            'Mohales Hoek',
+            'Mokhotlong',
+            'Qachas Neck',
+            'Quthing',
+            'Thaba-Tseka'
+        ];
 
         vm.$onInit = onInit;
         vm.downloadReport = downloadReport;
@@ -66,95 +86,38 @@
             DueDays: 'report.dueDaysInfo'
         };
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name messageService
-         * @type {Object}
-         *
-         * @description
-         * The object representing the message service.
-         */
         vm.messageService = messageService;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name booleanOptions
-         *
-         * @description
-         * The options for the report parameter of type boolean.
-         */
         vm.booleanOptions = [
             {
-                name: messageService.get('report.boolean.true'),
+                name: messageService.get(
+                    'report.boolean.true'
+                ),
                 value: 'true'
             },
             {
-                name: messageService.get('report.boolean.false'),
+                name: messageService.get(
+                    'report.boolean.false'
+                ),
                 value: 'false'
             }
         ];
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name report
-         * @type {Object}
-         *
-         * @description
-         * The object representing the selected report.
-         */
         vm.report = report;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name paramsOptions
-         * @type {Array}
-         *
-         * @description
-         * The parameter options for this report.
-         */
         vm.paramsOptions = reportParamsOptions;
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name selectedParamsOptions
-         * @type {Object}
-         *
-         * @description
-         * Selected parameter values by parameter name.
-         */
         vm.selectedParamsOptions = {};
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name selectedParamsDependencies
-         * @type {Object}
-         *
-         * @description
-         * Parameter dependencies and their selected values.
-         */
         vm.selectedParamsDependencies = {};
 
-        /**
-         * @ngdoc property
-         * @propertyOf report.controller:ReportGenerateController
-         * @name format
-         * @type {String}
-         *
-         * @description
-         * Selected report output format.
-         */
         vm.format = 'pdf';
 
         /**
          * Downloads the report.
          */
         function downloadReport() {
+
             $window.open(
                 accessTokenFactory.addAccessToken(
                     reportUrlFactory.buildUrl(
@@ -169,39 +132,287 @@
         }
 
         /**
-         * Watches a dependency and reloads dependent parameter options.
+         * Watches report parameter dependencies.
          */
         function watchDependency(param, dep) {
+
             var watchProperty =
-                'vm.selectedParamsOptions.' + dep.dependency;
+                'vm.selectedParamsOptions.' +
+                dep.dependency;
 
-            $scope.$watch(watchProperty, function(newVal) {
-                vm.selectedParamsDependencies[dep.dependency] = newVal;
+            $scope.$watch(
+                watchProperty,
+                function(newVal) {
 
-                if (newVal) {
-                    reportFactory
-                        .getReportParamOptions(
-                            param,
-                            vm.selectedParamsDependencies
-                        )
-                        .then(function(items) {
-                            vm.paramsOptions[param.name] = items;
-                        });
+                    vm.selectedParamsDependencies[
+                        dep.dependency
+                    ] = newVal;
+
+                    if (newVal) {
+
+                        reportFactory
+                            .getReportParamOptions(
+                                param,
+                                vm.selectedParamsDependencies
+                            )
+                            .then(function(items) {
+
+                                vm.paramsOptions[
+                                    param.name
+                                ] = items;
+                            });
+                    }
                 }
-            });
+            );
+        }
+
+        /**
+         * Filters the District parameter so only
+         * the ten Lesotho districts are displayed.
+         */
+        function filterDistrictOptions() {
+
+            if (
+                !vm.paramsOptions.district ||
+                !angular.isArray(
+                    vm.paramsOptions.district
+                )
+            ) {
+                return;
+            }
+
+            vm.paramsOptions.district =
+                vm.paramsOptions.district.filter(
+                    function(option) {
+
+                        var districtName =
+                            option.name ||
+                            option.displayName ||
+                            option.value;
+
+                        return allowedDistricts.indexOf(
+                            districtName
+                        ) !== -1;
+                    }
+                );
+        }
+
+        /**
+         * Finds the actual district name
+         * represented by the selected value.
+         */
+        function getSelectedDistrictName(
+            selectedValue
+        ) {
+
+            var districtName = null;
+
+            if (!selectedValue) {
+                return null;
+            }
+
+            /*
+             * Selected value may already be the district name.
+             */
+            if (
+                angular.isString(selectedValue) &&
+                allowedDistricts.indexOf(
+                    selectedValue
+                ) !== -1
+            ) {
+                return selectedValue;
+            }
+
+            /*
+             * Selected value may be an object.
+             */
+            if (angular.isObject(selectedValue)) {
+
+                districtName =
+                    selectedValue.name ||
+                    selectedValue.displayName ||
+                    selectedValue.value;
+
+                if (
+                    allowedDistricts.indexOf(
+                        districtName
+                    ) !== -1
+                ) {
+                    return districtName;
+                }
+            }
+
+            /*
+             * Otherwise match the selected value
+             * against the existing District options.
+             */
+            angular.forEach(
+                vm.paramsOptions.district || [],
+                function(option) {
+
+                    if (districtName) {
+                        return;
+                    }
+
+                    if (
+                        option.value === selectedValue ||
+                        option.id === selectedValue
+                    ) {
+
+                        districtName =
+                            option.name ||
+                            option.displayName ||
+                            option.value;
+                    }
+                }
+            );
+
+            return districtName;
+        }
+
+        /**
+         * Rebuilds Select2 after Facility options change.
+         */
+        function refreshFacilitySelect() {
+
+            $timeout(function() {
+
+                var element =
+                    angular.element('#facility');
+
+                if (!element.length) {
+                    return;
+                }
+
+                if (element.data('select2')) {
+                    element.select2('destroy');
+                }
+
+                $timeout(
+                    function() {
+                        reinitializeSelect(
+                            'facility'
+                        );
+                    },
+                    0
+                );
+
+            }, 0);
+        }
+
+        /**
+         * Updates Facility options using the
+         * selected District.
+         */
+        function updateFacilityOptions(
+            selectedDistrict
+        ) {
+
+            /*
+             * Clear Facility whenever District changes.
+             */
+            vm.selectedParamsOptions.facility = null;
+
+            var districtName =
+                getSelectedDistrictName(
+                    selectedDistrict
+                );
+
+            if (!districtName) {
+
+                vm.paramsOptions.facility = [];
+
+                refreshFacilitySelect();
+
+                return;
+            }
+
+            var facilities =
+                facilitiesByDistrict[
+                    districtName
+                ] || [];
+
+            /*
+             * Convert facilities into the same shape
+             * expected by the report select.
+             */
+            vm.paramsOptions.facility =
+                facilities.map(
+                    function(facility) {
+
+                        return {
+                            name: facility.name,
+                            value: facility.name
+                        };
+                    }
+                );
+
+            refreshFacilitySelect();
+        }
+
+        /**
+         * Watches District selection and updates
+         * the Facility dropdown.
+         */
+        function watchDistrictSelection() {
+
+            $scope.$watch(
+                'vm.selectedParamsOptions.district',
+                function(
+                    newDistrict,
+                    oldDistrict
+                ) {
+
+                    if (
+                        newDistrict === oldDistrict &&
+                        !newDistrict
+                    ) {
+                        return;
+                    }
+
+                    updateFacilityOptions(
+                        newDistrict
+                    );
+                }
+            );
         }
 
         /**
          * Controller initialization.
          */
         function onInit() {
+
+            /*
+             * Keep only the ten District options.
+             */
+            filterDistrictOptions();
+
+            /*
+             * Facility starts empty.
+             * It is populated after District selection.
+             */
+            vm.paramsOptions.facility = [];
+
+            /*
+             * Watch District changes.
+             */
+            watchDistrictSelection();
+
+            /*
+             * Existing dependency handling.
+             */
             angular.forEach(
                 report.templateParameters,
                 function(param) {
+
                     angular.forEach(
                         param.dependencies,
                         function(dependency) {
-                            watchDependency(param, dependency);
+
+                            watchDependency(
+                                param,
+                                dependency
+                            );
                         }
                     );
                 }
@@ -209,42 +420,74 @@
         }
 
         /**
-         * Reinitializes select2 for a given parameter.
+         * Reinitializes Select2.
          */
-        function reinitializeSelect(parameterName) {
+        function reinitializeSelect(
+            parameterName
+        ) {
+
             $timeout(function() {
+
                 var element =
-                    angular.element('#' + parameterName);
+                    angular.element(
+                        '#' + parameterName
+                    );
+
+                if (!element.length) {
+                    return;
+                }
+
+                if (element.data('select2')) {
+                    element.select2('destroy');
+                }
 
                 element.select2({
+
                     allowClear: true,
+
                     selectOnClose: true,
-                    placeholder: getPlaceholder(element),
+
+                    placeholder:
+                        getPlaceholder(
+                            element
+                        ),
+
                     language: {
+
                         noResults: function() {
+
                             return messageService.get(
                                 'openlmisForm.selectNoResults'
                             );
                         }
                     }
                 });
+
             });
         }
 
         /**
-         * Returns the placeholder defined in the first placeholder option.
+         * Gets placeholder text.
          */
         function getPlaceholder(element) {
-            var placeholderOption =
-                element.children('.placeholder:first');
 
-            if (placeholderOption.length === 0) {
+            var placeholderOption =
+                element.children(
+                    '.placeholder:first'
+                );
+
+            if (
+                placeholderOption.length === 0
+            ) {
                 return false;
             }
 
             return {
-                id: placeholderOption.val(),
-                text: placeholderOption.text()
+                id:
+                    placeholderOption.val(),
+
+                text:
+                    placeholderOption.text()
             };
         }
     }

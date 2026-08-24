@@ -28,54 +28,153 @@
 
     function config($stateProvider, REPORT_RIGHTS) {
 
-        $stateProvider.state(
-            'openlmis.reports.list.generate',
-            {
-                label: 'report.generateReport',
+        $stateProvider.state('openlmis.reports.list.generate', {
+            label: 'report.generateReport',
 
-                url: '/:module/:report/options',
+            url: '/:module/:report/options',
 
-                accessRights: [
-                    REPORT_RIGHTS.REPORTS_VIEW
-                ],
+            accessRights: [
+                REPORT_RIGHTS.REPORTS_VIEW
+            ],
 
-                views: {
-                    '@openlmis': {
-                        controller:
-                            'ReportGenerateController',
+            views: {
+                '@openlmis': {
+                    controller: 'ReportGenerateController',
+                    controllerAs: 'vm',
+                    templateUrl: 'report/report-generate.html',
 
-                        controllerAs:
-                            'vm',
+                    resolve: {
 
-                        templateUrl:
-                            'report/report-generate.html',
+                        report: function($stateParams, reportFactory) {
+                            return reportFactory.getReport(
+                                $stateParams.module,
+                                $stateParams.report
+                            );
+                        },
 
-                        resolve: {
-                            report: function(
-                                $stateParams,
-                                reportFactory
-                            ) {
-                                return reportFactory.getReport(
-                                    $stateParams.module,
-                                    $stateParams.report
-                                );
-                            },
+                        /*
+                         * Load all facilities using the existing
+                         * OpenLMIS facility service.
+                         */
+                        facilities: function(facilityService) {
+                            return facilityService.search(
+                                {
+                                    page: 0,
+                                    size: 10000
+                                },
+                                {}
+                            ).then(function(facilitiesPage) {
+                                return facilitiesPage.content || [];
+                            });
+                        },
 
-                            reportParamsOptions: function(
-                                report,
-                                reportFactory
-                            ) {
-                                return reportFactory
-                                    .getReportParamsOptions(
-                                        report
-                                    );
+                        /*
+                         * Group facilities by their real district
+                         * using the geographic zone hierarchy.
+                         */
+                        facilitiesByDistrict: function(facilities) {
+
+                            var districts = [
+                                    'Berea',
+                                    'Butha-Buthe',
+                                    'Leribe',
+                                    'Mafeteng',
+                                    'Maseru',
+                                    'Mohales Hoek',
+                                    'Mokhotlong',
+                                    'Qachas Neck',
+                                    'Quthing',
+                                    'Thaba-Tseka'
+                                ],
+                                grouped = {};
+
+                            angular.forEach(
+                                districts,
+                                function(district) {
+                                    grouped[district] = [];
+                                }
+                            );
+
+                            function findDistrict(geographicZone) {
+
+                                var zone = geographicZone;
+
+                                while (zone) {
+
+                                    if (
+                                        zone.level &&
+                                        (
+                                            zone.level.code === 'district' ||
+                                            zone.level.levelNumber === 3
+                                        )
+                                    ) {
+                                        return zone.name;
+                                    }
+
+                                    zone = zone.parent;
+                                }
+
+                                return null;
                             }
+
+                            angular.forEach(
+                                facilities,
+                                function(facility) {
+
+                                    if (
+                                        !facility ||
+                                        !facility.geographicZone
+                                    ) {
+                                        return;
+                                    }
+
+                                    var district = findDistrict(
+                                        facility.geographicZone
+                                    );
+
+                                    if (
+                                        !district ||
+                                        !grouped[district]
+                                    ) {
+                                        return;
+                                    }
+
+                                    grouped[district].push(facility);
+                                }
+                            );
+
+                            /*
+                             * Keep facility names ordered alphabetically
+                             * inside every district.
+                             */
+                            angular.forEach(
+                                districts,
+                                function(district) {
+
+                                    grouped[district].sort(
+                                        function(a, b) {
+                                            return a.name.localeCompare(
+                                                b.name
+                                            );
+                                        }
+                                    );
+                                }
+                            );
+
+                            return grouped;
+                        },
+
+                        reportParamsOptions: function(
+                            report,
+                            reportFactory
+                        ) {
+                            return reportFactory
+                                .getReportParamsOptions(report);
                         }
                     }
                 }
             }
-        );
-
+        });
     }
 
 })();
