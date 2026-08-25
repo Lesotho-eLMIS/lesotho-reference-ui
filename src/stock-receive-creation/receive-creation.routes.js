@@ -126,11 +126,21 @@
                             Object.values(result).forEach(function (record) {
                                 let receivingDate = new Date(record.receivingDate);
                                 if (receivingDate >= activePeriod) {
-
                                     references.push(record);
                                 }
                             });
-                           return references;
+
+                            // Redistribution sentinel - always present regardless of the 14-day filter.
+                            // Used when receiving commodities from a facility that does not use eLMIS,
+                            // where no POD reference number exists in the system.
+                            references.push({
+                                referenceNumber: 'Redistribution',
+                                cartonsQuantityAccepted: null,
+                                receivingDate: null,
+                                _isRedistribution: true
+                            });
+
+                            return references;
                         });
                 },
                 requisitionLineItems: function($stateParams, requisitionService) {

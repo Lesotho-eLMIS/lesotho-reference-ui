@@ -252,7 +252,9 @@
         selectedItem.referenceNumber = vm.referenceNumber;
         if (adjustmentType.state === 'receive') {
           for (var i = 0; i < ReferenceNumbers.length; i++) {
-            if (ReferenceNumbers[i].referenceNumber === vm.referenceNumber) {
+            // Skip the Redistribution sentinel - it has no carton data
+            if (ReferenceNumbers[i].referenceNumber === vm.referenceNumber
+                    && !ReferenceNumbers[i]._isRedistribution) {
               selectedItem.totalCartonNumber = ReferenceNumbers[i].cartonsQuantityAccepted;
             };
           }
@@ -380,6 +382,11 @@
 
     vm.validateCartonNumberRange = function (lineItem) {
       if (adjustmentType.state === "receive") {
+        // Redistribution receives have no POD carton data - skip carton validation
+        if (vm.referenceNumber === 'Redistribution') {
+          lineItem.$errors.cartonsInvalid = false;
+          return lineItem;
+        }
         if (!lineItem.hasOwnProperty('totalCartonNumber') || lineItem.individualCartonNumberRange > lineItem.totalCartonNumber ||
           isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumberRange === 0) {
 
@@ -397,6 +404,11 @@
     vm.validateCartonNumber = function (lineItem) {
       lineItem.individualCartonNumberRange = lineItem.individualCartonNumber;
       if (adjustmentType.state === "receive") {
+        // Redistribution receives have no POD carton data - skip carton validation
+        if (vm.referenceNumber === 'Redistribution') {
+          lineItem.$errors.cartonsInvalid = false;
+          return lineItem;
+        }
         if (!lineItem.hasOwnProperty('totalCartonNumber') || lineItem.individualCartonNumber > lineItem.totalCartonNumber ||
           isEmpty(lineItem.totalCartonNumber) || lineItem.individualCartonNumber === 0) {
 
@@ -552,10 +564,17 @@
     vm.referenceNumberChanged = function() {
         for (var i = 0; i < ReferenceNumbers.length; i++) {
             if (ReferenceNumbers[i].referenceNumber === vm.referenceNumber) {
-                vm.addedLineItems.forEach(function(lineItem) {
-                    lineItem.totalCartonNumber =
-                        ReferenceNumbers[i].cartonsQuantityAccepted;
-                });
+                // Skip carton update for Redistribution - no POD carton data exists
+                if (ReferenceNumbers[i]._isRedistribution) {
+                    vm.addedLineItems.forEach(function(lineItem) {
+                        lineItem.totalCartonNumber = undefined;
+                    });
+                } else {
+                    vm.addedLineItems.forEach(function(lineItem) {
+                        lineItem.totalCartonNumber =
+                            ReferenceNumbers[i].cartonsQuantityAccepted;
+                    });
+                }
             }
         }
     };
