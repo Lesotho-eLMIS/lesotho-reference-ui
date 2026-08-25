@@ -232,7 +232,10 @@
             }
             return resource.submitPhysicalInventory(event).$promise
                 .then(function() {
-                    removeDraftFromCache(physicalInventory.id);
+                    return deleteDraft(physicalInventory.$serverDraftId || physicalInventory.id)
+                        .catch(function() {
+                            removeDraftFromCache(physicalInventory.$serverDraftId || physicalInventory.id);
+                        });
                 });
         }
 
