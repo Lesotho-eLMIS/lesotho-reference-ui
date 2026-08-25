@@ -30,16 +30,19 @@
 
     controller.$inject = [
         'orderingFacilities', 'programs', 'loadingModalService', 'orders',
-        '$stateParams', '$state', 'ORDER_STATUS', 'facility'
+        '$stateParams', '$state', 'ORDER_STATUS', 'facility',
+        'orderRepository', 'confirmService', 'notificationService'
     ];
 
     function controller(orderingFacilities, programs, loadingModalService, orders,
-                        $stateParams, $state, ORDER_STATUS, facility) {
+                        $stateParams, $state, ORDER_STATUS, facility,
+                        orderRepository, confirmService, notificationService) {
 
         var vm = this;
 
         vm.$onInit = onInit;
         vm.loadOrders = loadOrders;
+        vm.archiveOrder = archiveOrder;
 
         /**
          * @ngdoc property
@@ -167,6 +170,36 @@
             $state.go('openlmis.orders.fulfillment', stateParams, {
                 reload: true
             });
+        }
+
+        /**
+         * @ngdoc method
+         * @methodOf order-fulfillment.controller:OrderFulfillmentController
+         * @name archiveOrder
+         *
+         * @description
+         * Asks for confirmation and archives the given request so that it no longer
+         * appears on the screen.
+         *
+         * @param {Object} order the request to archive
+         */
+        function archiveOrder(order) {
+            return confirmService.confirmDestroy(
+                'orderFulfillment.deleteRequestConfirmation',
+                'orderFulfillment.delete'
+            )
+                .then(function() {
+                    loadingModalService.open();
+                    return orderRepository.archive(order.id)
+                        .then(function() {
+                            notificationService.success('orderFulfillment.requestHasBeenDeleted');
+                            $state.reload();
+                        })
+                        .catch(function() {
+                            notificationService.error('orderFulfillment.failedToDeleteRequest');
+                            loadingModalService.close();
+                        });
+                });
         }
 
     }
