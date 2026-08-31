@@ -16,5 +16,9 @@
     "orderFulfillment.search": "Search",
     "orderFulfillment.status": "Status",
     "orderFulfillment.startFulfillment": "Start Fulfillment",
-    "orderFulfillment.continueFulfillment": "Continue Fulfillment"
+    "orderFulfillment.continueFulfillment": "Continue Fulfillment",
+    "orderFulfillment.delete": "Delete",
+    "orderFulfillment.deleteRequestConfirmation": "Are you sure you want to delete this request?",
+    "orderFulfillment.requestHasBeenDeleted": "The request has been deleted",
+    "orderFulfillment.failedToDeleteRequest": "Failed to delete the request"
 }

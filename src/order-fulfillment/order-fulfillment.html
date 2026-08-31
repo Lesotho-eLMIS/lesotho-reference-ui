@@ -55,6 +55,9 @@
         <button ng-if="!order.isFulfilling()" ui-sref="openlmis.orders.shipmentView({id: order.id})">
           {{'orderFulfillment.startFulfillment' | message}}
         </button>
+        <button type="button" class="danger" ng-click="vm.archiveOrder(order)">
+          {{'orderFulfillment.delete' | message}}
+        </button>
       </td>
     </tr>
     </tbody>
