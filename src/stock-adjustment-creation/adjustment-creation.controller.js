@@ -879,11 +879,16 @@
     }
 
     function onInit() {
-      // Filter out all COM- generic products immediately upon initialization
+      // Filter out all CommodityType products using the extraData JSON payload
       if (orderableGroups && orderableGroups.length > 0) {
         orderableGroups = orderableGroups.filter(function(group) {
-          if (group && group.length > 0 && group[0].orderable && group[0].orderable.productCode) {
-            return !group[0].orderable.productCode.startsWith('COM-');
+          if (group && group.length > 0 && group[0].orderable) {
+            var extraData = group[0].orderable.extraData;
+            
+            // If extraData exists and isCommodityType is strictly true, filter it out
+            if (extraData && extraData.isCommodityType === true) {
+              return false;
+            }
           }
           return true;
         });
