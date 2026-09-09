@@ -12,7 +12,6 @@ COPY --from=node:12-bullseye /usr/local/lib/node_modules /usr/local/lib/node_mod
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
-RUN apt-get update && apt-get install -y gettext
 RUN mv consul/package.json package.json
 RUN npm install
 
