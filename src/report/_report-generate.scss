@@ -1,0 +1,417 @@
+/*
+ * Report Generate Page
+ * Keeps all report fields consistently aligned.
+ */
+
+
+/* ============================================================
+   MAIN PARAMETER LAYOUT
+   ============================================================ */
+
+.report-parameter {
+    width: 520px;
+    max-width: 100%;
+    margin-bottom: 20px;
+}
+
+.report-parameter > label {
+    display: block;
+    margin: 0 0 7px 0;
+    padding: 0;
+
+    font-weight: 600;
+    line-height: 20px;
+}
+
+
+/* ============================================================
+   NORMAL INPUTS
+   ============================================================ */
+
+.report-parameter > input,
+.report-parameter > span,
+.report-parameter > span > input,
+.report-parameter > select {
+    width: 520px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.report-parameter > input,
+.report-parameter > span > input {
+    height: 42px;
+}
+
+
+/* ============================================================
+   SELECT2
+   Fix District / Program / Product dropdown alignment
+   ============================================================ */
+
+.report-parameter .select2-container {
+    display: block;
+
+    width: 520px !important;
+    max-width: 100%;
+
+    margin: 0;
+    box-sizing: border-box;
+}
+
+
+/*
+ * OpenLMIS uses the older Select2 styling.
+ */
+.report-parameter .select2-container .select2-choice {
+    height: 42px !important;
+    min-height: 42px !important;
+
+    padding: 0 38px 0 12px;
+
+    line-height: 40px !important;
+
+    box-sizing: border-box;
+}
+
+
+/* Selected value */
+.report-parameter
+.select2-container
+.select2-choice
+.select2-chosen {
+    line-height: 40px !important;
+}
+
+
+/* Dropdown arrow area */
+.report-parameter
+.select2-container
+.select2-choice
+.select2-arrow {
+    width: 32px;
+}
+
+
+/* Remove strange vertical expansion */
+.report-parameter
+.select2-container
+.select2-choice
+.select2-arrow b {
+    margin-top: 6px;
+}
+
+
+/* ============================================================
+   FACILITY MULTISELECT
+   Same width as dates and district
+   ============================================================ */
+
+.facility-multiselect {
+    width: 520px;
+    max-width: 100%;
+
+    margin: 0;
+
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   FACILITY TOOLBAR
+   ============================================================ */
+
+.facility-multiselect-toolbar {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 44px;
+
+    padding: 7px 10px;
+
+    border-bottom: 1px solid #dddddd;
+
+    background: #f7f7f7;
+
+    box-sizing: border-box;
+}
+
+
+.facility-selected-count {
+    margin: 0;
+
+    font-weight: 600;
+    line-height: 30px;
+}
+
+
+.facility-toolbar-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+}
+
+
+.facility-action-button {
+    height: 32px;
+
+    margin: 0;
+    padding: 4px 12px;
+
+    white-space: nowrap;
+}
+
+
+.facility-action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   FACILITY SEARCH
+   ============================================================ */
+
+.facility-search-wrapper {
+    width: 100%;
+
+    padding: 8px 10px;
+
+    border-bottom: 1px solid #dddddd;
+
+    box-sizing: border-box;
+}
+
+
+.facility-search-input {
+    display: block;
+
+    width: 100% !important;
+    height: 36px !important;
+
+    margin: 0;
+    padding: 6px 10px;
+
+    border: 1px solid #bbbbbb;
+    border-radius: 3px;
+
+    box-sizing: border-box;
+}
+
+
+.facility-search-input:focus {
+    outline: none;
+    border-color: #777777;
+}
+
+
+/* ============================================================
+   FACILITY LIST
+   Compact rather than expanding down the whole page
+   ============================================================ */
+
+.facility-options {
+    width: 100%;
+
+    max-height: 180px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    padding: 4px 0;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   INDIVIDUAL FACILITY
+   ============================================================ */
+
+.facility-option {
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
+    min-height: 34px;
+
+    margin: 0;
+    padding: 6px 12px;
+
+    font-weight: normal;
+
+    box-sizing: border-box;
+
+    cursor: pointer;
+}
+
+
+.facility-option:hover {
+    background: #f4f4f4;
+}
+
+
+.facility-option input[type="checkbox"] {
+    width: auto !important;
+    height: auto !important;
+
+    flex: 0 0 auto;
+
+    margin: 0 9px 0 0;
+}
+
+
+.facility-option-name {
+    flex: 1;
+
+    margin: 0;
+
+    line-height: 20px;
+
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+
+/* ============================================================
+   FACILITY MESSAGES
+   ============================================================ */
+
+.facility-message,
+.facility-no-results {
+    width: 100%;
+
+    margin: 0;
+    padding: 14px 10px;
+
+    text-align: center;
+
+    color: #666666;
+    font-style: italic;
+
+    background: #fafafa;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   FACILITY SCROLLBAR
+   ============================================================ */
+
+.facility-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.facility-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.facility-options::-webkit-scrollbar-thumb {
+    background: #bcbcbc;
+    border-radius: 4px;
+}
+
+
+/* ============================================================
+   PARAMETER INFORMATION
+   ============================================================ */
+
+.param-info {
+    width: 520px;
+    max-width: 100%;
+
+    margin: 5px 0 0 0;
+}
+
+
+/* ============================================================
+   REPORT FORMAT
+   ============================================================ */
+
+.report-format {
+    width: 520px;
+    max-width: 100%;
+
+    margin-top: 10px;
+}
+
+
+.report-format legend {
+    margin-bottom: 8px;
+}
+
+
+.report-format .radio {
+    display: block;
+
+    margin: 8px 0;
+}
+
+
+/* ============================================================
+   GENERATE BUTTON
+   ============================================================ */
+
+.report-generate-actions {
+    width: 520px;
+    max-width: 100%;
+
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .report-parameter,
+    .facility-multiselect,
+    .report-format,
+    .report-generate-actions,
+    .param-info {
+        width: 100%;
+    }
+
+
+    .report-parameter > input,
+    .report-parameter > select,
+    .report-parameter > span,
+    .report-parameter > span > input,
+    .report-parameter .select2-container {
+        width: 100% !important;
+    }
+
+
+    .facility-multiselect-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 7px;
+    }
+
+
+    .facility-toolbar-actions {
+        justify-content: flex-end;
+    }
+
+
+    .facility-options {
+        max-height: 160px;
+    }
+}

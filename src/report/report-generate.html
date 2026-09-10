@@ -4,13 +4,18 @@
 
 <form ng-submit="vm.downloadReport()">
 
-    <div ng-repeat="parameter in vm.report.templateParameters">
+    <div
+        class="report-parameter"
+        ng-repeat="parameter in vm.report.templateParameters">
 
         <label for="{{parameter.name}}">
             {{parameter.displayName}}
         </label>
 
-        <!-- Date parameters -->
+
+        <!-- =====================================================
+             DATE PICKER
+             ===================================================== -->
         <input
             id="{{parameter.name}}"
             ng-if="parameter.description == 'datepickers'"
@@ -19,98 +24,319 @@
             ng-required="{{parameter.required}}" />
 
 
-        <!--
-            Normal report selects.
+        <!-- =====================================================
+             FACILITY MULTISELECT
+             Custom checkbox UI.
+             Activated when:
+                 name = facility
+                 description = multipleselect
+             ===================================================== -->
+        <div
+            ng-if="
+                parameter.name == 'facility' &&
+                parameter.description == 'multipleselect'
+            "
+            class="facility-multiselect">
 
-            Facility is also kept rendered when its option list is empty,
-            because its options are populated after District is selected.
-        -->
+            <!-- Top toolbar -->
+            <div class="facility-multiselect-toolbar">
+
+                <div class="facility-selected-count">
+                    {{
+                        (vm.selectedParamsOptions.facility || []).length
+                    }}
+                    selected
+                </div>
+
+                <div class="facility-toolbar-actions">
+
+                    <button
+                        type="button"
+                        class="facility-action-button"
+                        ng-click="vm.selectAllFacilities()"
+                        ng-disabled="
+                            !vm.paramsOptions.facility ||
+                            vm.paramsOptions.facility.length === 0
+                        ">
+                        Select All
+                    </button>
+
+                    <button
+                        type="button"
+                        class="facility-action-button"
+                        ng-click="vm.clearFacilities()"
+                        ng-disabled="
+                            !vm.selectedParamsOptions.facility ||
+                            vm.selectedParamsOptions.facility.length === 0
+                        ">
+                        Clear
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Search box -->
+            <div class="facility-search-wrapper">
+
+                <input
+                    type="text"
+                    class="facility-search-input"
+                    ng-model="vm.facilitySearch"
+                    placeholder="Search facilities..."
+                    autocomplete="off" />
+
+            </div>
+
+
+            <!-- Message before district is selected -->
+            <div
+                class="facility-message"
+                ng-if="!vm.selectedParamsOptions.district">
+
+                Select a district to load facilities.
+
+            </div>
+
+
+            <!-- No facilities for selected district -->
+            <div
+                class="facility-message"
+                ng-if="
+                    vm.selectedParamsOptions.district &&
+                    (
+                        !vm.paramsOptions.facility ||
+                        vm.paramsOptions.facility.length === 0
+                    )
+                ">
+
+                No facilities found for this district.
+
+            </div>
+
+
+            <!-- Facility checkbox list -->
+            <div
+                class="facility-options"
+                ng-if="
+                    vm.selectedParamsOptions.district &&
+                    vm.paramsOptions.facility.length > 0
+                ">
+
+                <label
+                    class="facility-option"
+                    ng-repeat="
+                        option in vm.paramsOptions.facility
+                        | filter:{name: vm.facilitySearch}
+                        track by option.value
+                    ">
+
+                    <input
+                        type="checkbox"
+                        ng-model="
+                            vm.selectedFacilityMap[
+                                option.value
+                            ]
+                        "
+                        ng-change="
+                            vm.onFacilitySelectionChange()
+                        " />
+
+                    <span class="facility-option-name">
+                        {{option.name}}
+                    </span>
+
+                </label>
+
+
+                <!-- Search produced no matches -->
+                <div
+                    class="facility-no-results"
+                    ng-if="
+                        (
+                            vm.paramsOptions.facility
+                            | filter:{name: vm.facilitySearch}
+                        ).length === 0
+                    ">
+
+                    No matching facilities found.
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             NORMAL SELECT
+             Facility MULTISELECT is explicitly excluded here.
+             ===================================================== -->
         <select
             id="{{parameter.name}}"
+
             ng-if="
                 parameter.description != 'datepickers' &&
                 parameter.description != 'booleanSelect' &&
+                !(
+                    parameter.name == 'facility' &&
+                    parameter.description == 'multipleselect'
+                ) &&
                 (
                     vm.paramsOptions[parameter.name].length > 0 ||
-                    parameter.dependencies.length > 0 ||
-                    parameter.name == 'facility'
+                    parameter.dependencies.length > 0
                 )
             "
-            ng-model="vm.selectedParamsOptions[parameter.name]"
-            ng-disabled="
-                parameter.name == 'facility' &&
-                !vm.selectedParamsOptions.district
+
+            ng-model="
+                vm.selectedParamsOptions[
+                    parameter.name
+                ]
             "
+
             ng-options="
                 option.value as option.name
-                for option in vm.paramsOptions[parameter.name]
+                for option in vm.paramsOptions[
+                    parameter.name
+                ]
             "
+
             ng-required="{{parameter.required}}"
-            ng-init="vm.reinitializeSelect(parameter.name)">
+
+            ng-init="
+                vm.reinitializeSelect(
+                    parameter.name
+                )
+            ">
+
+            <option
+                value=""
+                class="placeholder">
+                Select an option
+            </option>
+
         </select>
 
 
-        <!-- Boolean parameters -->
+        <!-- =====================================================
+             BOOLEAN SELECT
+             ===================================================== -->
         <select
             id="{{parameter.name}}"
+
             ng-if="
                 parameter.description == 'booleanSelect' &&
                 vm.paramsOptions[parameter.name].length == 0
             "
-            ng-model="vm.selectedParamsOptions[parameter.name]"
+
+            ng-model="
+                vm.selectedParamsOptions[
+                    parameter.name
+                ]
+            "
+
             ng-options="
                 option.value as option.name
                 for option in vm.booleanOptions
             "
+
             ng-required="{{parameter.required}}"
-            ng-init="vm.reinitializeSelect(parameter.name)">
+
+            ng-init="
+                vm.reinitializeSelect(
+                    parameter.name
+                )
+            ">
+
+            <option
+                value=""
+                class="placeholder">
+                Select an option
+            </option>
+
         </select>
 
 
-        <!-- Plain input parameters -->
+        <!-- =====================================================
+             NORMAL INPUT
+             Used when parameter has no options.
+             Facility multiselect is excluded.
+             ===================================================== -->
         <span
             ng-if="
                 vm.paramsOptions[parameter.name].length == 0 &&
                 parameter.dependencies.length == 0 &&
                 parameter.description != 'datepickers' &&
                 parameter.description != 'booleanSelect' &&
-                parameter.name != 'facility'
+                !(
+                    parameter.name == 'facility' &&
+                    parameter.description == 'multipleselect'
+                )
             "
             ng-switch="parameter.dataType">
 
+            <!-- Integer -->
             <input
+                id="{{parameter.name}}"
                 ng-switch-when="java.lang.Integer"
-                ng-model="vm.selectedParamsOptions[parameter.name]"
+                ng-model="
+                    vm.selectedParamsOptions[
+                        parameter.name
+                    ]
+                "
                 ng-required="{{parameter.required}}"
                 positive-integer />
 
+
+            <!-- Default text -->
             <input
+                id="{{parameter.name}}"
                 ng-switch-default
-                ng-model="vm.selectedParamsOptions[parameter.name]"
+                ng-model="
+                    vm.selectedParamsOptions[
+                        parameter.name
+                    ]
+                "
                 ng-required="{{parameter.required}}"
                 type="text" />
 
         </span>
 
 
-        <!-- Optional parameter information -->
+        <!-- =====================================================
+             PARAMETER HELP / INFORMATION
+             ===================================================== -->
         <p
             class="param-info"
+
             ng-if="
-                vm.paramsInfo[parameter.name] &&
+                vm.paramsInfo[
+                    parameter.name
+                ] &&
                 parameter.selectExpression != null
             ">
-            {{vm.paramsInfo[parameter.name] | message}}
+
+            {{
+                vm.paramsInfo[
+                    parameter.name
+                ] | message
+            }}
+
         </p>
 
     </div>
 
 
-    <fieldset class="form-group">
+    <!-- =========================================================
+         OUTPUT FORMAT
+         ========================================================= -->
+    <fieldset class="form-group report-format">
 
         <legend>
             {{'report.format' | message}}
         </legend>
+
 
         <label class="radio">
             <input
@@ -118,8 +344,10 @@
                 ng-model="vm.format"
                 value="pdf"
                 required />
+
             {{'report.pdf' | message}}
         </label>
+
 
         <label class="radio">
             <input
@@ -127,8 +355,10 @@
                 ng-model="vm.format"
                 value="csv"
                 required />
+
             {{'report.csv' | message}}
         </label>
+
 
         <label class="radio">
             <input
@@ -136,8 +366,10 @@
                 ng-model="vm.format"
                 value="xls"
                 required />
+
             {{'report.xls' | message}}
         </label>
+
 
         <label class="radio">
             <input
@@ -145,8 +377,10 @@
                 ng-model="vm.format"
                 value="xlsx"
                 required />
+
             {{'report.xlsx' | message}}
         </label>
+
 
         <label class="radio">
             <input
@@ -154,14 +388,22 @@
                 ng-model="vm.format"
                 value="html"
                 required />
+
             {{'report.html' | message}}
         </label>
 
     </fieldset>
 
 
-    <input
-        type="submit"
-        value="{{'report.generate' | message}}" />
+    <!-- =========================================================
+         GENERATE
+         ========================================================= -->
+    <div class="report-generate-actions">
+
+        <input
+            type="submit"
+            value="{{'report.generate' | message}}" />
+
+    </div>
 
 </form>

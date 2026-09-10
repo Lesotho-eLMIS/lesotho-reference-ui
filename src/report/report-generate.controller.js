@@ -5,12 +5,6 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Affero General Public License for more details. You should have received a copy of
- * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.
  */
 
 (function() {
@@ -19,21 +13,39 @@
 
     angular
         .module('report')
-        .controller('ReportGenerateController', controller);
+        .controller(
+            'ReportGenerateController',
+            controller
+        );
 
     controller.$inject = [
-        '$state', '$scope', '$window', 'report', 'reportFactory', '$timeout',
-        'reportParamsOptions', 'reportUrlFactory', 'accessTokenFactory', '$q',
-        'messageService', 'facilitiesByDistrict'
+        '$scope',
+        '$window',
+        'report',
+        'reportFactory',
+        '$timeout',
+        'reportParamsOptions',
+        'reportUrlFactory',
+        'accessTokenFactory',
+        'messageService',
+        'facilitiesByDistrict'
     ];
 
-    function controller($state, $scope, $window, report, reportFactory, $timeout,
-                        reportParamsOptions, reportUrlFactory, accessTokenFactory, $q,
-                        messageService, facilitiesByDistrict) {
+    function controller(
+        $scope,
+        $window,
+        report,
+        reportFactory,
+        $timeout,
+        reportParamsOptions,
+        reportUrlFactory,
+        accessTokenFactory,
+        messageService,
+        facilitiesByDistrict
+    ) {
 
         var vm = this;
 
-        // Custom Lesotho district list used to filter geographic-zone options.
         var allowedDistricts = [
             'Berea',
             'Butha-Buthe',
@@ -53,32 +65,63 @@
 
         vm.reinitializeSelect = reinitializeSelect;
 
+        vm.onFacilitySelectionChange =
+            onFacilitySelectionChange;
+
+        vm.selectAllFacilities =
+            selectAllFacilities;
+
+        vm.clearFacilities =
+            clearFacilities;
+
         vm.paramsInfo = {
-            GeographicZone: 'report.geographicZoneInfo',
-            DueDays: 'report.dueDaysInfo'
+            GeographicZone:
+                'report.geographicZoneInfo',
+
+            DueDays:
+                'report.dueDaysInfo'
         };
 
-        vm.messageService = messageService;
+        vm.messageService =
+            messageService;
 
-        vm.booleanOptions = [{
-            name: messageService.get('report.boolean.true'),
-            value: 'true'
-        }, {
-            name: messageService.get('report.boolean.false'),
-            value: 'false'
-        }];
+        vm.booleanOptions = [
+            {
+                name: messageService.get(
+                    'report.boolean.true'
+                ),
+                value: 'true'
+            },
+            {
+                name: messageService.get(
+                    'report.boolean.false'
+                ),
+                value: 'false'
+            }
+        ];
 
         vm.report = report;
 
-        vm.paramsOptions = reportParamsOptions;
+        vm.paramsOptions =
+            reportParamsOptions || {};
 
         vm.selectedParamsOptions = {};
 
         vm.selectedParamsDependencies = {};
 
+        /*
+         * Object used only by Facility checkboxes.
+         */
+        vm.selectedFacilityMap = {};
+
         vm.format = 'pdf';
 
+
+        /**
+         * Generate/download report.
+         */
         function downloadReport() {
+
             $window.open(
                 accessTokenFactory.addAccessToken(
                     reportUrlFactory.buildUrl(
@@ -92,202 +135,461 @@
             );
         }
 
-        function watchDependency(param, dep) {
-            var watchProperty = 'vm.selectedParamsOptions.' + dep.dependency;
 
-            $scope.$watch(watchProperty, function(newVal) {
-                vm.selectedParamsDependencies[dep.dependency] = newVal;
+        /**
+         * Existing report dependency handling.
+         */
+        function watchDependency(
+            param,
+            dep
+        ) {
 
-                if (newVal) {
-                    reportFactory.getReportParamOptions(
-                        param,
-                        vm.selectedParamsDependencies
-                    ).then(function(items) {
-                        vm.paramsOptions[param.name] = items;
-                    });
-                }
-            });
-        }
+            var watchProperty =
+                'vm.selectedParamsOptions.' +
+                dep.dependency;
 
-        // Keep only the ten administrative districts.
-        function filterDistrictOptions() {
-            if (!vm.paramsOptions.district ||
-                !angular.isArray(vm.paramsOptions.district)) {
-                return;
-            }
-
-            vm.paramsOptions.district =
-                vm.paramsOptions.district.filter(function(option) {
-
-                    var districtName =
-                        option.name ||
-                        option.displayName ||
-                        option.value;
-
-                    return allowedDistricts.indexOf(districtName) !== -1;
-                });
-        }
-
-        function getSelectedDistrictName(selectedValue) {
-            if (!selectedValue) {
-                return null;
-            }
-
-            if (angular.isString(selectedValue) &&
-                allowedDistricts.indexOf(selectedValue) !== -1) {
-                return selectedValue;
-            }
-
-            if (angular.isObject(selectedValue)) {
-                var objectName =
-                    selectedValue.name ||
-                    selectedValue.displayName ||
-                    selectedValue.value;
-
-                if (allowedDistricts.indexOf(objectName) !== -1) {
-                    return objectName;
-                }
-            }
-
-            var districtName = null;
-
-            angular.forEach(vm.paramsOptions.district, function(option) {
-                if (districtName) {
-                    return;
-                }
-
-                if (option.value === selectedValue ||
-                    option.id === selectedValue) {
-
-                    districtName =
-                        option.name ||
-                        option.displayName ||
-                        option.value;
-                }
-            });
-
-            return districtName;
-        }
-
-        // Rebuild only the Facility Select2 when district-based options change.
-        function refreshFacilitySelect() {
-            $timeout(function() {
-                var element = angular.element('#facility');
-
-                if (!element.length) {
-                    return;
-                }
-
-                if (element.data('select2')) {
-                    element.select2('destroy');
-                }
-
-                $timeout(function() {
-                    reinitializeSelect('facility');
-                }, 0);
-
-            }, 0);
-        }
-
-        // Replace Facility options with facilities from the selected district.
-        function updateFacilityOptions(selectedDistrict) {
-            vm.selectedParamsOptions.facility = null;
-
-            var districtName =
-                getSelectedDistrictName(selectedDistrict);
-
-            if (!districtName) {
-                vm.paramsOptions.facility = [];
-                refreshFacilitySelect();
-                return;
-            }
-
-            var facilities =
-                facilitiesByDistrict[districtName] || [];
-
-            vm.paramsOptions.facility =
-                facilities.map(function(facility) {
-                    return {
-                        name: facility.name,
-                        value: facility.name
-                    };
-                });
-
-            refreshFacilitySelect();
-        }
-
-        // Watch the District parameter and update Facility accordingly.
-        function watchDistrictSelection() {
             $scope.$watch(
-                'vm.selectedParamsOptions.district',
-                function(newDistrict, oldDistrict) {
+                watchProperty,
+                function(newVal) {
 
-                    if (newDistrict === oldDistrict &&
-                        !newDistrict) {
+                    vm.selectedParamsDependencies[
+                        dep.dependency
+                    ] = newVal;
+
+                    if (!newVal) {
                         return;
                     }
 
-                    updateFacilityOptions(newDistrict);
+                    reportFactory
+                        .getReportParamOptions(
+                            param,
+                            vm.selectedParamsDependencies
+                        )
+                        .then(
+                            function(items) {
+
+                                vm.paramsOptions[
+                                    param.name
+                                ] = items || [];
+                            }
+                        );
                 }
             );
         }
 
-        function onInit() {
-
-            // Custom district/facility filtering.
-            filterDistrictOptions();
-
-            if (vm.paramsOptions.facility) {
-                vm.paramsOptions.facility = [];
-            }
-
-            watchDistrictSelection();
-
-            // Original OpenLMIS dependency handling.
-            angular.forEach(report.templateParameters, function(param) {
-                angular.forEach(param.dependencies, function(dependency) {
-                    watchDependency(param, dependency);
-                });
-            });
-        }
 
         /**
-         * Original OpenLMIS Select2 initialization.
-         *
-         * Important:
-         * Do not destroy Select2 here because this function is used
-         * by every report dropdown, including Program and District.
+         * Check if this particular report has
+         * Facility configured for multiselect.
          */
-        function reinitializeSelect(parameterName) {
-            $timeout(function() {
-                var element = angular.element('#' + parameterName);
+        function hasFacilityMultiselect() {
 
-                element.select2({
-                    allowClear: true,
-                    selectOnClose: true,
-                    placeholder: getPlaceholder(element),
-                    language: {
-                        noResults: function() {
-                            return messageService.get(
-                                'openlmisForm.selectNoResults'
-                            );
-                        }
+            var found = false;
+
+            angular.forEach(
+                report.templateParameters || [],
+                function(parameter) {
+
+                    if (
+                        parameter.name === 'facility' &&
+                        parameter.description === 'multipleselect'
+                    ) {
+                        found = true;
                     }
-                });
-            });
+                }
+            );
+
+            return found;
         }
 
-        function getPlaceholder(element) {
-            var placeholderOption =
-                element.children('.placeholder:first');
 
-            if (placeholderOption.length === 0) {
+        /**
+         * Only show the 10 Lesotho Districts.
+         */
+        function filterDistrictOptions() {
+
+            if (
+                !angular.isArray(
+                    vm.paramsOptions.district
+                )
+            ) {
+                return;
+            }
+
+            vm.paramsOptions.district =
+                vm.paramsOptions.district.filter(
+                    function(option) {
+
+                        var districtName =
+                            option.name ||
+                            option.displayName ||
+                            option.value;
+
+                        return allowedDistricts
+                            .indexOf(
+                                districtName
+                            ) !== -1;
+                    }
+                );
+        }
+
+
+        /**
+         * Resolve selected District name.
+         */
+        function getSelectedDistrictName(
+            selectedValue
+        ) {
+
+            var districtName = null;
+
+            if (!selectedValue) {
+                return null;
+            }
+
+            if (
+                angular.isString(
+                    selectedValue
+                ) &&
+                allowedDistricts.indexOf(
+                    selectedValue
+                ) !== -1
+            ) {
+
+                return selectedValue;
+            }
+
+            if (
+                angular.isObject(
+                    selectedValue
+                )
+            ) {
+
+                districtName =
+                    selectedValue.name ||
+                    selectedValue.displayName ||
+                    selectedValue.value;
+
+                if (
+                    allowedDistricts.indexOf(
+                        districtName
+                    ) !== -1
+                ) {
+
+                    return districtName;
+                }
+            }
+
+            angular.forEach(
+                vm.paramsOptions.district || [],
+                function(option) {
+
+                    if (districtName) {
+                        return;
+                    }
+
+                    if (
+                        option.value === selectedValue ||
+                        option.id === selectedValue
+                    ) {
+
+                        districtName =
+                            option.name ||
+                            option.displayName ||
+                            option.value;
+                    }
+                }
+            );
+
+            return districtName;
+        }
+
+
+        /**
+         * Replace Facility options whenever
+         * District changes.
+         */
+        function updateFacilityOptions(
+            selectedDistrict
+        ) {
+
+            vm.selectedParamsOptions.facility =
+                [];
+
+            vm.selectedFacilityMap =
+                {};
+
+            var districtName =
+                getSelectedDistrictName(
+                    selectedDistrict
+                );
+
+            if (!districtName) {
+
+                vm.paramsOptions.facility =
+                    [];
+
+                return;
+            }
+
+            var facilities =
+                facilitiesByDistrict[
+                    districtName
+                ] || [];
+
+            vm.paramsOptions.facility =
+                facilities.map(
+                    function(facility) {
+
+                        return {
+                            name: facility.name,
+                            value: facility.name
+                        };
+                    }
+                );
+        }
+
+
+        /**
+         * Watch District only for the report
+         * using Facility multiselect.
+         */
+        function watchDistrictSelection() {
+
+            $scope.$watch(
+                'vm.selectedParamsOptions.district',
+                function(
+                    newDistrict,
+                    oldDistrict
+                ) {
+
+                    if (
+                        newDistrict === oldDistrict &&
+                        !newDistrict
+                    ) {
+                        return;
+                    }
+
+                    updateFacilityOptions(
+                        newDistrict
+                    );
+                }
+            );
+        }
+
+
+        /**
+         * Synchronize checkbox map into the
+         * actual Facility array sent to Jasper.
+         */
+        function onFacilitySelectionChange() {
+
+            var selected = [];
+
+            angular.forEach(
+                vm.paramsOptions.facility || [],
+                function(option) {
+
+                    if (
+                        vm.selectedFacilityMap[
+                            option.value
+                        ]
+                    ) {
+
+                        selected.push(
+                            option.value
+                        );
+                    }
+                }
+            );
+
+            vm.selectedParamsOptions.facility =
+                selected;
+        }
+
+
+        /**
+         * Select every Facility in current District.
+         */
+        function selectAllFacilities() {
+
+            vm.selectedFacilityMap = {};
+
+            angular.forEach(
+                vm.paramsOptions.facility || [],
+                function(option) {
+
+                    vm.selectedFacilityMap[
+                        option.value
+                    ] = true;
+                }
+            );
+
+            onFacilitySelectionChange();
+        }
+
+
+        /**
+         * Clear selected Facilities.
+         */
+        function clearFacilities() {
+
+            vm.selectedFacilityMap = {};
+
+            vm.selectedParamsOptions.facility =
+                [];
+        }
+
+
+        /**
+         * Controller initialization.
+         */
+        function onInit() {
+
+            angular.forEach(
+                report.templateParameters || [],
+                function(param) {
+
+                    if (
+                        param.description ===
+                        'multipleselect'
+                    ) {
+
+                        vm.selectedParamsOptions[
+                            param.name
+                        ] = [];
+                    }
+
+                    angular.forEach(
+                        param.dependencies || [],
+                        function(dependency) {
+
+                            watchDependency(
+                                param,
+                                dependency
+                            );
+                        }
+                    );
+                }
+            );
+
+            /*
+             * Do District → Facility filtering
+             * ONLY for reports configured for it.
+             */
+            if (
+                hasFacilityMultiselect()
+            ) {
+
+                if (
+                    !vm.paramsOptions.district
+                ) {
+                    vm.paramsOptions.district =
+                        [];
+                }
+
+                vm.paramsOptions.facility =
+                    [];
+
+                vm.selectedParamsOptions.facility =
+                    [];
+
+                filterDistrictOptions();
+
+                watchDistrictSelection();
+            }
+        }
+
+
+        /**
+         * Existing Select2 handling for
+         * normal single-select fields.
+         */
+        function reinitializeSelect(
+            parameterName
+        ) {
+
+            
+            if (
+                parameterName === 'facility' &&
+                hasFacilityMultiselect()
+            ) {
+                return;
+            }
+
+            $timeout(
+                function() {
+
+                    var element =
+                        angular.element(
+                            '#' +
+                            parameterName
+                        );
+
+                    if (!element.length) {
+                        return;
+                    }
+
+                    if (
+                        element.data(
+                            'select2'
+                        )
+                    ) {
+                        element.select2(
+                            'destroy'
+                        );
+                    }
+
+                    element.select2({
+
+                        allowClear: true,
+
+                        selectOnClose: true,
+
+                        placeholder:
+                            getPlaceholder(
+                                element
+                            ),
+
+                        language: {
+
+                            noResults:
+                                function() {
+
+                                    return messageService.get(
+                                        'openlmisForm.selectNoResults'
+                                    );
+                                }
+                        }
+                    });
+
+                },
+                0
+            );
+        }
+
+
+        function getPlaceholder(
+            element
+        ) {
+
+            var placeholderOption =
+                element.children(
+                    '.placeholder:first'
+                );
+
+            if (
+                placeholderOption.length === 0
+            ) {
                 return false;
             }
 
             return {
-                id: placeholderOption.val(),
-                text: placeholderOption.text()
+                id:
+                    placeholderOption.val(),
+
+                text:
+                    placeholderOption.text()
             };
         }
     }
