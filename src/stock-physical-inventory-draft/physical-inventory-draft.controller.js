@@ -836,7 +836,7 @@
                 vm.stateParams.physicalInventoryType
               )
               .then(
-                function () {
+                function (stockEventId) {
                   notificationService.success(
                     "stockPhysicalInventoryDraft.submitted"
                   );
@@ -847,12 +847,53 @@
                       "stockPhysicalInventoryDraft.printModal.no"
                     )
                     .then(function () {
-                      $window.open(
-                        accessTokenFactory.addAccessToken(
-                          getPrintUrl(draft.id)
-                        ),
-                        "_blank"
-                      );
+                      // Replaced: draft.id is only cleared to undefined for a
+                      // Cyclic submit that had a server draft id (see lines
+                      // 828-830), so it is not safe to assume draft.id is set
+                      // here. If draft.id is set, use it exactly as before.
+                      // Only when it is falsy, look the submitted id up by
+                      // stock event id.
+                      // $window.open(
+                      //   accessTokenFactory.addAccessToken(
+                      //     getPrintUrl(draft.id)
+                      //   ),
+                      //   "_blank"
+                      // );
+                      if (draft.id) {
+                        $window.open(
+                          accessTokenFactory.addAccessToken(
+                            getPrintUrl(draft.id)
+                          ),
+                          "_blank"
+                        );
+                        return;
+                      }
+
+                      return physicalInventoryService
+                        .getSubmittedPhysicalInventories(
+                          draft.programId,
+                          draft.facilityId
+                        )
+                        .then(function (submitted) {
+                          var match = _.findWhere(submitted, {
+                            stockEventId: stockEventId
+                          });
+
+                          if (match) {
+                            $window.open(
+                              accessTokenFactory.addAccessToken(
+                                getPrintUrl(match.id)
+                              ),
+                              "_blank"
+                            );
+                          } else {
+                            alertService.error(
+                              messageService.get(
+                                "stockPhysicalInventoryDraft.printNotFound"
+                              )
+                            );
+                          }
+                        });
                     })
                     .finally(function () {
                       
