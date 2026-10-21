@@ -36,6 +36,7 @@
   "stockPhysicalInventoryDraft.printModal.label": "Print this physical inventory?",
   "stockPhysicalInventoryDraft.printModal.yes": "Print",
   "stockPhysicalInventoryDraft.printModal.no": "No",
+  "stockPhysicalInventoryDraft.printNotFound": "Submitted, but the record to print could not be found. Look for it in the physical inventory history.",
   "stockPhysicalInventoryDraft.deactivate": "Deactivate",
   "stockPhysicalInventoryDraft.deactivated": "The Product has been successfully deactivated",
   "stockPhysicalInventoryDraft.deactivateItem": "Do you want to deactivate Product with Lot Code: ${lot} for ${product}? \n This lot will also be deactivated on stock card",

@@ -51,7 +51,19 @@
             },
             submitPhysicalInventory: {
                 method: 'POST',
-                url: stockmanagementUrlFactory('/api/stockEvents')
+                url: stockmanagementUrlFactory('/api/stockEvents'),
+                // Backend returns a bare UUID string. Without this, $resource's
+                // default handling (shallowClearAndCopy) spreads a bare string
+                // into an object keyed by character index. Only wrap plain
+                // strings; anything else (for example an error body) passes
+                // through exactly as the default would.
+                transformResponse: function(data) {
+                    if (!data) {
+                        return data;
+                    }
+                    var parsed = angular.fromJson(data);
+                    return angular.isString(parsed) ? { id: parsed } : parsed;
+                }
             }
         });
 
@@ -62,6 +74,7 @@
         this.saveDraft = saveDraft;
         this.deleteDraft = deleteDraft;
         this.submitPhysicalInventory = submit;
+        this.getSubmittedPhysicalInventories = getSubmittedPhysicalInventories;
 
         /**
          * @ngdoc method
@@ -231,12 +244,41 @@
                 return getDraft(physicalInventory.programId, physicalInventory.facilityId);
             }
             return resource.submitPhysicalInventory(event).$promise
-                .then(function() {
+                .then(function(response) {
+                    // Capture the stock event id before the cache cleanup below
+                    // runs (unchanged), so the draft controller can look up the
+                    // submitted physical inventory's server id afterwards.
+                    var stockEventId = response.id;
                     return deleteDraft(physicalInventory.$serverDraftId || physicalInventory.id)
                         .catch(function() {
                             removeDraftFromCache(physicalInventory.$serverDraftId || physicalInventory.id);
+                        })
+                        .then(function() {
+                            return stockEventId;
                         });
                 });
+        }
+
+        /**
+         * @ngdoc method
+         * @methodOf stock-physical-inventory.physicalInventoryService
+         * @name getSubmittedPhysicalInventories
+         *
+         * @description
+         * Retrieves submitted (non-draft) physical inventories for a program
+         * and facility. Used to recover a Cyclic submission's server id by
+         * matching stockEventId, since Cyclic never sends resourceId.
+         *
+         * @param  {String}  programId  Program UUID
+         * @param  {String}  facilityId Facility UUID
+         * @return {Promise}          List of submitted physical inventories
+         */
+        function getSubmittedPhysicalInventories(programId, facilityId) {
+            return resource.query({
+                program: programId,
+                facility: facilityId,
+                isDraft: false
+            }).$promise;
         }
 
         function getLot(item, hasLot) {
