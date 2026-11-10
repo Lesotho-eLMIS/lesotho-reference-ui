@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 (function () {
@@ -71,15 +71,12 @@
          */
         vm.programs = programs;
 
-        //vm.drafts = (vm.physicalInventoryType === "Major") ? drafts : draftsForCyclic;
-
         //Default to Major drafts
         vm.drafts = drafts[0];
 
         $scope.$watch(function () { return vm.program; }, function (newVal, oldVal) {
 
             if (newVal === oldVal) return;
-            // if (vm.adjustmentType !== 'receive') return; // only show options in Receive flow
 
             if (newVal == null || newVal == undefined) {
 
@@ -106,9 +103,6 @@
             if (!vm.program || !vm.facility) {
                 return null;
             }
-            // else if (!vm.facility) {
-            //     alertService.error('stockPhysicalInventory.noFacilitySelected');
-            // }
             var programId = vm.program.id;
             return _.find(vm.drafts, function (draft) {
                 return draft.programId === programId;
@@ -120,7 +114,7 @@
             return _.find(vm.drafts, function (draft) {
                 return draft.programId === programId;
             });
-        }
+        };
 
         /**
          * @ngdoc method
@@ -153,12 +147,41 @@
                 return messageService.get('stockPhysicalInventory.notStarted');
             }
             return messageService.get('stockPhysicalInventory.draft');
+        };
 
+        
+        // Added vm.getButtonLabel()
+        // Returns "Start Count" when no draft exists yet (isStarter=true) and
+        // "Continue Count" when a draft is already in progress (isStarter=false).
+        // Reuses draft.isStarter which is already set by getDraftByProgramAndFacility in the factory; true means no server draft, false means one exists.
+        
+        /**
+         * @ngdoc method
+         * @propertyOf stock-physical-inventory-list.controller:PhysicalInventoryListController
+         * @name getButtonLabel
+         *
+         * @description
+         * Returns the label for the start/continue button based on whether a
+         * draft already exists for the currently selected program.
+         *
+         * @return {String} button label message
+         */
+        vm.getButtonLabel = function () {
+            var draft = vm.getSelectedDraft();
+            var isCyclic = vm.physicalInventoryType === 'Cyclic';
+
+            if (isCyclic) {
+                return messageService.get('stockPhysicalInventory.cyclicCount');
+            }
+            if (!draft || draft.isStarter) {
+                return messageService.get('stockPhysicalInventory.majorCount');
+            }
+            return messageService.get('stockPhysicalInventory.continueCount');
         };
 
         vm.onChangePhysicalInventoryType = function () {
             vm.drafts = (vm.physicalInventoryType === "Major") ? drafts[0] : drafts[1];
-        }
+        };
 
         /**
          * @ngdoc method
@@ -194,13 +217,14 @@
                             return navigateToCyclic(draft);
                         }
 
-                        // A Major draft exists. Only block if it has real progress
+                        // A Major draft exists. Only block if it has real progress —
+                        // at least one line item with a quantity entered (not null,
+                        // not -1). A draft at 0% is treated as not started.
                         var lineItems = serverDrafts[0].lineItems || [];
                         var hasProgress = lineItems.some(function(item) {
                             return item.quantity !== null &&
                                 item.quantity !== undefined &&
-                                item.quantity !== -1; //&&
-                                //item.quantity !== 0;
+                                item.quantity !== -1;
                         });
 
                         if (hasProgress) {
@@ -212,7 +236,7 @@
                     });
             }
 
-            // Get the draft , prefer passed draft, 
+            // Get the draft, prefer passed draft,
             // then find existing, else create new
             var selectedDraft = draft || vm.getDraft();
 
@@ -221,6 +245,7 @@
                     item.isStarter = false;
                 }
             });
+
             if (offlineService.isOffline() || selectedDraft.id) {
                 $state.go('openlmis.stockmanagement.physicalInventory.draft', {
                     id: selectedDraft.id,
@@ -236,15 +261,15 @@
             return physicalInventoryService.getDraft(vm.program.id, vm.facility.id).then(function (data) {
 
                 if (Array.isArray(data) && data.length > 0 && data[0].id) {
-                     selectedDraft.id = data[0].id;
-                        $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-                            id: selectedDraft.id,
-                            program: vm.program,
-                            facility: vm.facility,
-                            supervised: vm.isSupervised,
-                            includeInactive: false,
-                            physicalInventoryType: vm.physicalInventoryType
-                        });
+                    selectedDraft.id = data[0].id;
+                    $state.go('openlmis.stockmanagement.physicalInventory.draft', {
+                        id: selectedDraft.id,
+                        program: vm.program,
+                        facility: vm.facility,
+                        supervised: vm.isSupervised,
+                        includeInactive: false,
+                        physicalInventoryType: vm.physicalInventoryType
+                    });
                 } else {
                     return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
                         selectedDraft.id = data.id;
@@ -258,20 +283,7 @@
                         });
                     });
                 }
-
             });
-            // return physicalInventoryService.createDraft(vm.program.id, vm.facility.id).then(function (data) {
-            //     //    console.log("Data: ", data);
-            //     selectedDraft.id = data.id;
-            //     $state.go('openlmis.stockmanagement.physicalInventory.draft', {
-            //         id: selectedDraft.id,
-            //         program: vm.program,
-            //         facility: vm.facility,
-            //         supervised: vm.isSupervised,
-            //         includeInactive: false,
-            //         physicalInventoryType: vm.physicalInventoryType
-            //     });
-            // });
         }
         
         function navigateToCyclic(draft) {
@@ -324,4 +336,3 @@
         }
     }
 })();
-

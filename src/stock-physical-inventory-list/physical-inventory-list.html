@@ -21,15 +21,30 @@
     <input ng-if="vm.physicalInventoryType === 'Cyclic'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
       value="{{'stockPhysicalInventory.start' | message}}" class="primary"/>
   </div> -->
-  <input ng-if="vm.physicalInventoryType === 'Major'" id="proceedButton" type="button" ng-click="vm.editDraft(vm.getSelectedDraft())"
-       value="{{(vm.getSelectedDraft() && vm.getSelectedDraft().isStarter ? 'stockPhysicalInventory.start' : 'stockPhysicalInventory.majorCount') | message}}"
+  <input id="proceedButton"
+     type="button"
+     ng-click="vm.editDraft(vm.getSelectedDraft())"
+     ng-disabled="!vm.program || !vm.facility"
+     value="{{vm.getButtonLabel()}}"
+     class="primary"/>
+  
+    <!--
+     <input ng-if="vm.physicalInventoryType === 'Major'" 
+       id="proceedButton" 
+       type="button" 
+       ng-click="vm.editDraft(vm.getSelectedDraft())"
+       ng-disabled="!vm.program || !vm.faculity"
+       value="{{vm.getButtonLabel()}}"
        class="primary"/>
   <input ng-if="vm.physicalInventoryType === 'Cyclic'"
        id="proceedButton"
        type="button"
        ng-click="vm.editDraft(vm.getSelectedDraft())"
-       value="{{'stockPhysicalInventory.cyclicCount' | message}}"
+       ng-disabled="!vm.program || !vm.faculity"
+       value="{{vm.getButtonLabel()}}"
        class="primary"/>
+
+       -->
 </form>
 
 

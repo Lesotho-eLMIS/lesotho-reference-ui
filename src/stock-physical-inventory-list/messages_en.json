@@ -8,6 +8,8 @@
   "stockPhysicalInventory.actions": "Actions",
   "stockPhysicalInventory.start": "Start",
   "stockPhysicalInventory.continue": "Continue",
+  "stockPhysicalInventory.startCount": "Start Count",
+  "stockPhysicalInventory.continueCount": "Continue Count",
   "stockPhysicalInventory.notStarted": "Not yet started",
   "stockPhysicalInventory.draft": "Draft",
   "stockPhysicalInventory.noProgramSelected": "Select a Program",
