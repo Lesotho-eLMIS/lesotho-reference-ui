@@ -123,6 +123,10 @@
 
     $scope.$on('$destroy', function() {
       $timeout.cancel(durableAutosaveTimeout);
+      // Added for Cyclic refresh warning below - always safe to call even
+      // if the listener was never attached (Major pages, or Cyclic with no
+      // unsaved changes).
+      $window.removeEventListener('beforeunload', warnBeforeUnload);
     });
 
     /**
@@ -1129,6 +1133,18 @@
           $scope,
           'openlmis.stockmanagement.stockCardSummaries'
         );
+
+        // confirmDiscardService only intercepts in-app ui-router transitions;
+        // it cannot run on an actual browser refresh (F5), tab close, or
+        // address-bar navigation, since the page is already tearing down by
+        // the time that happens. The only mechanism the browser allows for
+        // that case is window.onbeforeunload, and browsers ignore any custom
+        // message passed to it and always show their own native "leave
+        // site?" confirmation - there is no way to show the app's own
+        // styled dialog at that point. Gated by the same needToConfirm flag
+        // so both paths agree on when there is something to lose. Removed
+        // again in the $destroy handler above.
+        $window.addEventListener('beforeunload', warnBeforeUnload);
       }
 
       vm.hasLot = _.any(draft.lineItems, function (item) {
@@ -1456,6 +1472,29 @@
         }
         regroupCyclicItems();
       });
+    }
+
+    /**
+     * @ngdoc method
+     * @propertyOf stock-physical-inventory-draft.controller:PhysicalInventoryDraftController
+     * @name warnBeforeUnload
+     *
+     * @description
+     * Handler for window.onbeforeunload, attached only for Cyclic (see
+     * onInit above). Setting e.returnValue / returning a string is the
+     * standard way to trigger the browser's native "leave site?" prompt;
+     * modern browsers ignore any custom text passed here and always show
+     * their own wording, so the string itself is not displayed - only its
+     * presence matters. Not attached at all when $scope.needToConfirm is
+     * falsy, so Major and any Cyclic session with nothing to lose refresh
+     * silently as before.
+     */
+    function warnBeforeUnload(e) {
+      if ($scope.needToConfirm) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
     }
 
     vm.validateOnPageChange();

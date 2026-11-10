@@ -25,7 +25,7 @@
 
     function routes($stateProvider, STOCKMANAGEMENT_RIGHTS) {
         $stateProvider.state('openlmis.stockmanagement.physicalInventory.draft', {
-            url: '/:id?physicalInventoryType&keyword&includeInactive&page&size',
+            url: '/:id?physicalInventoryType&keyword&includeInactive&page&size&programId&facilityId',
             isOffline: true,
             views: {
                 '@openlmis': {
@@ -46,7 +46,7 @@
             },
             resolve: {
                 draft: function($stateParams, physicalInventoryFactory, offlineService,
-                    physicalInventoryDraftCacheService, drafts) {
+                    physicalInventoryDraftCacheService, drafts, $state, $q) {
 
                     // Cyclic is handled first — it has no server draft and no id.
                     // Both noReload and normal load use the same path: check cache
@@ -55,31 +55,88 @@
                     // Never call getPhysicalInventory for Cyclic — it would load the
                     // Major draft's line items since they share the same server draft id.
                     if ($stateParams.physicalInventoryType === 'Cyclic') {
-                        if (!$stateParams.program || !$stateParams.facility) {
-                            return {
-                                programId: undefined,
-                                facilityId: undefined,
-                                isStarter: true,
-                                lineItems: []
-                            };
-                        }
-                        // Synthetic cache key — Cyclic has no server draft id so we
-                        // use program+facility as a stable identifier. vm.addProducts
-                        // sets draft.id to this same key before calling cacheDraft().
-                        var cyclicKey = 'cyclic-' +
-                            $stateParams.program.id + '-' +
-                            $stateParams.facility.id;
-                        return physicalInventoryDraftCacheService.getDraft(cyclicKey)
-                            .then(function(cached) {
-                                if (cached && cached.$modified) {
-                                    return cached;
-                                }
-                                // No modified cache — fresh load. Call getDraft to get
-                                // real stock products for this facility so Search Existing
-                                // Product and Add from Catalogue have items to show.
-                                return physicalInventoryFactory
-                                    .getDraft($stateParams.program.id, $stateParams.facility.id);
+                        // Cyclic identity comes from two possible sources:
+                        // - $stateParams.program / .facility: full objects,
+                        //   only ever present via in-app $state.go(...) params
+                        //   (normal navigation from the list page).
+                        // - $stateParams.programId / .facilityId: plain string
+                        //   ids carried in the URL itself (see url pattern
+                        //   above), set by navigateToCyclic in
+                        //   physical-inventory-list.controller.js. These are
+                        //   what survive a real browser refresh, since the
+                        //   full objects above are not.
+                        // Prefer the objects when present (avoids an extra
+                        // lookup on normal navigation); fall back to the URL
+                        // ids so a refresh can reconstruct the same session
+                        // instead of leaving the page.
+                        var cyclicProgramId = $stateParams.program ?
+                            $stateParams.program.id : $stateParams.programId;
+                        var cyclicFacilityId = $stateParams.facility ?
+                            $stateParams.facility.id : $stateParams.facilityId;
+
+                        if (!cyclicProgramId || !cyclicFacilityId) {
+                            // Truly unrecoverable - no in-app params and
+                            // nothing usable in the URL either (for example
+                            // the draft URL was opened directly with no
+                            // query params at all). Nothing to render;
+                            // send the user to pick a program and facility.
+                            $state.go('openlmis.stockmanagement.physicalInventory', {}, {
+                                reload: true
                             });
+                            return $q.reject();
+                        }
+
+                        // Fix: Cyclic has no incremental server save - every
+                        // in-progress product/quantity previously lived only
+                        // in physicalInventoryDraftCacheService under this
+                        // synthetic key, and the old code below restored it
+                        // whenever cached.$modified was true. Cyclic's own
+                        // add-product flow (selectExistingProductForCyclic,
+                        // addProducts, etc. in the controller) never actually
+                        // depends on this cache read - it updates
+                        // vm.itemsSelectedForCyclic directly in memory - so
+                        // this branch was only ever reached via an accidental
+                        // refresh or navigate-away-and-back. That made a
+                        // refresh silently resurrect old counts instead of
+                        // starting fresh. Removed entirely: Cyclic now always
+                        // fetches straight from the server below, which
+                        // naturally reflects nothing counted yet, since
+                        // Cyclic has never saved anything there.
+                        //
+                        // var cyclicKey = 'cyclic-' + cyclicProgramId + '-' + cyclicFacilityId;
+                        // return physicalInventoryDraftCacheService.getDraft(cyclicKey)
+                        //     .then(function(cached) {
+                        //         if (cached && cached.$modified) {
+                        //             return cached;
+                        //         }
+                        //         return physicalInventoryFactory
+                        //             .getDraft(cyclicProgramId, cyclicFacilityId);
+                        //     });
+
+                        // Proactively clear any stale cache entry for this
+                        // key so no earlier session's data can resurface
+                        // through any other path either. Best-effort: a
+                        // missing key is not an error worth blocking on.
+                        // Defensively checked for .catch support rather than
+                        // assumed, since this service's return shape was not
+                        // directly available while writing this fix.
+                        var cyclicKey = 'cyclic-' + cyclicProgramId + '-' + cyclicFacilityId;
+                        var clearCachePromise = physicalInventoryDraftCacheService.removeById(cyclicKey);
+                        if (clearCachePromise && typeof clearCachePromise.catch === 'function') {
+                            clearCachePromise.catch(function() {
+                                // No existing cache entry for this key - nothing to clear.
+                            });
+                        }
+
+                        // Always a fresh server fetch. Real stock products
+                        // are returned so Search Existing Product and Add
+                        // from Catalogue still have items to show; none of
+                        // them carry isAdded/hasQuantity yet, so the display
+                        // filter in displayLineItemsGroup below keeps the
+                        // table blank until the user adds something in this
+                        // session, exactly like a first visit.
+                        return physicalInventoryFactory
+                            .getDraft(cyclicProgramId, cyclicFacilityId);
                     }
 
                     // noReload=true after Add Product or Save for Major — load from cache.
