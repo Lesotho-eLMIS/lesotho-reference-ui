@@ -1,3 +1,18 @@
+/*
+ * This program is part of the OpenLMIS logistics management information system platform software.
+ * Copyright © 2017 VillageReach
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms
+ * of the GNU Affero General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * See the GNU Affero General Public License for more details. You should have received a copy of
+ * the GNU Affero General Public License along with this program. If not, see
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ */
+
 (function() {
 
     'use strict';
@@ -28,7 +43,7 @@
         vm.getFillQuantityDisplay = getFillQuantityDisplay;
         vm.getEditableQuantitySummary = getEditableQuantitySummary;
         vm.onQuantityTypeChanged = onQuantityTypeChanged;
-        vm.onQuantityShippedChanged = onQuantityShippedChanged;
+        vm.onUnitQuantityChanged = onUnitQuantityChanged;
         vm.getQuantityTypeOptions = getQuantityTypeOptions;
         vm.getQuantityTypeLabel = getQuantityTypeLabel;
 
@@ -36,6 +51,7 @@
             vm.order = updatedOrder;
             vm.shipment = shipment;
             vm.tableLineItems = tableLineItems;
+            console.log('[DIAGNOSTIC] shipment-view onInit - order loaded for fulfillment:', vm.order);
         }
 
         function getOrderQuantityDisplay(tableLineItem) {
@@ -75,6 +91,8 @@
         }
 
         function getEditableQuantitySummary(lineItem) {
+            var quantityInPacks;
+            var quantityRemainderInUnits;
             var quantityShipped;
 
             if (!lineItem) {
@@ -83,19 +101,25 @@
 
             quantityShipped = lineItem.quantityShipped || 0;
 
-            return lineItem.quantityType === 'DISPENSING_UNITS' ?
-                quantityShipped + ' ' + messageService.get('shipmentView.units') :
-                quantityShipped + ' ' + messageService.get('shipmentView.packs');
+            if (lineItem.quantityType === 'DISPENSING_UNITS') {
+                quantityInPacks = lineItem.quantityInPacks || 0;
+                quantityRemainderInUnits = lineItem.quantityRemainderInUnits || 0;
+
+                return quantityInPacks + ' ' + messageService.get('shipmentView.packs') +
+                    ' + ' + quantityRemainderInUnits + ' ' + messageService.get('shipmentView.units') +
+                    ' = ' + quantityShipped + ' ' + messageService.get('shipmentView.units');
+            }
+
+            return quantityShipped + ' ' + messageService.get('shipmentView.packs');
         }
 
         function onQuantityTypeChanged(lineItem) {
             lineItem.setQuantityType(lineItem.quantityType);
         }
 
-        function onQuantityShippedChanged(lineItem) {
-            lineItem.updateQuantityShipped();
+        function onUnitQuantityChanged(lineItem) {
+            lineItem.updateQuantityShippedFromSplit();
         }
-
 
         function getQuantityTypeOptions() {
             return [

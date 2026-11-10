@@ -24,6 +24,7 @@
 routes.$inject = ['$stateProvider'];
 
     function routes($stateProvider) {
+        
         $stateProvider.state('openlmis.redistribution', {
             url: '/redistribution/:rnr', 
             isOffline: true,
@@ -93,7 +94,6 @@ routes.$inject = ['$stateProvider'];
                 }
             }
         });
-       
      }
 })();
   

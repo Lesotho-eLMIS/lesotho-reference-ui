@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 
@@ -100,11 +100,14 @@
           
             if(vm.facility.type.code === 'dist_store'){
                 const zoneId = vm.facility.geographicZone.id;
-                return supplierFacilities.filter(item => item.geographicZone.parent.id === zoneId || item.type.code === 'dist_store');
+                // Guard added - some supplier facilities have no parent zone, which threw a
+                // TypeError here and blocked the whole redistribution screen from loading
+                return supplierFacilities.filter(item => (item.geographicZone.parent && item.geographicZone.parent.id === zoneId) || item.type.code === 'dist_store');
             }
            else {
             const zoneId = vm.facility.geographicZone.parent.id;
-            return supplierFacilities.filter(item => item.geographicZone.parent.id === zoneId || item.type.code === 'dist_store');
+            // Guard added - same reasoning as above
+            return supplierFacilities.filter(item => (item.geographicZone.parent && item.geographicZone.parent.id === zoneId) || item.type.code === 'dist_store');
            }
         }
 
@@ -145,6 +148,7 @@
                                 emergency: true,
                                 createdBy: { id: user.id },
                                 program: { id: program.id },
+                                processingPeriod: { id: processingPeriod.id},
                                 requestingFacility: { id: facility.id },
                                 receivingFacility: { id: facility.id },
                                 supplyingFacility: { id: lineItem.supplyingFacility.id },
@@ -188,6 +192,10 @@
                     return orderCreateService.get(createdOrder.id);
                 })
                 .then((fetchedOrder) => {
+
+                    fetchedOrder.processingPeriod = processingPeriod;
+                    fetchedOrder.emergency = true;
+
                     requestedItems.forEach((lineItem) => {
                         let packs = calculatePacksToShip(lineItem);
                      
@@ -197,14 +205,13 @@
                             soh: 45
                         });
                     }); 
-                                   
+
                     return orderCreateService.send(fetchedOrder);
                 })
-                .then(() => {
+                .then((sentOrder) => {
                     notificationService.success('Successfully submitted.');
                 })
                 .catch((error) => {
-                    console.error('Error processing order:', error);
                 });
         }
 

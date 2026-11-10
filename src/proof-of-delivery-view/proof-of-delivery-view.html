@@ -28,7 +28,16 @@
         </li>
         <li>
             <strong>{{'proofOfDeliveryView.reportingPeriod' | message}}</strong>
-            {{vm.order.processingPeriod | period}}
+            <!--
+                Commented out - the period filter dereferences period.startDate with no null
+                check, so a missing processingPeriod throws inside the digest and AngularJS
+                leaves the raw {{ }} expression rendered on screen. Replaced with a guarded
+                inline format so the field degrades to blank instead of leaking template syntax.
+            -->
+            <!-- {{vm.order.processingPeriod | period}} -->
+            <span ng-if="vm.order.processingPeriod">
+                {{vm.order.processingPeriod.startDate | openlmisDate}} - {{vm.order.processingPeriod.endDate | openlmisDate}}
+            </span>
         </li>
         <li>
             <strong>{{'proofOfDeliveryView.supplyingFacility' | message}}</strong>

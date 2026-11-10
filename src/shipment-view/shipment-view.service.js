@@ -5,12 +5,12 @@
  * This program is free software: you can redistribute it and/or modify it under the terms
  * of the GNU Affero General Public License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
- *  
+ *  
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  * See the GNU Affero General Public License for more details. You should have received a copy of
  * the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
 (function() {
@@ -108,6 +108,7 @@
         function decorateConfirm(originalConfirm) {
             return function() {
                 var shipment = this;
+                console.log('[DIAGNOSTIC] shipment.confirm() called, shipment before confirm:', shipment);
                 return confirmService.confirm(
                     'shipmentView.confirmShipment.question',
                     'shipmentView.confirmShipment'
@@ -116,11 +117,13 @@
                         loadingModalService.open();
 
                         return originalConfirm.apply(shipment)
-                            .then(function() {
+                            .then(function(response) {
+                                console.log('[DIAGNOSTIC] shipment confirmed, response:', response);
                                 notificationService.success('shipmentView.shipmentHasBeenConfirmed');
                                 stateTrackerService.goToPreviousState('openlmis.orders.view');
                             })
                             .catch(function(error) {
+                                console.log('[DIAGNOSTIC] shipment confirm failed:', error);
                                 if (error === 'shipment.noShippedQuantity') {
                                     notificationService.error(
                                         'shipmentView.fillQuantityRequiredForConfirmation'
